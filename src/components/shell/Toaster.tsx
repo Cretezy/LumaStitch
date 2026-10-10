@@ -8,8 +8,8 @@ export function Toaster() {
   const toast = useUi((s) => s.toast);
   const [visible, setVisible] = useState<typeof toast>(null);
   useEffect(() => {
-    if (!toast) return;
     setVisible(toast);
+    if (!toast) return;
     const t = setTimeout(
       () => setVisible((v) => (v?.id === toast.id ? null : v)),
       toast.kind === 'error' ? 7000 : 4000,

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /** Design settings (FR-8.1, SPEC §8.8). */
+import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -22,7 +23,7 @@ import { useDoc } from '@/store/documentStore';
 import { listCharts } from '@/threads/charts';
 import type { DialogProps } from '../DialogHost';
 
-const FIELDS: {
+interface Field {
   key: keyof DesignSettings;
   label: string;
   unit?: string;
@@ -31,7 +32,9 @@ const FIELDS: {
   step: number;
   digits: number;
   help: string;
-}[] = [
+}
+
+const STITCH_FIELDS: Field[] = [
   {
     key: 'trimThreshold',
     label: 'Trim threshold',
@@ -40,7 +43,7 @@ const FIELDS: {
     max: 50,
     step: 0.5,
     digits: 1,
-    help: 'Same-colour moves shorter than this are stitched; longer ones are trimmed and jumped.',
+    help: 'Shorter same-colour moves are stitched; longer ones are trimmed.',
   },
   {
     key: 'minStitchLength',
@@ -70,8 +73,11 @@ const FIELDS: {
     max: 2,
     step: 0.05,
     digits: 2,
-    help: 'Length of the tiny lock stitches at starts and ends.',
+    help: 'The tiny lock stitches at starts and ends.',
   },
+];
+
+const TIME_FIELDS: Field[] = [
   {
     key: 'machineSpm',
     label: 'Machine speed',
@@ -80,7 +86,7 @@ const FIELDS: {
     max: 1500,
     step: 50,
     digits: 0,
-    help: 'Stitches per minute, for time estimates and 1× simulation.',
+    help: 'Stitches per minute; also the 1× simulator speed.',
   },
   {
     key: 'trimSeconds',
@@ -90,7 +96,7 @@ const FIELDS: {
     max: 60,
     step: 1,
     digits: 0,
-    help: 'For time estimates.',
+    help: 'Per trim.',
   },
   {
     key: 'colorChangeSeconds',
@@ -100,9 +106,42 @@ const FIELDS: {
     max: 300,
     step: 5,
     digits: 0,
-    help: 'For time estimates.',
+    help: 'Per colour change or stop.',
   },
 ];
+
+function NumberSetting({ f, value }: { f: Field; value: number }) {
+  const id = `ds-${f.key}`;
+  return (
+    <div className="grid min-w-0 content-start gap-1">
+      <Label htmlFor={id}>{f.label}</Label>
+      <NumberField
+        id={id}
+        value={value}
+        min={f.min}
+        max={f.max}
+        step={f.step}
+        digits={f.digits}
+        unit={f.unit}
+        className="h-8"
+        onCommit={(v) =>
+          setDesignSettings({ [f.key]: v } as Partial<DesignSettings>, `Set ${f.label.toLowerCase()}`)
+        }
+        ariaLabel={f.label}
+      />
+      <p className="text-[11px] leading-snug text-muted-foreground">{f.help}</p>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="grid gap-3">
+      <h3 className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{title}</h3>
+      {children}
+    </section>
+  );
+}
 
 export default function DesignSettingsDialog({ open, onClose }: DialogProps) {
   const design = useDoc((s) => s.design);
@@ -110,102 +149,119 @@ export default function DesignSettingsDialog({ open, onClose }: DialogProps) {
   const s = design.settings;
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Design settings</DialogTitle>
           <DialogDescription>Changes apply immediately and can be undone.</DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-[10rem_1fr] items-center gap-x-3 gap-y-2.5 text-sm">
-          <Label htmlFor="ds-name">Name</Label>
-          <Input
-            id="ds-name"
-            defaultValue={design.name}
-            onBlur={(e) =>
-              e.target.value.trim() &&
-              e.target.value !== design.name &&
-              setDesignProps({ name: e.target.value.trim() }, 'Rename design')
-            }
-          />
-          <Label>Fabric</Label>
-          <Select
-            value={design.fabric}
-            onValueChange={(v) => setDesignProps({ fabric: v as FabricId }, 'Change fabric')}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {FABRIC_IDS.map((f) => (
-                <SelectItem key={f} value={f}>
-                  {FABRIC_PRESETS[f].label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Label>Thread chart</Label>
-          <Select
-            value={design.threadChart}
-            onValueChange={(v) => setDesignProps({ threadChart: v }, 'Change thread chart')}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="max-h-72">
-              <SelectItem value="exact">Exact colours (no chart)</SelectItem>
-              {listCharts().map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {FIELDS.map((f) => (
-            <div key={f.key} className="contents">
-              <Label title={f.help}>{f.label}</Label>
-              <div className="flex items-center gap-2">
-                <NumberField
-                  value={s[f.key] as number}
-                  min={f.min}
-                  max={f.max}
-                  step={f.step}
-                  digits={f.digits}
-                  unit={f.unit}
-                  className="w-28"
-                  onCommit={(v) =>
-                    setDesignSettings(
-                      { [f.key]: v } as Partial<DesignSettings>,
-                      `Set ${f.label.toLowerCase()}`,
-                    )
-                  }
-                  ariaLabel={f.label}
-                />
-                <span className="text-[11px] leading-tight text-muted-foreground">{f.help}</span>
-              </div>
+        <Section title="Design">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid min-w-0 content-start gap-1">
+              <Label htmlFor="ds-name">Name</Label>
+              <Input
+                id="ds-name"
+                defaultValue={design.name}
+                onBlur={(e) =>
+                  e.target.value.trim() &&
+                  e.target.value !== design.name &&
+                  setDesignProps({ name: e.target.value.trim() }, 'Rename design')
+                }
+              />
             </div>
-          ))}
-          <Label>Default ties</Label>
-          <Select
-            value={s.defaultTie}
-            onValueChange={(v) => setDesignSettings({ defaultTie: v as DesignSettings['defaultTie'] })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="auto">Auto (next to trims, colour changes, stops)</SelectItem>
-              <SelectItem value="always">Always tie every element</SelectItem>
-              <SelectItem value="never">Never (unless set on an element)</SelectItem>
-            </SelectContent>
-          </Select>
-          <Label>Scale stroke widths</Label>
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Switch
-              checked={s.scaleStrokeWidths}
-              onCheckedChange={(c) => setDesignSettings({ scaleStrokeWidths: c })}
-            />
-            Satin and stroke widths scale when shapes are resized
-          </label>
-        </div>
+            <div className="grid min-w-0 content-start gap-1">
+              <Label htmlFor="ds-fabric">Fabric</Label>
+              <Select
+                value={design.fabric}
+                onValueChange={(v) => setDesignProps({ fabric: v as FabricId }, 'Change fabric')}
+              >
+                <SelectTrigger
+                  id="ds-fabric"
+                  className="w-full min-w-0 *:data-[slot=select-value]:block *:data-[slot=select-value]:truncate"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {FABRIC_IDS.map((f) => (
+                    <SelectItem key={f} value={f}>
+                      {FABRIC_PRESETS[f].label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid min-w-0 content-start gap-1">
+              <Label htmlFor="ds-chart">Thread chart</Label>
+              <Select
+                value={design.threadChart}
+                onValueChange={(v) => setDesignProps({ threadChart: v }, 'Change thread chart')}
+              >
+                <SelectTrigger
+                  id="ds-chart"
+                  className="w-full min-w-0 *:data-[slot=select-value]:block *:data-[slot=select-value]:truncate"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  <SelectItem value="exact">Exact colours (no chart)</SelectItem>
+                  {listCharts().map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </Section>
+        <Section title="Stitching">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {STITCH_FIELDS.map((f) => (
+              <NumberSetting key={f.key} f={f} value={s[f.key] as number} />
+            ))}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid min-w-0 content-start gap-1">
+              <Label htmlFor="ds-ties">Default ties</Label>
+              <Select
+                value={s.defaultTie}
+                onValueChange={(v) => setDesignSettings({ defaultTie: v as DesignSettings['defaultTie'] })}
+              >
+                <SelectTrigger
+                  id="ds-ties"
+                  className="w-full min-w-0 *:data-[slot=select-value]:block *:data-[slot=select-value]:truncate"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Auto (next to trims, colour changes, stops)</SelectItem>
+                  <SelectItem value="always">Always tie every element</SelectItem>
+                  <SelectItem value="never">Never (unless set on an element)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <label className="flex items-start gap-2 self-end pb-1.5 text-sm">
+              <Switch
+                checked={s.scaleStrokeWidths}
+                onCheckedChange={(c) => setDesignSettings({ scaleStrokeWidths: c })}
+                className="mt-0.5"
+                aria-label="Scale stroke widths"
+              />
+              <span>
+                Scale stroke widths
+                <span className="block text-[11px] leading-snug text-muted-foreground">
+                  Satin and stroke widths change when shapes are resized.
+                </span>
+              </span>
+            </label>
+          </div>
+        </Section>
+        <Section title="Time estimates">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {TIME_FIELDS.map((f) => (
+              <NumberSetting key={f.key} f={f} value={s[f.key] as number} />
+            ))}
+          </div>
+        </Section>
         <DialogFooter>
           <Button
             variant="ghost"
