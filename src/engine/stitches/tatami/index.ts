@@ -998,12 +998,31 @@ function outlineWalk(ps: PolyShape, a: Vec2, b: Vec2, maxLen: number): Float64Ar
 const shortTurn = (layer: FillLayer) => Math.max(1, 2.5 * layer.spacing);
 
 /**
- * Splits sections at large sideways steps on either edge (e.g. a letter's stem meeting a bar).
- * Even a turn entirely inside the fill cuts diagonally across the bar instead of following its
- * horizontal edge. Separate sections let the router choose a clean entry at the width change.
+ * Splits sections where a long row-to-row turn doesn't follow the outline: where it would leave
+ * the fill (a step in the outline, e.g. a bar meeting a narrower ear above it), or cut across it
+ * (a stem meeting a wider bar: the turn would be a diagonal stitch across the bar instead of the
+ * bar's own horizontal rows). A turn follows the outline when the outline between the two row
+ * ends bulges less than half a row spacing from it: slanted and curved edges (the caps of a
+ * circle) stay one section, steps don't. Separate sections let the order choose a clean entry.
  */
 function splitAtTurns(layer: FillLayer): FillLayer {
   const limit = shortTurn(layer);
+  const ok = (x0: number, y0: number, x1: number, y1: number) => {
+    if (Math.abs(x1 - x0) <= limit) return true;
+    const a = toDocPoint(layer, x0, y0),
+      b = toDocPoint(layer, x1, y1);
+    for (const u of [0.25, 0.5, 0.75])
+      if (!layer.inside(a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u)) return false;
+    if (!layer.poly) return true;
+    const ex = b[0] - a[0],
+      ey = b[1] - a[1];
+    const len = Math.hypot(ex, ey);
+    const walk = outlineWalk(layer.poly, a, b, 2 * len + 1);
+    if (!walk) return false;
+    for (let k = 2; k < walk.length - 2; k += 2)
+      if (Math.abs((walk[k] - a[0]) * ey - (walk[k + 1] - a[1]) * ex) / len > layer.spacing / 2) return false;
+    return true;
+  };
   const sections: Section[] = [];
   for (const s of layer.sections) {
     let cur: Section = { rows: [s.rows[0]] };
@@ -1011,7 +1030,7 @@ function splitAtTurns(layer: FillLayer): FillLayer {
     for (let i = 1; i < s.rows.length; i++) {
       const p = s.rows[i - 1],
         r = s.rows[i];
-      if (Math.abs(r.x0 - p.x0) > limit || Math.abs(r.x1 - p.x1) > limit) {
+      if (!ok(p.x0, p.y, r.x0, r.y) || !ok(p.x1, p.y, r.x1, r.y)) {
         cur = { rows: [] };
         sections.push(cur);
       }
