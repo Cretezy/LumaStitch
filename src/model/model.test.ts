@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createDesign, createElement, createShape, createThread } from './factories';
 import { checkInvariants, repairDesign } from './invariants';
 import { parseProjectFile, serializeProject } from './schema';
+import { DEFAULT_FABRIC_COLOR, fabricColorOf } from './types';
 import { ellipseGeom, polylineGeom } from '@/geom/shapes';
 import type { Design } from './types';
 
@@ -51,6 +52,12 @@ describe('project files', () => {
     expect(checkInvariants(d)).toEqual([]);
     const back = parseProjectFile(serializeProject(d));
     expect(canon(back)).toEqual(canon(d));
+  });
+  it('keeps the fabric colour, which older files leave out', () => {
+    const d = sample();
+    expect(fabricColorOf(parseProjectFile(serializeProject(d)))).toBe(DEFAULT_FABRIC_COLOR);
+    d.fabricColor = '#1f2a44';
+    expect(parseProjectFile(serializeProject(d)).fabricColor).toBe('#1f2a44');
   });
   it('rejects foreign files and newer schema versions', () => {
     expect(() => parseProjectFile('{"hello":1}')).toThrow();

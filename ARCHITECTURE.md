@@ -204,6 +204,7 @@ export interface Design {
   schemaVersion: 1;
   name: string;
   fabric: FabricId; // no hoop: design size = bounds of its shapes
+  fabricColor?: string; // '#rrggbb'; default DEFAULT_FABRIC_COLOR (canvas and exports on fabric)
   threadChart: string;
   settings: DesignSettings; // see SPEC §8.8
   threads: Record<Id, Thread>;
@@ -295,7 +296,7 @@ A memoised selector builds an `elementId → { shapeId, role }` index.
 
 ### 10.1 Layers (bottom to top, one shared viewport)
 
-1. **Background** (Canvas2D): fabric colour, grid, origin mark, and the design's bounding box with a W×H dimension label.
+1. **Background** (Canvas2D): the design's fabric colour, grid, origin mark, and the design's bounding box with a W×H dimension label.
 2. **Artwork backdrop**: `<img>` of the original SVG or image with a CSS transform (optional).
 3. **Shapes** (SVG): one `<path>` per shape. Artwork view uses the original paint or thread colour. Stitch views use transparent fills that act as hit areas. The `d` strings are memoised by `geom` object identity, so only changed shapes re-render.
 4. **Stitches** (Canvas2D): see §13.

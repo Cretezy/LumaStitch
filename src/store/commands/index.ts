@@ -480,12 +480,13 @@ export function setDesignSettings(patch: Partial<DesignSettings>, label = 'Desig
 }
 
 export function setDesignProps(
-  props: { name?: string; fabric?: FabricId; threadChart?: string },
+  props: { name?: string; fabric?: FabricId; fabricColor?: string; threadChart?: string },
   label = 'Design settings',
 ): void {
   exec(label, (d) => {
     if (props.name !== undefined) d.name = props.name;
     if (props.fabric !== undefined) d.fabric = props.fabric;
+    if (props.fabricColor !== undefined) d.fabricColor = props.fabricColor;
     if (props.threadChart !== undefined) d.threadChart = props.threadChart;
   });
 }

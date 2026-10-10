@@ -59,7 +59,6 @@ export interface ViewOptions {
   underlay: boolean;
   rulers: boolean;
   snap: boolean;
-  fabricColor: string;
 }
 
 export type DragPreview =
@@ -121,7 +120,6 @@ function loadView(): { view: ViewOptions; viewMode: ViewMode } {
     underlay: false,
     rulers: true,
     snap: false,
-    fabricColor: '#f5f3ef',
   };
   try {
     const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(VIEW_KEY) : null;

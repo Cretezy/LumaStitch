@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { FabricColorInput } from '@/components/inspector/FabricColorInput';
 import { NumberField } from '@/components/inspector/NumberField';
 import { FABRIC_IDS, FABRIC_PRESETS } from '@/engine/params/fabric';
 import { DEFAULT_SETTINGS } from '@/model/factories';
@@ -170,24 +171,27 @@ export default function DesignSettingsDialog({ open, onClose }: DialogProps) {
             </div>
             <div className="grid min-w-0 content-start gap-1">
               <Label htmlFor="ds-fabric">Fabric</Label>
-              <Select
-                value={design.fabric}
-                onValueChange={(v) => setDesignProps({ fabric: v as FabricId }, 'Change fabric')}
-              >
-                <SelectTrigger
-                  id="ds-fabric"
-                  className="w-full min-w-0 *:data-[slot=select-value]:block *:data-[slot=select-value]:truncate"
+              <div className="flex min-w-0 items-center gap-2">
+                <FabricColorInput design={design} />
+                <Select
+                  value={design.fabric}
+                  onValueChange={(v) => setDesignProps({ fabric: v as FabricId }, 'Change fabric')}
                 >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {FABRIC_IDS.map((f) => (
-                    <SelectItem key={f} value={f}>
-                      {FABRIC_PRESETS[f].label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <SelectTrigger
+                    id="ds-fabric"
+                    className="w-full min-w-0 *:data-[slot=select-value]:block *:data-[slot=select-value]:truncate"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FABRIC_IDS.map((f) => (
+                      <SelectItem key={f} value={f}>
+                        {FABRIC_PRESETS[f].label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid min-w-0 content-start gap-1">
               <Label htmlFor="ds-chart">Thread chart</Label>
@@ -219,8 +223,8 @@ export default function DesignSettingsDialog({ open, onClose }: DialogProps) {
               <NumberSetting key={f.key} f={f} value={s[f.key] as number} />
             ))}
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="grid min-w-0 content-start gap-1">
+          <div className="grid gap-3">
+            <div className="grid min-w-0 content-start gap-1 sm:max-w-[calc(50%-0.375rem)]">
               <Label htmlFor="ds-ties">Default ties</Label>
               <Select
                 value={s.defaultTie}
@@ -239,19 +243,18 @@ export default function DesignSettingsDialog({ open, onClose }: DialogProps) {
                 </SelectContent>
               </Select>
             </div>
-            <label className="flex items-start gap-2 self-end pb-1.5 text-sm">
-              <Switch
-                checked={s.scaleStrokeWidths}
-                onCheckedChange={(c) => setDesignSettings({ scaleStrokeWidths: c })}
-                className="mt-0.5"
-                aria-label="Scale stroke widths"
-              />
+            <label className="flex cursor-pointer items-center justify-between gap-4 rounded-md border px-3 py-2.5 text-sm">
               <span>
                 Scale stroke widths
                 <span className="block text-[11px] leading-snug text-muted-foreground">
                   Satin and stroke widths change when shapes are resized.
                 </span>
               </span>
+              <Switch
+                checked={s.scaleStrokeWidths}
+                onCheckedChange={(c) => setDesignSettings({ scaleStrokeWidths: c })}
+                aria-label="Scale stroke widths"
+              />
             </label>
           </div>
         </Section>

@@ -146,6 +146,8 @@ export interface Design {
   schemaVersion: 1;
   name: string;
   fabric: FabricId;
+  /** Colour of the fabric (canvas background, exports on fabric); default DEFAULT_FABRIC_COLOR. */
+  fabricColor?: string;
   threadChart: string;
   settings: DesignSettings;
   threads: Record<Id, Thread>;
@@ -158,3 +160,10 @@ export interface Design {
 }
 
 export const CURRENT_SCHEMA_VERSION = 1 as const;
+
+/** Fabric colour when a design doesn't set one: an off-white cotton. */
+export const DEFAULT_FABRIC_COLOR = '#f5f3ef';
+
+export function fabricColorOf(design: Pick<Design, 'fabricColor'> | null | undefined): string {
+  return design?.fabricColor ?? DEFAULT_FABRIC_COLOR;
+}

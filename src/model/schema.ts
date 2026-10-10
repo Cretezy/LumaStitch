@@ -97,6 +97,10 @@ export const designSchema = z.object({
   schemaVersion: z.literal(1),
   name: z.string(),
   fabric: z.enum(['woven', 'knit', 'pile', 'lightweight']),
+  fabricColor: z
+    .string()
+    .regex(/^#[0-9a-f]{6}$/i)
+    .optional(),
   threadChart: z.string(),
   settings: z.object({
     trimThreshold: z.number(),

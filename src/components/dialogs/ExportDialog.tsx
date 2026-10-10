@@ -38,6 +38,7 @@ import { getPref, setPref } from '@/library/library';
 import { useDoc } from '@/store/documentStore';
 import { waitForPlan } from '@/store/planStore';
 import { useUi } from '@/store/uiStore';
+import { fabricColorOf } from '@/model/types';
 import { PngExportTab, SvgExportTab, type PngBackground, type PngMode } from './export/ImageExportTabs';
 import { MachineExportTab, MachineFormatPicker } from './export/MachineExportTab';
 import { isMachineFormat, type MachineChoice } from './export/machineFormats';
@@ -118,7 +119,7 @@ function ExportBody({
   requestedMachine: MachineChoice | null;
 }) {
   const design = useDoc((s) => s.design);
-  const fabricColor = useUi((s) => s.view.fabricColor);
+  const fabricColor = fabricColorOf(design);
   const [plan, setPlan] = useState<StitchPlan | null | undefined>(undefined);
   const [tab, setTab] = useState<Tab>(requestedMachine ? 'machine' : initialTab);
   const [machine, setMachine] = useState<MachineChoice>(requestedMachine ?? 'pes');

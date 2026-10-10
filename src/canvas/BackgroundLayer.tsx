@@ -7,6 +7,7 @@ import { usePlan } from '@/store/planStore';
 import { designBBox } from '@/store/commands';
 import { isEmptyBBox } from '@/geom/polygon';
 import { fmt } from '@/lib/utils';
+import { fabricColorOf } from '@/model/types';
 import { drawFabricTexture } from './stitchRenderer';
 
 function gridStep(zoom: number): number {
@@ -97,7 +98,7 @@ export function BackgroundLayer() {
     const ctx = c.getContext('2d')!;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const dark = document.documentElement.classList.contains('dark');
-    ctx.fillStyle = viewMode === 'artwork' ? (dark ? '#2a2a2e' : '#f4f4f5') : view.fabricColor;
+    ctx.fillStyle = viewMode === 'artwork' ? (dark ? '#2a2a2e' : '#f4f4f5') : fabricColorOf(design);
     ctx.fillRect(0, 0, size.width, size.height);
     if (viewMode === 'realistic') drawFabricTexture(ctx, viewport, size.width, size.height);
     const { zoom, pan } = viewport;

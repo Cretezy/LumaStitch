@@ -10,7 +10,8 @@ import { F, type StitchPlan } from '@/engine/types';
 import type { PesReadResult } from '@/io/pes';
 import { pesColorAt, pesColorIndexOf } from '@/io/pes/toPlan';
 import { DEFAULT_SETTINGS } from '@/model/factories';
-import { useUi } from '@/store/uiStore';
+import { useDoc } from '@/store/documentStore';
+import { fabricColorOf } from '@/model/types';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn, fmt, fmtInt, fmtTime } from '@/lib/utils';
@@ -50,7 +51,7 @@ const SPEEDS = ['1', '5', '25', '100', 'max'] as const;
 type Speed = (typeof SPEEDS)[number];
 
 function ViewerBody({ read, plan, name }: { read: PesReadResult; plan: StitchPlan; name: string }) {
-  const fabricColor = useUi((s) => s.view.fabricColor);
+  const fabricColor = useDoc((s) => fabricColorOf(s.design));
   const last = Math.max(0, plan.flags.length - 1);
   const [index, setIndex] = useState(last);
   const [playing, setPlaying] = useState(false);

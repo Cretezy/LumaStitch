@@ -46,6 +46,7 @@ import { useUi } from '@/store/uiStore';
 import { selectionBBox } from '@/tools/selection';
 import { cn, fmtInt } from '@/lib/utils';
 import { ThreadPicker } from '@/components/threads/ThreadPicker';
+import { FabricColorInput } from './FabricColorInput';
 import { NumberField } from './NumberField';
 import { LiveSlider, ParamRow, type ParamState } from './ParamControls';
 
@@ -522,21 +523,24 @@ function DesignPanel({ design }: { design: Design }) {
       </div>
       <div className="space-y-1.5">
         <span className="text-xs font-medium">Fabric</span>
-        <Select
-          value={design.fabric}
-          onValueChange={(v) => setDesignProps({ fabric: v as FabricId }, 'Change fabric')}
-        >
-          <SelectTrigger className="text-xs" aria-label="Fabric">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {FABRIC_IDS.map((f) => (
-              <SelectItem key={f} value={f} className="text-xs">
-                {FABRIC_PRESETS[f].label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <FabricColorInput design={design} />
+          <Select
+            value={design.fabric}
+            onValueChange={(v) => setDesignProps({ fabric: v as FabricId }, 'Change fabric')}
+          >
+            <SelectTrigger className="min-w-0 flex-1 text-xs" aria-label="Fabric">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FABRIC_IDS.map((f) => (
+                <SelectItem key={f} value={f} className="text-xs">
+                  {FABRIC_PRESETS[f].label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <p className="text-[11px] text-muted-foreground">
           {FABRIC_PRESETS[design.fabric].description} {FABRIC_PRESETS[design.fabric].stabilizer}. Settings you
           have not overridden follow the fabric.
