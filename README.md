@@ -1,12 +1,66 @@
+<div align="center">
+
+<img src="public/favicon.svg" alt="" width="72" height="72">
+
 # LumaStitch
 
-Open-source, browser-based machine embroidery digitizer. Import an SVG or an image, auto-digitize it, adjust stitches per object, simulate the stitch-out, and export a `.pes` file for Brother and Baby Lock machines (DST, JEF, EXP and VP3 are also available, plus a PNG preview, SVG geometry, a PDF production worksheet and an MP4/WebM stitch-out video).
+**Turn SVGs and images into machine embroidery, right in your browser.**
 
-- Runs entirely in your browser. There is no account and no backend, and designs never leave your computer.
-- Designs are kept in a local project library (IndexedDB) and can be saved as `.lumastitch` project files.
-- The preview, the simulator and the export all come from the same stitch plan, so what you see is what gets sewn.
+Import artwork, auto-digitize it, fine-tune every stitch, watch the stitch-out, and export a `.pes` file for Brother and Baby Lock machines.
 
-Specification: [SPEC.md](./SPEC.md) · Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md) · Licence: GPL-3.0-or-later ([LICENSE](./LICENSE), [NOTICE.md](./NOTICE.md))
+### [Open LumaStitch →](https://lumastitch.cretezy.com)
+
+No account · No upload · Works offline · Free and open source (GPL-3.0)
+
+<br>
+
+<img src="docs/screenshots/editor.webp" alt="The LumaStitch editor showing a digitized mountain badge in realistic thread view, with the fill settings of the selected shape in the inspector" width="100%">
+
+</div>
+
+## Features
+
+<img src="docs/screenshots/stitch-out.webp" alt="Animated stitch-out of the mountain badge" width="320" align="right">
+
+- **Import SVG or images.** SVGs from Illustrator, Inkscape, Figma and friends keep their shapes, holes and transforms. PNG, JPG and WebP artwork is reduced to thread colours and traced into editable shapes.
+- **Auto-digitize.** Every shape gets a sensible stitch type (tatami fill, satin columns, running stitch) and a thread colour, sewn in an optimised order with few trims.
+- **Edit like a vector app.** Select, move, scale, rotate and edit nodes; draw shapes; combine them with booleans; set stitch angle, density, underlay, compensation and start/end points per shape.
+- **Many stitch types.** Tatami, satin, contour, meander, ripple, gradient and pattern fills, cross-stitch, appliqué, triple run, bean, motif and blanket stitches.
+- **What you see is what gets sewn.** The canvas, the simulator and every export come from the same stitch plan, with realistic thread rendering.
+- **Simulator.** Play the stitch-out at machine speed or faster, step stitch by stitch, and jump between colours.
+- **Export.** Brother PES (v1 and v6), DST, JEF, EXP and VP3, plus a PNG preview, SVG geometry, a printable PDF worksheet and an MP4/WebM stitch-out video.
+- **Private by design.** Everything runs in your browser. Designs are saved in a local library (IndexedDB), never on a server, and can be backed up as `.lumastitch` files.
+
+<br clear="right">
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/image-import.webp" alt="Image import: a flower PNG reduced to five thread colours, with the original and the traced preview side by side"><p align="center"><sub><b>Image import</b>: colours reduced to threads, background left unstitched</sub></p></td>
+    <td width="50%"><img src="docs/screenshots/simulator.webp" alt="The simulator part-way through the mountain badge, with the colour timeline below the canvas"><p align="center"><sub><b>Simulator</b>: the stitch-out in sewing order, with a colour timeline</sub></p></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/export.webp" alt="The export dialog for a PES file, showing the machine label, PES version and how each thread colour maps to the machine palette"><p align="center"><sub><b>Export</b>: PES with the colours the machine will show, plus checks</sub></p></td>
+    <td width="50%"><img src="docs/screenshots/library.webp" alt="The home screen with the project library showing two designs"><p align="center"><sub><b>Library</b>: designs saved automatically in your browser</sub></p></td>
+  </tr>
+</table>
+
+## Supported formats
+
+| Direction | Formats                                                                                       |
+| --------- | --------------------------------------------------------------------------------------------- |
+| Import    | SVG, PNG, JPG, WebP, `.lumastitch` projects; `.pes` files open in a read-only viewer          |
+| Machine   | Brother/Baby Lock PES (v1, v6), Tajima DST, Janome JEF, Melco EXP, Pfaff/Husqvarna Viking VP3 |
+| Other     | PNG preview, SVG geometry, PDF production worksheet, MP4/WebM stitch-out video                |
+
+The PES, DST, JEF, EXP and VP3 writers are byte-for-byte ports of [pyembroidery](https://github.com/EmbroidePy/pyembroidery), checked against it in the test suite. Results of sewing on a real machine (Brother SE600) are recorded in [docs/sew-tests.md](./docs/sew-tests.md).
+
+## Documentation
+
+- [SPEC.md](./SPEC.md): what LumaStitch does and why
+- [ARCHITECTURE.md](./ARCHITECTURE.md): how it is built
+- [LICENSE](./LICENSE) (GPL-3.0-or-later) and [NOTICE.md](./NOTICE.md) (third-party code and data)
 
 ## Development
 
@@ -22,20 +76,9 @@ npm run build        # type-check + production build into dist/
 
 Browser tests need Playwright's Chromium once: `npx playwright install chromium`.
 
-## Deployment (Cloudflare Workers static assets)
+The screenshots above are generated from a production build with `node scripts/readme-screenshots.mjs` (needs `cwebp`, `img2webp` and `ffmpeg`).
 
-`dist/` is served by Cloudflare Workers static assets (see `wrangler.jsonc`; there is no Worker script). A push to `main` deploys in one of two ways:
-
-- **GitHub Actions** (`.github/workflows/ci.yml`): add the repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; after the tests pass, the `deploy` job runs `npx wrangler deploy`.
-- **Workers Builds**: connect the GitHub repository in the Cloudflare dashboard:
-
-- Build command: `npm ci && npm test && npm run build`
-- Deploy command: `npx wrangler deploy`
-- Non-production branches: `npx wrangler versions upload` for preview URLs
-
-`public/_headers` sets long-lived caching for hashed assets and a strict Content-Security-Policy. `npx wrangler dev` serves `dist/` the way production does.
-
-## Layout
+### Project layout
 
 | Path                      | What                                                                                                           |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------- |
@@ -44,13 +87,22 @@ Browser tests need Playwright's Chromium once: `npx playwright install chromium`
 | `src/geom`                | Geometry kernel: flattening, Clipper2 wrapper, scanlines, medial axis, Paper.js adapter                        |
 | `src/engine`              | Pure stitch engine (runs in a Web Worker): stitch types, sequencer, auto-digitize analysis, sequence optimiser |
 | `src/raster`              | Image digitizer (quantise, clean, trace with Potrace) in its own worker                                        |
-| `src/io`                  | SVG import, PES writer/reader, project files, exports                                                          |
+| `src/io`                  | SVG import, PES writer/reader, other machine formats, project files, exports                                   |
 | `src/threads`             | Colour maths (CIELAB, ΔE2000), thread charts, k-means                                                          |
 | `src/canvas`, `src/tools` | Canvas layers, stitch renderer, editing tools                                                                  |
 | `src/simulator`           | Stitch-out playback                                                                                            |
 | `src/components`          | React UI (shadcn/ui + Radix)                                                                                   |
 | `tests/`                  | Fixtures (SVG, PES goldens), integration tests, pyembroidery tools                                             |
 
-## Physical sew tests
+## Deployment
 
-Results of sew tests on the reference machine (Brother SE600) are recorded in [docs/sew-tests.md](./docs/sew-tests.md).
+The app is static files served by Cloudflare Workers static assets (see `wrangler.jsonc`; there is no Worker script). `npm run deploy` builds and deploys by hand. To deploy on every push to `main`, either:
+
+- **GitHub Actions** (`.github/workflows/ci.yml`): add the repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. After the tests pass, the `deploy` job runs `npx wrangler deploy`.
+- **Workers Builds**: connect the GitHub repository in the Cloudflare dashboard with build command `npm ci && npm test && npm run build` and deploy command `npx wrangler deploy` (`npx wrangler versions upload` for preview branches).
+
+`public/_headers` sets long-lived caching for hashed assets and a strict Content-Security-Policy. `npx wrangler dev` serves `dist/` the way production does.
+
+## Licence
+
+LumaStitch is free software under the [GNU General Public License v3.0 or later](./LICENSE). It builds on pyembroidery, Ink/Stitch's thread palettes, Potrace, Paper.js, Clipper2 and others; see [NOTICE.md](./NOTICE.md).
