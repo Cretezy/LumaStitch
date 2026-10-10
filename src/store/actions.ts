@@ -202,12 +202,17 @@ export async function copySelection(): Promise<void> {
 }
 
 export async function cutSelection(): Promise<void> {
+  const revision = useDoc.getState().revision;
+  const ids = editableSelection();
+  if (!ids.length) return;
   await copySelection();
-  deleteShapes(editableSelection());
+  // Clipboard permission can outlive an edit or document switch. Never delete newer content.
+  if (useDoc.getState().revision !== revision) return;
+  deleteShapes(ids);
 }
 
 export async function paste(): Promise<void> {
-  const d = useDoc.getState().design;
+  const { design: d, revision } = useDoc.getState();
   if (!d) return;
   let data = clipboard;
   try {
@@ -220,6 +225,8 @@ export async function paste(): Promise<void> {
   } catch {
     /* ignore */
   }
+  // Thread mappings and the destination must still describe the document we started with.
+  if (useDoc.getState().revision !== revision) return;
   if (!data?.shapes?.length) return;
   const threadMap = new Map<Id, Id>();
   const threads: Thread[] = [];

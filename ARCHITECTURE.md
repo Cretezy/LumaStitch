@@ -249,6 +249,8 @@ A memoised selector builds an `elementId → { shapeId, role }` index.
 
 **Commands.** `exec(label, recipe: (draft: Design) => void)` runs Immer `produce`, pushes the previous `design` onto `past` (structural sharing keeps this cheap), clears `future` and bumps `revision`. History is capped at 200 entries. Each history entry also stores the selection, so undo restores it.
 
+Clipboard operations capture the document revision before awaiting browser access. Cut deletes only the originally selected editable shapes, even if selection changes while access is pending. Cut and paste cancel if the revision changes (an edit, undo/redo, close, or document load), preventing stale deletion or thread mappings from affecting newer content.
+
 **Interactive drags.** While dragging, a transient `{ shapeIds, matrix }` (or a node delta) lives in `uiStore.dragPreview`. The overlay draws the transformed geometry, and the dragged shapes' stitches are dimmed. On pointer-up, exactly one command is executed. Escape cancels. There is no stitch regeneration mid-drag in v1.
 
 **Command catalogue** (initial): `importSvg`, `addShape`, `deleteShapes`, `duplicateShapes`, `transformShapes`, `editNodes`, `booleanOp`, `pathOp`, `arrange`, `setElement` (type, enable/disable), `setParams`, `resetParam`, `setThread`, `upsertThread`, `reorderSequence`, `insertStop`, `removeStop`, `setEntryExit`, `setGuides`, `autoDigitize`, `optimizeSequence`, `setDesignSettings`.
