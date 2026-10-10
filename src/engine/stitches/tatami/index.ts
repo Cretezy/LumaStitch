@@ -141,27 +141,22 @@ const VISIBLE_MARGIN = 0.6;
 
 /** Section counts up to this are ordered exactly (bitmask DP); larger layers greedily. */
 const EXACT_SECTIONS = 10;
+/** Larger layers up to this many sections use a beam search with the same costs; beyond, greedy. */
+const BEAM_SECTIONS = 30;
+const BEAM_WIDTH = 64;
+const BEAM_NEAR = 8;
 
 /**
- * Order and start corner of each section minimising total travel: from `from` to the first
- * section, between each section's exit corner and the next start corner, and from the last exit
- * to `exit`. Travel whose straight line leaves the layer (it must detour or jump) costs triple.
+ * Cost model for ordering a layer's sections: start and exit corners, the travel each hop will
+ * really sew (mirroring travelTo: direct when short and clear, else the router's path, else trim +
+ * jump), and which sections that travel crosses (over a section already sewn it stays visible on
+ * top; over one sewn later it is hidden). Hops are computed lazily and memoised.
  */
-function exactSectionOrder(
-  layer: FillLayer,
-  idx: number[],
-  from: Vec2 | undefined,
-  exit: Vec2 | undefined,
-  t: TravelCtx,
-): [number, number][] {
+function sectionCostModel(layer: FillLayer, idx: number[], t: TravelCtx) {
   const m = idx.length;
+  const W = m * 4;
   const corner = (k: number, c: number) => sectionCorner(layer, layer.sections[idx[k]], c);
   const exitOf = (k: number, c: number) => exitCorner(layer.sections[idx[k]], c);
-  /**
-   * The travel `travelTo` will sew from a to b, as a polyline, or null for a trim + jump (no inside
-   * path, or a long detour). Straight when the hop stays inside the layer.
-   */
-  // Mirrors travelTo's decisions exactly, so the cost matches what will be sewn.
   const travel = (a: Vec2, b: Vec2): Float64Array | null => {
     const d = Math.hypot(b[0] - a[0], b[1] - a[1]);
     if (d < 1e-9) return Float64Array.of(a[0], a[1], b[0], b[1]);
@@ -177,9 +172,6 @@ function exactSectionOrder(
     const full = Float64Array.from([a[0], a[1], ...path, b[0], b[1]]);
     return polyLength(full) <= 3 * d + 1 ? full : null;
   };
-  // State (mask, k, c): sections in mask sewn, the last being k started at corner c.
-  const S = 1 << m;
-  const W = m * 4;
   // Bitmask of the sections whose rows cover (x, y), or come within VISIBLE_MARGIN of it (travel
   // along the edge of sewn rows runs over their ends and shows just the same).
   const toRot = invert(layer.toDoc);
@@ -198,69 +190,100 @@ function exactSectionOrder(
     }
     return bits;
   };
-  // Travel cost from the exit of (k, c) to the start corner (j, cj), and the sections it crosses
-  // (travel over a section already sewn stays visible on top; over one sewn later it is hidden).
-  const H = new Float64Array(W * W);
-  // Per hop: OR of the masks it crosses (quick reject), and the masks with sample counts.
+  type Coverage = { masks: number[]; counts: number[]; n: number };
+  const H = new Float64Array(W * W).fill(NaN);
   const X = new Int32Array(W * W);
-  const XC: ({ masks: number[]; counts: number[]; n: number } | undefined)[] = new Array(W * W);
-  for (let k = 0; k < m; k++)
-    for (let c = 0; c < 4; c++) {
-      const e = corner(k, exitOf(k, c));
-      for (let j = 0; j < m; j++)
-        for (let cj = 0; cj < 4; cj++) {
-          const p = corner(j, cj);
-          const at = (k * 4 + c) * W + j * 4 + cj;
-          // Follow the path travel will actually take; a trim + jump costs extra.
-          const d = Math.hypot(p[0] - e[0], p[1] - e[1]);
-          if (d < 1e-9) continue;
-          const path = travel(e, p);
-          if (!path) {
-            H[at] = d * 3 + JUMP_COST;
-            continue;
-          }
-          const len = polyLength(path);
-          H[at] = len;
-          if (len > layer.spacing * 2) {
-            const cv = coveredAlong(path, coveredBy);
-            for (const mk of cv.masks) X[at] |= mk;
-            if (X[at]) XC[at] = cv;
-          }
-        }
+  const XC: (Coverage | undefined)[] = new Array(W * W);
+  /** Part of a path's length that runs over sections in `mask`. */
+  const visibleLen = (len: number, cv: Coverage | undefined, mask: number) => {
+    if (!cv) return 0;
+    let vis = 0;
+    for (let q = 0; q < cv.masks.length; q++) if (cv.masks[q] & mask) vis += cv.counts[q];
+    return (len * vis) / cv.n;
+  };
+  const fill = (k: number, c: number, j: number, cj: number) => {
+    const at = (k * 4 + c) * W + j * 4 + cj;
+    const e = corner(k, exitOf(k, c)),
+      p = corner(j, cj);
+    const d = Math.hypot(p[0] - e[0], p[1] - e[1]);
+    H[at] = 0;
+    if (d < 1e-9) return at;
+    const path = travel(e, p);
+    if (!path) {
+      H[at] = d * 3 + JUMP_COST;
+      return at;
     }
+    const len = polyLength(path);
+    H[at] = len;
+    if (len > layer.spacing * 2) {
+      const cv = coveredAlong(path, coveredBy);
+      for (const mk of cv.masks) X[at] |= mk;
+      if (X[at]) XC[at] = cv;
+    }
+    return at;
+  };
+  const at = (k: number, c: number, j: number, cj: number) => {
+    const i = (k * 4 + c) * W + j * 4 + cj;
+    return Number.isNaN(H[i]) ? fill(k, c, j, cj) : i;
+  };
+  const insideCost = (i: number, mask: number) => {
+    const h = H[i];
+    if (!(X[i] & mask)) return h;
+    // Travel over rows already sewn stays on top: charge it, plus a fixed cost per hop.
+    return h + visibleLen(h, XC[i], mask) * VISIBLE_FACTOR + VISIBLE_COST;
+  };
+  return {
+    m,
+    corner,
+    exitOf,
+    /** Cost of the hop from the exit of (k, c) to the start of (j, cj), given the sections sewn. */
+    hop(k: number, c: number, j: number, cj: number, mask: number): number {
+      return insideCost(at(k, c, j, cj), mask);
+    },
+    start(from: Vec2 | undefined, k: number, c: number): number {
+      if (!from) return 0;
+      const p = corner(k, c);
+      const path = travel(from, p);
+      return path ? polyLength(path) : Math.hypot(p[0] - from[0], p[1] - from[1]) * 3 + JUMP_COST;
+    },
+    /** Finishing near the exit only shortens the next jump; it weighs less than travel. */
+    end(exit: Vec2 | undefined, k: number, c: number): number {
+      if (!exit) return 0;
+      const e = corner(k, exitOf(k, c));
+      return EXIT_WEIGHT * Math.hypot(e[0] - exit[0], e[1] - exit[1]);
+    },
+  };
+}
+
+type SectionCostModel = ReturnType<typeof sectionCostModel>;
+
+/**
+ * Order and start corner of each section minimising the model's cost exactly: a bitmask DP over
+ * (sections sewn, last section, its start corner). For up to EXACT_SECTIONS sections.
+ */
+function exactSectionOrder(
+  M: SectionCostModel,
+  from: Vec2 | undefined,
+  exit: Vec2 | undefined,
+): [number, number][] {
+  const m = M.m;
+  const S = 1 << m;
+  const W = m * 4;
   const cost = new Float64Array(S * W).fill(Infinity);
   const prev = new Int32Array(S * W).fill(-1);
   for (let k = 0; k < m; k++)
-    for (let c = 0; c < 4; c++) {
-      let v = 0;
-      if (from) {
-        const p = corner(k, c);
-        const path = travel(from, p);
-        v = path ? polyLength(path) : Math.hypot(p[0] - from[0], p[1] - from[1]) * 3 + JUMP_COST;
-      }
-      cost[(1 << k) * W + k * 4 + c] = v;
-    }
+    for (let c = 0; c < 4; c++) cost[(1 << k) * W + k * 4 + c] = M.start(from, k, c);
   for (let mask = 1; mask < S; mask++)
     for (let k = 0; k < m; k++) {
       if (!(mask & (1 << k))) continue;
       for (let c = 0; c < 4; c++) {
         const cur = cost[mask * W + k * 4 + c];
         if (cur === Infinity) continue;
-        const row = (k * 4 + c) * W;
         for (let j = 0; j < m; j++) {
           if (mask & (1 << j)) continue;
           const nm = mask | (1 << j);
           for (let cj = 0; cj < 4; cj++) {
-            const hi = row + j * 4 + cj;
-            const h = H[hi];
-            let v = cur + h;
-            if (X[hi] & mask) {
-              // Charge the part of the travel that runs over rows already sewn.
-              const cv = XC[hi]!;
-              let vis = 0;
-              for (let q = 0; q < cv.masks.length; q++) if (cv.masks[q] & mask) vis += cv.counts[q];
-              v += (h * vis * VISIBLE_FACTOR) / cv.n + VISIBLE_COST;
-            }
+            const v = cur + M.hop(k, c, j, cj, mask);
             const at = nm * W + j * 4 + cj;
             if (v < cost[at]) {
               cost[at] = v;
@@ -277,20 +300,86 @@ function exactSectionOrder(
     for (let c = 0; c < 4; c++) {
       const at = full * W + k * 4 + c;
       if (cost[at] === Infinity) continue;
-      // Finishing near the exit only shortens the next jump; it weighs less than travel.
-      const end = exit
-        ? EXIT_WEIGHT * Math.hypot(...(sub(corner(k, exitOf(k, c)), exit) as [number, number]))
-        : 0;
-      if (cost[at] + end < bc) {
-        bc = cost[at] + end;
+      const v = cost[at] + M.end(exit, k, c);
+      if (v < bc) {
+        bc = v;
         best = at;
       }
     }
   const out: [number, number][] = [];
   for (let at = best; at >= 0; at = prev[at]) {
     const r = at % W;
-    out.push([idx[Math.floor(r / 4)], r % 4]);
+    out.push([Math.floor(r / 4), r % 4]);
   }
+  return out.reverse();
+}
+
+/**
+ * Beam search with the same cost model, for layers with more sections than the exact DP can take
+ * (up to BEAM_SECTIONS): the best BEAM_WIDTH partial orders survive each step, each extended to
+ * the BEAM_NEAR nearest unsewn sections.
+ */
+function beamSectionOrder(
+  M: SectionCostModel,
+  from: Vec2 | undefined,
+  exit: Vec2 | undefined,
+): [number, number][] {
+  const m = M.m;
+  interface State {
+    mask: number;
+    k: number;
+    c: number;
+    cost: number;
+    parent: State | null;
+  }
+  // Straight distance from the exit of (k, c) to the nearest corner of section j.
+  const near = (k: number, c: number, j: number) => {
+    const e = M.corner(k, M.exitOf(k, c));
+    let d = Infinity;
+    for (let cj = 0; cj < 4; cj++) {
+      const p = M.corner(j, cj);
+      d = Math.min(d, Math.hypot(p[0] - e[0], p[1] - e[1]));
+    }
+    return d;
+  };
+  let beam: State[] = [];
+  for (let k = 0; k < m; k++)
+    for (let c = 0; c < 4; c++) beam.push({ mask: 1 << k, k, c, cost: M.start(from, k, c), parent: null });
+  beam.sort((a, b) => a.cost - b.cost);
+  beam = beam.slice(0, BEAM_WIDTH);
+  for (let step = 1; step < m; step++) {
+    const next = new Map<string, State>();
+    for (const s of beam) {
+      const cand: number[] = [];
+      for (let j = 0; j < m; j++) if (!(s.mask & (1 << j))) cand.push(j);
+      cand.sort((a, b) => near(s.k, s.c, a) - near(s.k, s.c, b));
+      for (const j of cand.slice(0, BEAM_NEAR))
+        for (let cj = 0; cj < 4; cj++) {
+          const st: State = {
+            mask: s.mask | (1 << j),
+            k: j,
+            c: cj,
+            cost: s.cost + M.hop(s.k, s.c, j, cj, s.mask),
+            parent: s,
+          };
+          const key = `${st.mask}:${j}:${cj}`;
+          const old = next.get(key);
+          if (!old || st.cost < old.cost) next.set(key, st);
+        }
+    }
+    beam = [...next.values()].sort((a, b) => a.cost - b.cost).slice(0, BEAM_WIDTH);
+  }
+  let best = beam[0],
+    bc = Infinity;
+  for (const s of beam) {
+    const v = s.cost + M.end(exit, s.k, s.c);
+    if (v < bc) {
+      bc = v;
+      best = s;
+    }
+  }
+  const out: [number, number][] = [];
+  for (let s: State | null = best; s; s = s.parent) out.push([s.k, s.c]);
   return out.reverse();
 }
 
@@ -357,26 +446,7 @@ export function sewLayer(
           if (!near(cur[0] + (pts[0] - cur[0]) * u, cur[1] + (pts[1] - cur[1]) * u)) ok = false;
         if (!ok) {
           const d = Math.hypot(pts[0] - cur[0], pts[1] - cur[1]);
-          let walk = layer.poly ? outlineWalk(layer.poly, cur, [pts[0], pts[1]], 2 * d + 1) : null;
-          // Drop points the minimum stitch length would merge anyway (post-processing would
-          // otherwise cut the corner they mark), then make sure every leg stays in the layer.
-          if (walk) {
-            const kept = [walk[0], walk[1]];
-            for (let k = 2; k < walk.length; k += 2) {
-              const last = k === walk.length - 2;
-              const far =
-                Math.hypot(walk[k] - kept[kept.length - 2], walk[k + 1] - kept[kept.length - 1]) >= minEnd;
-              if (far || last) kept.push(walk[k], walk[k + 1]);
-            }
-            walk = Float64Array.from(kept);
-          }
-          for (let k = 2; walk && k < walk.length; k += 2)
-            for (const u of [0.25, 0.5, 0.75]) {
-              const x = walk[k - 2] + (walk[k] - walk[k - 2]) * u,
-                y = walk[k - 1] + (walk[k + 1] - walk[k - 1]) * u;
-              if (!near(x, y)) walk = null;
-              if (!walk) break;
-            }
+          const walk = safeOutlineWalk(layer, cur, [pts[0], pts[1]], 2 * d + 1, minEnd);
           if (walk)
             for (let k = 2; k < walk.length - 2; k += 2) b.push(walk[k], walk[k + 1], F.TRAVEL | flag);
           else travelTo(b, [pts[0], pts[1]], t, flag);
@@ -425,10 +495,17 @@ export function sewLayer(
     }
     return hits / 7;
   };
-  // Few sections (one letter, a simple shape): find the order and start corners with the least
-  // travel exactly, so the fill flows through the shape instead of hopping between its ends.
-  if (allowed.length <= EXACT_SECTIONS) {
-    for (const [i, c] of exactSectionOrder(layer, allowed, b.last() ?? start, exit, t)) sew(i, c);
+  // Up to BEAM_SECTIONS sections (a letter, a simple shape): choose the order and start corners by
+  // the full travel cost (exactly for few sections, by beam search for more), so the fill flows
+  // through the shape instead of hopping between its ends or leaving travel on top.
+  if (allowed.length <= BEAM_SECTIONS) {
+    const model = sectionCostModel(layer, allowed, t);
+    const from = b.last() ?? start;
+    const order =
+      allowed.length <= EXACT_SECTIONS
+        ? exactSectionOrder(model, from, exit)
+        : beamSectionOrder(model, from, exit);
+    for (const [k, c] of order) sew(allowed[k], c);
     return;
   }
   while (remaining > 0) {
@@ -771,6 +848,35 @@ function partLocator(ps: PolyShape): (x: number, y: number) => number {
     }
     return best;
   };
+}
+
+/**
+ * outlineWalk on the layer's polygon, made safe to sew: points the minimum stitch length would
+ * merge anyway are dropped first (post-processing would otherwise cut the corner they mark), and
+ * every leg must stay within the layer's loose tolerance. Null if there is no such walk.
+ */
+function safeOutlineWalk(
+  layer: FillLayer,
+  a: Vec2,
+  b: Vec2,
+  maxLen: number,
+  minEnd: number,
+): Float64Array | null {
+  if (!layer.poly) return null;
+  const walk = outlineWalk(layer.poly, a, b, maxLen);
+  if (!walk) return null;
+  const kept = [walk[0], walk[1]];
+  for (let k = 2; k < walk.length; k += 2) {
+    const last = k === walk.length - 2;
+    const far = Math.hypot(walk[k] - kept[kept.length - 2], walk[k + 1] - kept[kept.length - 1]) >= minEnd;
+    if (far || last) kept.push(walk[k], walk[k + 1]);
+  }
+  const near = layer.near ?? layer.inside;
+  for (let k = 2; k < kept.length; k += 2)
+    for (const u of [0.25, 0.5, 0.75])
+      if (!near(kept[k - 2] + (kept[k] - kept[k - 2]) * u, kept[k - 1] + (kept[k + 1] - kept[k - 1]) * u))
+        return null;
+  return Float64Array.from(kept);
 }
 
 /**
