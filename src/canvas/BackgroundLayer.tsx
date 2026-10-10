@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-/** Fabric colour, grid, origin mark, design bounding box and its W×H dimension label. */
+/** Fabric colour (woven texture in realistic view), grid, origin mark, design bounding box and its W×H dimension label. */
 import { useEffect, useRef } from 'react';
 import { useDoc } from '@/store/documentStore';
 import { useUi } from '@/store/uiStore';
@@ -7,6 +7,7 @@ import { usePlan } from '@/store/planStore';
 import { designBBox } from '@/store/commands';
 import { isEmptyBBox } from '@/geom/polygon';
 import { fmt } from '@/lib/utils';
+import { drawFabricTexture } from './stitchRenderer';
 
 function gridStep(zoom: number): number {
   // Minor grid step in mm so lines are ≥ 8 px apart.
@@ -98,6 +99,7 @@ export function BackgroundLayer() {
     const dark = document.documentElement.classList.contains('dark');
     ctx.fillStyle = viewMode === 'artwork' ? (dark ? '#2a2a2e' : '#f4f4f5') : view.fabricColor;
     ctx.fillRect(0, 0, size.width, size.height);
+    if (viewMode === 'realistic') drawFabricTexture(ctx, viewport, size.width, size.height);
     const { zoom, pan } = viewport;
     if (view.grid) {
       const step = gridStep(zoom);
