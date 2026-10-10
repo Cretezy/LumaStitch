@@ -5,6 +5,7 @@ import { Pause, Play } from 'lucide-react';
 import type { StitchPlan } from '@/engine/types';
 import {
   VIDEO_HOLD_END,
+  VIDEO_MAX_HOLD_END,
   VIDEO_MAX_SECONDS,
   VIDEO_MIN_SECONDS,
   VIDEO_SIZES,
@@ -16,11 +17,12 @@ import {
   type VideoTiming,
 } from '@/io/export/video';
 import type { Design } from '@/model/types';
+import { WATERMARK_TEXT } from '@/io/export/watermark';
 import { NumberField } from '@/components/inspector/NumberField';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { fmt, fmtInt, fmtTime } from '@/lib/utils';
-import { SectionTitle, Swatch } from './parts';
+import { SectionTitle, Swatch, WatermarkField } from './parts';
 
 export interface VideoSettings {
   timing: 'length' | 'speed';
@@ -30,6 +32,8 @@ export interface VideoSettings {
   mode: 'flat' | 'realistic';
   background: 'fabric' | 'white';
   needle: boolean;
+  /** Seconds the finished design stays on screen at the end. */
+  holdEnd: number;
 }
 
 export const DEFAULT_VIDEO_SETTINGS: VideoSettings = {
@@ -40,6 +44,7 @@ export const DEFAULT_VIDEO_SETTINGS: VideoSettings = {
   mode: 'realistic',
   background: 'fabric',
   needle: true,
+  holdEnd: VIDEO_HOLD_END,
 };
 
 /** Restores saved settings, ignoring anything invalid. */
@@ -55,6 +60,8 @@ export function readVideoSettings(v: unknown): VideoSettings {
   if (o.mode === 'flat' || o.mode === 'realistic') s.mode = o.mode;
   if (o.background === 'fabric' || o.background === 'white') s.background = o.background;
   if (typeof o.needle === 'boolean') s.needle = o.needle;
+  if (typeof o.holdEnd === 'number' && o.holdEnd >= 0 && o.holdEnd <= VIDEO_MAX_HOLD_END)
+    s.holdEnd = o.holdEnd;
   return s;
 }
 
@@ -72,9 +79,13 @@ export function VideoExportTab({
   fabricColor,
   container,
   progress,
+  watermark,
+  onWatermark,
 }: {
   plan: StitchPlan;
   design: Design;
+  watermark: boolean;
+  onWatermark: (v: boolean) => void;
   settings: VideoSettings;
   onChange: (s: VideoSettings) => void;
   fabricColor: string;
@@ -104,6 +115,8 @@ export function VideoExportTab({
           background={background}
           needle={settings.needle}
           seconds={seconds}
+          holdEnd={settings.holdEnd}
+          watermark={watermark ? WATERMARK_TEXT : undefined}
           label={`Stitch-out preview of ${design.name}`}
         />
         {progress !== null ? (
@@ -127,43 +140,47 @@ export function VideoExportTab({
       <div className="grid content-start gap-4">
         <div className="grid gap-1.5">
           <SectionTitle id={timingId}>Timing</SectionTitle>
-          <ToggleGroup
-            type="single"
-            value={settings.timing}
-            onValueChange={(v) => v && set({ timing: v as VideoSettings['timing'] })}
-            aria-labelledby={timingId}
-            className="w-full"
-          >
-            <ToggleGroupItem value="length" className="flex-1">
-              Length
-            </ToggleGroupItem>
-            <ToggleGroupItem value="speed" className="flex-1">
-              Speed
-            </ToggleGroupItem>
-          </ToggleGroup>
-          {settings.timing === 'length' ? (
-            <NumberField
-              value={settings.seconds}
-              onCommit={(v) => set({ seconds: v })}
-              min={VIDEO_MIN_SECONDS}
-              max={VIDEO_MAX_SECONDS}
-              step={1}
-              digits={1}
-              unit="s"
-              ariaLabel="Video length in seconds"
-            />
-          ) : (
-            <NumberField
-              value={settings.factor}
-              onCommit={(v) => set({ factor: v })}
-              min={0.1}
-              max={10000}
-              step={1}
-              digits={1}
-              unit="×"
-              ariaLabel="Speed relative to the machine"
-            />
-          )}
+          <div className="flex items-center gap-2">
+            <ToggleGroup
+              type="single"
+              value={settings.timing}
+              onValueChange={(v) => v && set({ timing: v as VideoSettings['timing'] })}
+              aria-labelledby={timingId}
+              className="min-w-0 flex-1"
+            >
+              <ToggleGroupItem value="length" className="flex-1">
+                Length
+              </ToggleGroupItem>
+              <ToggleGroupItem value="speed" className="flex-1">
+                Speed
+              </ToggleGroupItem>
+            </ToggleGroup>
+            {settings.timing === 'length' ? (
+              <NumberField
+                value={settings.seconds}
+                onCommit={(v) => set({ seconds: v })}
+                min={VIDEO_MIN_SECONDS}
+                max={VIDEO_MAX_SECONDS}
+                step={1}
+                digits={1}
+                unit="s"
+                ariaLabel="Video length in seconds"
+                className="w-24 shrink-0"
+              />
+            ) : (
+              <NumberField
+                value={settings.factor}
+                onCommit={(v) => set({ factor: v })}
+                min={0.1}
+                max={10000}
+                step={1}
+                digits={1}
+                unit="×"
+                ariaLabel="Speed relative to the machine"
+                className="w-24 shrink-0"
+              />
+            )}
+          </div>
           <p className="text-xs text-muted-foreground" data-testid="video-timing">
             {settings.timing === 'length' ? (
               <>
@@ -236,13 +253,28 @@ export function VideoExportTab({
           <Checkbox checked={settings.needle} onCheckedChange={(c) => set({ needle: !!c })} />
           Show the needle
         </label>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm">Hold at the end</span>
+          <NumberField
+            value={settings.holdEnd}
+            onCommit={(v) => set({ holdEnd: v })}
+            min={0}
+            max={VIDEO_MAX_HOLD_END}
+            step={1}
+            digits={1}
+            unit="s"
+            ariaLabel="Seconds to show the finished design at the end"
+            className="w-24"
+          />
+        </div>
+        <WatermarkField value={watermark} onChange={onWatermark} />
         <p className="text-xs text-muted-foreground">
           <span className="font-medium text-foreground tabular-nums">
             {fmtInt(px.width)} × {fmtInt(px.height)} px
           </span>
           {container === null
             ? '. This browser can’t encode video.'
-            : `, 30 fps ${container === 'webm' ? 'WebM' : 'MP4'}, ${fmtTime(seconds + VIDEO_HOLD_END)} long.`}
+            : `, 30 fps ${container === 'webm' ? 'WebM' : 'MP4'}, ${fmtTime(seconds + settings.holdEnd)} long.`}
         </p>
       </div>
     </div>
@@ -262,6 +294,8 @@ function VideoPreview({
   background,
   needle,
   seconds,
+  holdEnd,
+  watermark,
   label,
 }: {
   plan: StitchPlan;
@@ -269,6 +303,8 @@ function VideoPreview({
   background: string;
   needle: boolean;
   seconds: number;
+  holdEnd: number;
+  watermark: string | undefined;
   label: string;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -286,8 +322,9 @@ function VideoPreview({
     canvas.width = size.width;
     canvas.height = size.height;
     const ctx = canvas.getContext('2d')!;
-    const renderer = createStitchOutRenderer(plan, { ...size, mode, background, needle });
-    const cycle = seconds + VIDEO_HOLD_END;
+    const renderer = createStitchOutRenderer(plan, { ...size, mode, background, needle, watermark });
+    // A short pause at the end even without a hold, so the loop's restart is visible.
+    const cycle = seconds + Math.max(holdEnd, 0.5);
     let raf = 0;
     let last = performance.now();
     const draw = () => {
@@ -303,7 +340,7 @@ function VideoPreview({
     draw();
     if (playing) raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [plan, mode, background, needle, seconds, playing]);
+  }, [plan, mode, background, needle, seconds, holdEnd, watermark, playing]);
 
   return (
     <div className="relative flex h-64 items-center justify-center overflow-hidden rounded-md border bg-muted/40">

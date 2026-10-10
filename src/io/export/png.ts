@@ -2,6 +2,7 @@
 /** PNG preview export (SPEC FR-6.5): the stitch plan rendered with the canvas stitch renderer. */
 import { renderPlanImage } from '@/canvas/stitchRenderer';
 import type { StitchPlan } from '@/engine/types';
+import { drawWatermark, watermarkSize, watermarkStrip } from './watermark';
 
 /** Default longest side of exported PNGs, px. */
 export const PNG_MAX_SIDE = 2048;
@@ -14,6 +15,8 @@ export interface PngExportOptions {
   background?: string | null;
   /** Padding around the design in pixels. Default 2 % of maxSide. */
   padding?: number;
+  /** Watermark text, drawn in a strip added below the design; empty = none. */
+  watermark?: string;
 }
 
 /** Pixel size of the PNG for a plan: the design's aspect ratio, longest side = maxSide. */
@@ -44,8 +47,35 @@ export async function exportPng(plan: StitchPlan, opts: PngExportOptions): Promi
     padding,
     ...(opts.background ? { background: opts.background } : {}),
   });
-  if ('convertToBlob' in canvas) return canvas.convertToBlob({ type: 'image/png' });
+  const out = opts.watermark?.trim() ? withWatermark(canvas, width, height, opts) : canvas;
+  if ('convertToBlob' in out) return out.convertToBlob({ type: 'image/png' });
   return new Promise<Blob>((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('PNG encoding failed'))), 'image/png'),
+    out.toBlob((b) => (b ? resolve(b) : reject(new Error('PNG encoding failed'))), 'image/png'),
   );
+}
+
+/** The image with a strip below it holding the watermark, so the mark never covers the design. */
+function withWatermark(
+  img: HTMLCanvasElement | OffscreenCanvas,
+  width: number,
+  height: number,
+  opts: PngExportOptions,
+): HTMLCanvasElement | OffscreenCanvas {
+  const longest = Math.max(width, height);
+  const strip = watermarkStrip(longest);
+  const h = height + strip;
+  const canvas: HTMLCanvasElement | OffscreenCanvas =
+    typeof OffscreenCanvas !== 'undefined'
+      ? new OffscreenCanvas(width, h)
+      : Object.assign(document.createElement('canvas'), { width, height: h });
+  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+  if (opts.background) {
+    ctx.fillStyle = opts.background;
+    ctx.fillRect(0, 0, width, h);
+  }
+  ctx.drawImage(img, 0, 0);
+  const size = watermarkSize(longest);
+  const margin = Math.round(size * 0.8);
+  drawWatermark(ctx, width - margin, h - margin, size, opts.watermark, width - margin * 2);
+  return canvas;
 }

@@ -16,6 +16,7 @@ import {
   type VideoCodec,
 } from 'mediabunny';
 import { drawPrefixFlat, drawRealistic } from '@/canvas/stitchRenderer';
+import { drawWatermark, watermarkSize } from './watermark';
 import { F, type StitchPlan } from '@/engine/types';
 import type { Viewport } from '@/store/uiStore';
 
@@ -28,6 +29,8 @@ export const VIDEO_MIN_SECONDS = 1;
 export const VIDEO_MAX_SECONDS = 600;
 /** Seconds the finished design stays on screen at the end. */
 export const VIDEO_HOLD_END = 2;
+/** Longest allowed hold at the end, s. */
+export const VIDEO_MAX_HOLD_END = 10;
 
 /** Either a fixed length, or a speed relative to the machine's stitch rate. */
 export type VideoTiming = { kind: 'length'; seconds: number } | { kind: 'speed'; factor: number };
@@ -45,6 +48,8 @@ export interface VideoExportOptions {
   holdEnd?: number;
   /** Draw a needle marker at the current stitch. */
   needle?: boolean;
+  /** Text drawn small in the bottom-right corner; empty = none. */
+  watermark?: string;
   onProgress?: (fraction: number) => void;
   signal?: AbortSignal;
 }
@@ -173,6 +178,8 @@ export function createStitchOutRenderer(
     mode: 'flat' | 'realistic';
     background: string;
     needle: boolean;
+    /** Text drawn small in the bottom-right corner; empty = none. */
+    watermark?: string;
   },
 ): StitchOutRenderer {
   const { width, height, padding } = o;
@@ -187,8 +194,11 @@ export function createStitchOutRenderer(
     zoom,
     pan: [width / 2 - ((b.minX + b.maxX) / 2) * zoom, height / 2 - ((b.minY + b.maxY) / 2) * zoom],
   };
-  const frame = o.needle ? new OffscreenCanvas(width, height) : sewn;
-  const fctx = o.needle ? frame.getContext('2d')! : null;
+  // Needle and watermark go on a separate frame canvas, over the stitches sewn so far.
+  const overlay = o.needle || !!o.watermark?.trim();
+  const frame = overlay ? new OffscreenCanvas(width, height) : sewn;
+  const fctx = overlay ? frame.getContext('2d')! : null;
+  const mark = watermarkSize(Math.max(width, height));
   const at = indexTable(plan);
   const total = at.length - 1;
   let drawn = Infinity;
@@ -227,6 +237,7 @@ export function createStitchOutRenderer(
             Math.max(width, height),
           );
         }
+        drawWatermark(fctx, width - mark * 0.8, height - mark * 0.8, mark, o.watermark, width - mark * 1.6);
       }
     },
   };
@@ -245,6 +256,7 @@ export async function exportVideo(plan: StitchPlan, opts: VideoExportOptions): P
     mode: opts.mode,
     background: opts.background,
     needle: opts.needle ?? true,
+    watermark: opts.watermark,
   });
 
   const output = new Output({

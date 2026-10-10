@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { CircleCheck, CircleX, Info, TriangleAlert } from 'lucide-react';
 import type { Diagnostic, StitchPlan } from '@/engine/types';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn, fmt, fmtInt, fmtTime } from '@/lib/utils';
 
 export function Swatch({ color, className, title }: { color: string; className?: string; title?: string }) {
@@ -149,5 +150,15 @@ export function ErrorBox({ title, children }: { title: string; children?: ReactN
         {children && <div className="text-xs opacity-90">{children}</div>}
       </div>
     </div>
+  );
+}
+
+/** On/off switch for the LumaStitch watermark on PNG and video exports. */
+export function WatermarkField({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex items-center gap-2 text-sm">
+      <Checkbox checked={value} onCheckedChange={(c) => onChange(!!c)} />
+      LumaStitch watermark
+    </label>
   );
 }

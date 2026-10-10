@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { planFromCommands } from '@/io/pes/testing';
 import { exportPng, pngSize } from './png';
+import { watermarkStrip } from './watermark';
 
 const RED = { color: '#ff0000' };
 
@@ -56,5 +57,26 @@ describe('exportPng', () => {
     expect(img.width).toBe(pngSize(plan, 300).width);
     expect(img.width).toBeLessThan(300);
     expect([...img.data.slice(0, 4)]).toEqual([0xf5, 0xf3, 0xef, 255]);
+  });
+
+  it('adds the watermark in a strip below the design only when asked', async () => {
+    const plan = wideplan();
+    const dark = async (watermark?: string) => {
+      const img = await decode(await exportPng(plan, { mode: 'flat', maxSide: 600, watermark }));
+      // Dark pixels in the bottom-right quarter (the red zig-zag has none).
+      let n = 0;
+      for (let y = Math.floor(img.height / 2); y < img.height; y++)
+        for (let x = Math.floor(img.width / 2); x < img.width; x++) {
+          const i = (y * img.width + x) * 4;
+          if (img.data[i + 3] > 100 && img.data[i] < 100) n++;
+        }
+      return n;
+    };
+    expect(await dark()).toBe(0);
+    expect(await dark('Made with LumaStitch')).toBeGreaterThan(50);
+    const plain = await decode(await exportPng(plan, { mode: 'flat', maxSide: 600 }));
+    const marked = await decode(await exportPng(plan, { mode: 'flat', maxSide: 600, watermark: 'x' }));
+    expect(marked.width).toBe(plain.width);
+    expect(marked.height).toBe(plain.height + watermarkStrip(600));
   });
 });

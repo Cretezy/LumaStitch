@@ -6,8 +6,9 @@ import { PNG_MAX_SIDE, pngSize } from '@/io/export/png';
 import type { Design } from '@/model/types';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn, fmtInt } from '@/lib/utils';
+import { WATERMARK_TEXT, watermarkStrip } from '@/io/export/watermark';
 import { PlanCanvas } from './PlanCanvas';
-import { SectionTitle, Swatch } from './parts';
+import { SectionTitle, Swatch, WatermarkField } from './parts';
 
 export type PngMode = 'flat' | 'realistic';
 export type PngBackground = 'transparent' | 'fabric';
@@ -23,9 +24,13 @@ export function PngExportTab({
   background,
   onBackground,
   fabricColor,
+  watermark,
+  onWatermark,
 }: {
   plan: StitchPlan;
   design: Design;
+  watermark: boolean;
+  onWatermark: (v: boolean) => void;
   mode: PngMode;
   onMode: (m: PngMode) => void;
   background: PngBackground;
@@ -35,6 +40,7 @@ export function PngExportTab({
   const modeId = useId();
   const bgId = useId();
   const size = pngSize(plan, PNG_MAX_SIDE);
+  if (watermark) size.height += watermarkStrip(Math.max(size.width, size.height));
   return (
     <div className="grid gap-4 sm:grid-cols-[1fr_13rem]">
       <PlanCanvas
@@ -43,6 +49,7 @@ export function PngExportTab({
         background={background === 'fabric' ? fabricColor : undefined}
         className={cn('h-64 rounded-md border', background === 'transparent' && CHECKER)}
         label={`PNG preview of ${design.name}`}
+        watermark={watermark ? WATERMARK_TEXT : undefined}
       />
       <div className="grid content-start gap-4">
         <div className="grid gap-1.5">
@@ -80,6 +87,7 @@ export function PngExportTab({
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
+        <WatermarkField value={watermark} onChange={onWatermark} />
         <p className="text-xs text-muted-foreground">
           <span className="font-medium text-foreground tabular-nums">
             {fmtInt(size.width)} × {fmtInt(size.height)} px

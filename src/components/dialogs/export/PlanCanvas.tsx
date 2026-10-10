@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { drawPlan, renderPlanImage } from '@/canvas/stitchRenderer';
 import type { StitchPlan } from '@/engine/types';
 import type { Viewport } from '@/store/uiStore';
+import { drawWatermark, watermarkSize, watermarkStrip } from '@/io/export/watermark';
 import { cn } from '@/lib/utils';
 
 export interface PlanCanvasProps {
@@ -19,6 +20,8 @@ export interface PlanCanvasProps {
   padding?: number;
   className?: string;
   label: string;
+  /** Watermark text, drawn as in the exported image (full design only). */
+  watermark?: string;
 }
 
 /** Same fit as renderPlanImage, so a prefix lines up with the full rendering. */
@@ -41,6 +44,7 @@ export function PlanCanvas({
   padding = 12,
   className,
   label,
+  watermark,
 }: PlanCanvasProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -84,6 +88,18 @@ export function PlanCanvas({
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, W, H);
       ctx.drawImage(img, 0, 0);
+      if (watermark?.trim()) {
+        // As in the exported image: in a strip below the design, at its right edge.
+        const vp = fitViewport(plan, W, H, pad);
+        const b = plan.bounds;
+        const x0 = b.minX * vp.zoom + vp.pan[0],
+          x1 = Math.max(b.minX + 1, b.maxX) * vp.zoom + vp.pan[0],
+          y1 = Math.max(b.minY + 1, b.maxY) * vp.zoom + vp.pan[1];
+        const longest = Math.max(x1 - x0, y1 - b.minY * vp.zoom - vp.pan[1]) + pad * 2;
+        const size = watermarkSize(longest);
+        const bottom = Math.min(H - 2, y1 + pad + watermarkStrip(longest) - size * 0.8);
+        drawWatermark(ctx, x1 + pad - size * 0.8, bottom, size, watermark, x1 - x0);
+      }
       return;
     }
     const vp = fitViewport(plan, W, H, pad);
@@ -117,7 +133,7 @@ export function PlanCanvas({
       ctx.stroke();
       ctx.restore();
     }
-  }, [plan, mode, upTo, background, padding, size]);
+  }, [plan, mode, upTo, background, padding, size, watermark]);
 
   return (
     <div ref={wrapRef} className={cn('relative overflow-hidden', className)}>

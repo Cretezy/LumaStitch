@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { StitchPlan } from '@/engine/types';
 import { exportPdf } from '@/io/export/pdf';
 import { PNG_MAX_SIDE, exportPng } from '@/io/export/png';
+import { WATERMARK_TEXT } from '@/io/export/watermark';
 import { getMachineFormat } from '@/io/export/registry';
 import { exportSvg } from '@/io/export/svg';
 import { exportVideo, videoContainer } from '@/io/export/video';
@@ -66,6 +67,7 @@ const PREF_MACHINE_FORMAT = 'export.machineFormat';
 const PREF_PNG = 'export.png';
 const PREF_PDF = 'export.pdf';
 const PREF_VIDEO = 'export.video';
+const PREF_WATERMARK = 'export.watermark';
 
 export default function ExportDialog({ open, onClose, data }: DialogProps) {
   const viewFile: File | null = data?.viewPes === true && data.file instanceof File ? data.file : null;
@@ -126,6 +128,7 @@ function ExportBody({
   const [pngBackground, setPngBackground] = useState<PngBackground>('transparent');
   const [pdfBackground, setPdfBackground] = useState<PdfBackground>('white');
   const [video, setVideo] = useState<VideoSettings>(DEFAULT_VIDEO_SETTINGS);
+  const [watermark, setWatermark] = useState(true);
   const [container, setContainer] = useState<'mp4' | 'webm' | null | undefined>(undefined);
   const [videoProgress, setVideoProgress] = useState<number | null>(null);
   const videoAbort = useRef<AbortController | null>(null);
@@ -148,6 +151,7 @@ function ExportBody({
       const saved = readVideoSettings(v);
       setVideo(videoSpeed ? { ...saved, timing: 'speed', factor: videoSpeed } : saved);
     });
+    void getPref<unknown>(PREF_WATERMARK).then((v) => alive && typeof v === 'boolean' && setWatermark(v));
     void getPref<{ background?: PdfBackground }>(PREF_PDF).then((p) => {
       if (alive && (p?.background === 'white' || p?.background === 'fabric')) setPdfBackground(p.background);
     });
@@ -224,10 +228,12 @@ function ExportBody({
     run(async () => {
       if (!plan) return false;
       void setPref(PREF_PNG, { mode: pngMode, background: pngBackground });
+      void setPref(PREF_WATERMARK, watermark);
       const blob = await exportPng(plan, {
         mode: pngMode,
         maxSide: PNG_MAX_SIDE,
         background: pngBackground === 'fabric' ? fabricColor : null,
+        watermark: watermark ? WATERMARK_TEXT : undefined,
       });
       return saveWithToast(blob, fileName, 'PNG image', ACCEPT_PNG);
     });
@@ -236,6 +242,7 @@ function ExportBody({
     run(async () => {
       if (!plan || !design) return false;
       void setPref(PREF_VIDEO, video);
+      void setPref(PREF_WATERMARK, watermark);
       const ctrl = new AbortController();
       videoAbort.current = ctrl;
       setVideoProgress(0);
@@ -247,6 +254,8 @@ function ExportBody({
           timing: videoTiming(video),
           machineSpm: design.settings.machineSpm,
           needle: video.needle,
+          holdEnd: video.holdEnd,
+          watermark: watermark ? WATERMARK_TEXT : undefined,
           signal: ctrl.signal,
           onProgress: setVideoProgress,
         });
@@ -388,6 +397,8 @@ function ExportBody({
                     background={pngBackground}
                     onBackground={setPngBackground}
                     fabricColor={fabricColor}
+                    watermark={watermark}
+                    onWatermark={setWatermark}
                   />
                 ) : (
                   noStitches
@@ -407,6 +418,8 @@ function ExportBody({
                     fabricColor={fabricColor}
                     container={container}
                     progress={videoProgress}
+                    watermark={watermark}
+                    onWatermark={setWatermark}
                   />
                 ) : (
                   noStitches
