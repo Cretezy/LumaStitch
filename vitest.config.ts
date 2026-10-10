@@ -20,6 +20,24 @@ export default defineConfig({
       },
       {
         resolve: { alias },
+        // Pre-bundle every dependency the browser tests reach: otherwise Vite discovers one mid-run
+        // on a cold cache (CI), re-optimises and reloads, and the running test files fail.
+        optimizeDeps: {
+          include: [
+            'clipper2-ts',
+            'comlink',
+            'd3-delaunay',
+            'dompurify',
+            'esm-potrace-wasm',
+            'idb-keyval',
+            'immer',
+            'mediabunny',
+            'nanoid',
+            'paper/dist/paper-core',
+            'zod',
+            'zustand',
+          ],
+        },
         test: {
           name: 'browser',
           include: ['src/**/*.browser.test.ts', 'tests/**/*.browser.test.ts'],
