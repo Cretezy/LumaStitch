@@ -215,7 +215,8 @@ describe('P2 fills: containment, limits, determinism, degenerate input', () => {
       const { plan } = one(geom, type);
       const dt = performance.now() - t0;
       expect(plan.stats.stitches).toBeGreaterThan(100);
-      expect(dt).toBeLessThan(300);
+      // Shared CI runners (with the browser tests running alongside) are several times slower.
+      expect(dt).toBeLessThan(process.env.CI ? 1000 : 300);
     });
   }
 });
