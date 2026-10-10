@@ -1,0 +1,146 @@
+{
+  "description": "Basic shapes with known mm sizes (0.5 mm/unit).",
+  "shapes": [
+    {
+      "name": "box",
+      "bbox": [
+        5,
+        5,
+        25,
+        15
+      ],
+      "fill": "#ff0000",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 200,
+      "subpaths": 1
+    },
+    {
+      "name": "rounded",
+      "bbox": [
+        30,
+        5,
+        50,
+        20
+      ],
+      "fill": "#00ff00",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "dot",
+      "bbox": [
+        55,
+        5,
+        75,
+        25
+      ],
+      "fill": "#0000ff",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 314.1592653589793
+    },
+    {
+      "name": "oval",
+      "bbox": [
+        75,
+        10,
+        95,
+        20
+      ],
+      "fill": "#123456",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 157.07963267948966
+    },
+    {
+      "name": "rule",
+      "bbox": [
+        5,
+        40,
+        95,
+        40
+      ],
+      "fill": null,
+      "stroke": "#000000",
+      "strokeWidth": 1,
+      "closed": false
+    },
+    {
+      "name": "zig",
+      "bbox": [
+        5,
+        42.5,
+        25,
+        47.5
+      ],
+      "fill": null,
+      "stroke": "#ff00ff",
+      "strokeWidth": 2,
+      "closed": false
+    },
+    {
+      "name": "tri",
+      "bbox": [
+        50,
+        30,
+        70,
+        47.5
+      ],
+      "fill": "#ffff00",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 175.0
+    },
+    {
+      "name": "wave",
+      "bbox": [
+        75,
+        37.5,
+        95,
+        45
+      ],
+      "fill": null,
+      "stroke": "#00ffff",
+      "strokeWidth": 0.5,
+      "closed": false
+    }
+  ],
+  "threads": [
+    "#ff0000",
+    "#00ff00",
+    "#0000ff",
+    "#123456",
+    "#000000",
+    "#ff00ff",
+    "#ffff00",
+    "#00ffff"
+  ],
+  "warnings": {},
+  "anchors": [
+    {
+      "user": [
+        10,
+        10
+      ],
+      "shape": "box",
+      "node": 0
+    },
+    {
+      "user": [
+        190,
+        80
+      ],
+      "shape": "rule",
+      "node": 1
+    },
+    {
+      "user": [
+        150,
+        90
+      ],
+      "shape": "wave",
+      "node": 0
+    }
+  ]
+}

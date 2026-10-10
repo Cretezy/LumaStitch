@@ -1,0 +1,56 @@
+# Tests on every push and pull request; deploys to Cloudflare Workers (static assets) on pushes to main.
+#
+# Deployment needs two repository secrets: CLOUDFLARE_API_TOKEN (a token with "Workers Scripts: Edit")
+# and CLOUDFLARE_ACCOUNT_ID. Alternatively connect the repository in the Cloudflare dashboard
+# (Workers Builds: build `npm ci && npm run build`, deploy `npx wrangler deploy`) and leave the
+# secrets unset; the deploy job then skips itself.
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - run: npm run e2e
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+  deploy:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Deploy to Cloudflare Workers
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        run: npx wrangler deploy
+      - name: Skip (no Cloudflare token configured)
+        if: env.CLOUDFLARE_API_TOKEN == ''
+        run: echo "CLOUDFLARE_API_TOKEN is not set; skipping deploy (use Workers Builds or add the secret)."

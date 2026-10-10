@@ -1,0 +1,85 @@
+{
+  "description": "<use> of symbols (viewBox scaling), plain elements and groups containing <use>; inherited fill; missing reference.",
+  "shapes": [
+    {
+      "name": "Star A/star/polygon 1",
+      "bbox": [
+        0,
+        0,
+        20,
+        20
+      ],
+      "fill": "#ff0000",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "star/polygon 2",
+      "bbox": [
+        30,
+        0,
+        40,
+        10
+      ],
+      "fill": "#0000ff",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "tile",
+      "bbox": [
+        50,
+        5,
+        60,
+        15
+      ],
+      "fill": "#ffaa00",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "pair/circle 1",
+      "bbox": [
+        70,
+        30,
+        80,
+        40
+      ],
+      "fill": "#00ff00",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "pair/tile",
+      "bbox": [
+        82,
+        30,
+        92,
+        40
+      ],
+      "fill": "#888888",
+      "stroke": null,
+      "strokeWidth": null
+    }
+  ],
+  "threads": [
+    "#ff0000",
+    "#0000ff",
+    "#ffaa00",
+    "#00ff00",
+    "#888888"
+  ],
+  "warnings": {
+    "use": 1
+  },
+  "anchors": [
+    {
+      "user": [
+        10,
+        0
+      ],
+      "shape": "Star A/star/polygon 1",
+      "node": 0
+    }
+  ]
+}

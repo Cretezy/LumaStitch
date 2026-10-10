@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 100 mm × 50 mm page, viewBox 200 × 100 → 0.5 mm per user unit. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="50mm" viewBox="0 0 200 100">
+  <rect id="box" x="10" y="10" width="40" height="20" fill="#ff0000"/>
+  <rect id="rounded" x="60" y="10" width="40" height="30" rx="5" fill="#00ff00"/>
+  <circle id="dot" cx="130" cy="30" r="20" fill="#0000ff"/>
+  <ellipse id="oval" cx="170" cy="30" rx="20" ry="10" fill="#123456"/>
+  <line id="rule" x1="10" y1="80" x2="190" y2="80" stroke="#000000" stroke-width="2"/>
+  <polyline id="zig" points="10,95 30,85 50,95" fill="none" stroke="#ff00ff" stroke-width="4"/>
+  <polygon id="tri" points="100,95 120,60 140,95" fill="#ffff00"/>
+  <path id="wave" d="M150 90 C 160 70, 180 70, 190 90" fill="none" stroke="#00ffff" stroke-width="1"/>
+</svg>

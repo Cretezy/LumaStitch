@@ -1,0 +1,4 @@
+<!-- Viewport 100 × 50 mm, square viewBox: default xMidYMid meet → 5 mm/unit, offset 25 mm in x. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="50mm" viewBox="0 0 10 10">
+  <rect id="r" x="2" y="0" width="8" height="10" fill="#000000"/>
+</svg>

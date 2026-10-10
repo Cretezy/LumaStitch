@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="50mm" height="50mm" viewBox="0 0 50 50">
+  <defs>
+    <filter id="blur"><feGaussianBlur stdDeviation="2"/></filter>
+    <mask id="m"><rect width="50" height="50" fill="#ffffff"/></mask>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z"/>
+    </marker>
+  </defs>
+  <text x="5" y="10">Hello</text>
+  <rect id="blurred" x="0" y="0" width="10" height="10" fill="#ff0000" filter="url(#blur)"/>
+  <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==" x="0" y="20" width="10" height="10"/>
+  <image href="https://example.com/remote.png" x="10" y="20" width="10" height="10"/>
+  <rect id="masked" x="20" y="0" width="10" height="10" fill="#00ff00" mask="url(#m)"/>
+  <path id="arrowed" d="M0 30 L40 30" stroke="#000000" marker-end="url(#arrow)"/>
+  <foreignObject x="0" y="0" width="10" height="10"><div xmlns="http://www.w3.org/1999/xhtml">x</div></foreignObject>
+  <script>window.__svgImportPwned = true;</script>
+  <rect id="anim" x="40" y="40" width="10" height="10" fill="#0000ff" onclick="window.__svgImportPwned = true"><animate attributeName="x" from="40" to="0" dur="1s"/></rect>
+</svg>

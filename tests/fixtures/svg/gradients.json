@@ -1,0 +1,50 @@
+{
+  "description": "Gradients \u2192 average stop colour (href templates, transparent stops skipped); pattern \u2192 fallback colour.",
+  "shapes": [
+    {
+      "name": "lin",
+      "bbox": [
+        0,
+        0,
+        20,
+        20
+      ],
+      "fill": "#800080",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "rad",
+      "bbox": [
+        20,
+        0,
+        40,
+        20
+      ],
+      "fill": "#808080",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "pat",
+      "bbox": [
+        40,
+        0,
+        60,
+        20
+      ],
+      "fill": "#00ff00",
+      "stroke": null,
+      "strokeWidth": null
+    }
+  ],
+  "threads": [
+    "#800080",
+    "#808080",
+    "#00ff00"
+  ],
+  "warnings": {
+    "gradient": 2,
+    "pattern": 1
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "description": "width/height in pt (1 unit = 1 pt).",
+  "shapes": [
+    {
+      "name": "r",
+      "bbox": [
+        0,
+        0,
+        25.4,
+        12.7
+      ],
+      "fill": "#000000",
+      "stroke": null,
+      "strokeWidth": null
+    }
+  ],
+  "threads": [
+    "#000000"
+  ],
+  "warnings": {},
+  "anchors": [
+    {
+      "user": [
+        0,
+        0
+      ],
+      "shape": "r",
+      "node": 0
+    }
+  ]
+}

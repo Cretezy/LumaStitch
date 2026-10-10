@@ -1,0 +1,70 @@
+{
+  "description": "text, filter, image, mask, marker, foreignObject, script, animation \u2192 warnings; supported shapes still imported.",
+  "shapes": [
+    {
+      "name": "blurred",
+      "bbox": [
+        0,
+        0,
+        10,
+        10
+      ],
+      "fill": "#ff0000",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "masked",
+      "bbox": [
+        20,
+        0,
+        30,
+        10
+      ],
+      "fill": "#00ff00",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "arrowed",
+      "bbox": [
+        0,
+        30,
+        40,
+        30
+      ],
+      "fill": null,
+      "stroke": "#000000",
+      "strokeWidth": 1,
+      "closed": false
+    },
+    {
+      "name": "anim",
+      "bbox": [
+        40,
+        40,
+        50,
+        50
+      ],
+      "fill": "#0000ff",
+      "stroke": null,
+      "strokeWidth": null
+    }
+  ],
+  "threads": [
+    "#ff0000",
+    "#00ff00",
+    "#000000",
+    "#0000ff"
+  ],
+  "warnings": {
+    "text": 1,
+    "filter": 1,
+    "image": 2,
+    "mask": 1,
+    "marker": 1,
+    "foreignObject": 1,
+    "script": 1,
+    "animation": 1
+  }
+}

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="60mm" height="20mm" viewBox="0 0 60 20">
+  <defs>
+    <linearGradient id="g1">
+      <stop offset="0" stop-color="#ff0000"/>
+      <stop offset="1" stop-color="#0000ff"/>
+    </linearGradient>
+    <radialGradient id="g2" xlink:href="#g3" cx="0.5" cy="0.5" r="0.5"/>
+    <linearGradient id="g3">
+      <stop offset="0" style="stop-color:#000000"/>
+      <stop offset="0.5" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="p1" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="2" height="2" fill="#000000"/>
+    </pattern>
+  </defs>
+  <rect id="lin" x="0" y="0" width="20" height="20" fill="url(#g1)"/>
+  <rect id="rad" x="20" y="0" width="20" height="20" fill="url(#g2)"/>
+  <rect id="pat" x="40" y="0" width="20" height="20" fill="url(#p1) #00ff00"/>
+</svg>

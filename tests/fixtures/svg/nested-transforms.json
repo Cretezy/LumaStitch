@@ -1,0 +1,118 @@
+{
+  "description": "translate/rotate/scale/matrix/skew in nested groups, rotate about a point, nested <svg> viewport.",
+  "shapes": [
+    {
+      "name": "Outer/diamond",
+      "bbox": [
+        35.8579,
+        35.8579,
+        64.1421,
+        64.1421
+      ],
+      "fill": "#ff0000",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 400
+    },
+    {
+      "name": "scaled",
+      "bbox": [
+        10,
+        10,
+        20,
+        30
+      ],
+      "fill": "#00ff00",
+      "stroke": "#000000",
+      "strokeWidth": 2,
+      "area": 200
+    },
+    {
+      "name": "m-circle",
+      "bbox": [
+        70,
+        10,
+        90,
+        20
+      ],
+      "fill": "#000000",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 157.07963267948966
+    },
+    {
+      "name": "skewed",
+      "bbox": [
+        10,
+        70,
+        40,
+        80
+      ],
+      "fill": "#0000ff",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 200
+    },
+    {
+      "name": "rot-about",
+      "bbox": [
+        85,
+        70,
+        90,
+        80
+      ],
+      "fill": "#ff00ff",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 50
+    },
+    {
+      "name": "inner-svg-rect",
+      "bbox": [
+        0,
+        85,
+        30,
+        100
+      ],
+      "fill": "#00ffff",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 450
+    }
+  ],
+  "threads": [
+    "#ff0000",
+    "#00ff00",
+    "#000000",
+    "#0000ff",
+    "#ff00ff",
+    "#00ffff"
+  ],
+  "warnings": {},
+  "anchors": [
+    {
+      "user": [
+        50,
+        35.85786437626905
+      ],
+      "shape": "Outer/diamond",
+      "node": 0
+    },
+    {
+      "user": [
+        30,
+        100
+      ],
+      "shape": "inner-svg-rect",
+      "node": 2
+    },
+    {
+      "user": [
+        10,
+        70
+      ],
+      "shape": "skewed",
+      "node": 0
+    }
+  ]
+}

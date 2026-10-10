@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100">
+  <g id="Outer" transform="translate(50 50)">
+    <g transform="rotate(45)">
+      <rect id="diamond" x="-10" y="-10" width="20" height="20" fill="#ff0000"/>
+    </g>
+  </g>
+  <g transform="translate(10,10) scale(2)">
+    <rect id="scaled" width="5" height="10" fill="#00ff00" stroke="#000000" stroke-width="1"/>
+  </g>
+  <g transform="matrix(1 0 0 1 70 10)">
+    <circle id="m-circle" cx="5" cy="5" r="5" transform="scale(2 1)"/>
+  </g>
+  <g transform="translate(10 70)">
+    <rect id="skewed" width="20" height="10" transform="skewX(45)" fill="#0000ff"/>
+  </g>
+  <g transform="rotate(90 75 75)">
+    <rect id="rot-about" x="70" y="60" width="10" height="5" fill="#ff00ff"/>
+  </g>
+  <svg x="0" y="85" width="30" height="15" viewBox="0 0 60 30">
+    <rect id="inner-svg-rect" width="60" height="30" fill="#00ffff"/>
+  </svg>
+</svg>

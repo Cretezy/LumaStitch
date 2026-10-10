@@ -1,0 +1,112 @@
+{
+  "description": "<style> classes, id selectors, specificity vs presentation attributes and inline style, currentColor, CSS transform.",
+  "shapes": [
+    {
+      "name": "r1",
+      "bbox": [
+        0,
+        0,
+        10,
+        10
+      ],
+      "fill": "#e31b23",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "c1",
+      "bbox": [
+        20,
+        0,
+        30,
+        10
+      ],
+      "fill": null,
+      "stroke": "#1b75bb",
+      "strokeWidth": 1.5
+    },
+    {
+      "name": "special",
+      "bbox": [
+        35,
+        0,
+        45,
+        10
+      ],
+      "fill": "#00a651",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "r3",
+      "bbox": [
+        0,
+        20,
+        10,
+        30
+      ],
+      "fill": "#ffcc00",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "Group A/p1",
+      "bbox": [
+        20,
+        20,
+        30,
+        30
+      ],
+      "fill": "#662d91",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "r4",
+      "bbox": [
+        35,
+        20,
+        45,
+        30
+      ],
+      "fill": "#abcdef",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "cc",
+      "bbox": [
+        0,
+        40,
+        10,
+        45
+      ],
+      "fill": "#008080",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "css-moved",
+      "bbox": [
+        45,
+        45,
+        50,
+        50
+      ],
+      "fill": "#ff00ff",
+      "stroke": null,
+      "strokeWidth": null
+    }
+  ],
+  "threads": [
+    "#e31b23",
+    "#1b75bb",
+    "#00a651",
+    "#ffcc00",
+    "#662d91",
+    "#abcdef",
+    "#008080",
+    "#ff00ff"
+  ],
+  "warnings": {}
+}

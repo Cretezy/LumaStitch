@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100mm" height="50mm" viewBox="0 0 100 50">
+  <defs>
+    <symbol id="star" viewBox="0 0 10 10">
+      <polygon points="5,0 6,4 10,4 7,6 8,10 5,7 2,10 3,6 0,4 4,4"/>
+    </symbol>
+    <rect id="tile" width="10" height="10"/>
+    <g id="pair">
+      <circle cx="5" cy="5" r="5" fill="#00ff00"/>
+      <use href="#tile" x="12"/>
+    </g>
+  </defs>
+  <use href="#star" x="0" y="0" width="20" height="20" fill="#ff0000" id="Star A"/>
+  <use xlink:href="#star" x="30" y="0" width="10" height="10" fill="#0000ff"/>
+  <use href="#tile" x="50" y="5" fill="#ffaa00"/>
+  <use href="#pair" x="70" y="30" fill="#888888"/>
+  <use href="#missing"/>
+</svg>

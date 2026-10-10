@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 283.46 141.73">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #e94e1b;
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        fill: none;
+        stroke: #1d1d1b;
+        stroke-miterlimit: 10;
+        stroke-width: 2.83px;
+      }
+    </style>
+  </defs>
+  <g id="Flower" data-name="Flower">
+    <circle class="cls-1" cx="70.87" cy="70.87" r="56.69"/>
+    <circle class="cls-2" cx="70.87" cy="70.87" r="14.17"/>
+  </g>
+  <line class="cls-3" x1="141.73" y1="70.87" x2="269.29" y2="70.87"/>
+  <rect id="Badge" data-name="Badge Shape" class="cls-1" x="170.08" y="28.35" width="85.04" height="28.35" rx="7.09" ry="7.09"/>
+</svg>

@@ -1,0 +1,31 @@
+{
+  "description": "preserveAspectRatio=\"none\".",
+  "shapes": [
+    {
+      "name": "r",
+      "bbox": [
+        20,
+        0,
+        100,
+        50
+      ],
+      "fill": "#000000",
+      "stroke": null,
+      "strokeWidth": null
+    }
+  ],
+  "threads": [
+    "#000000"
+  ],
+  "warnings": {},
+  "anchors": [
+    {
+      "user": [
+        2,
+        0
+      ],
+      "shape": "r",
+      "node": 0
+    }
+  ]
+}

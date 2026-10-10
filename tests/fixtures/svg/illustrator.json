@@ -1,0 +1,71 @@
+{
+  "description": "Illustrator export: data-name, .cls-N classes in <defs><style>, no width/height (viewBox in px).",
+  "shapes": [
+    {
+      "name": "Flower/circle 1",
+      "bbox": [
+        3.7518,
+        3.7518,
+        33.7503,
+        33.7503
+      ],
+      "fill": "#e94e1b",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 706.7856995942733
+    },
+    {
+      "name": "Flower/circle 2",
+      "bbox": [
+        15.0019,
+        15.0019,
+        22.5002,
+        22.5002
+      ],
+      "fill": "#ffffff",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "line 1",
+      "bbox": [
+        37.4994,
+        18.751,
+        71.2496,
+        18.751
+      ],
+      "fill": null,
+      "stroke": "#1d1d1b",
+      "strokeWidth": 0.7487708333333334,
+      "closed": false
+    },
+    {
+      "name": "Badge Shape",
+      "bbox": [
+        45.0003,
+        7.5009,
+        67.5005,
+        15.0019
+      ],
+      "fill": "#e94e1b",
+      "stroke": null,
+      "strokeWidth": null
+    }
+  ],
+  "threads": [
+    "#e94e1b",
+    "#ffffff",
+    "#1d1d1b"
+  ],
+  "warnings": {},
+  "anchors": [
+    {
+      "user": [
+        141.73,
+        70.87
+      ],
+      "shape": "line 1",
+      "node": 0
+    }
+  ]
+}

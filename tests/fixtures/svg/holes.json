@@ -1,0 +1,54 @@
+{
+  "description": "Compound paths with holes (evenodd, nonzero with reversed hole, nonzero same direction).",
+  "shapes": [
+    {
+      "name": "ring-evenodd",
+      "bbox": [
+        5,
+        5,
+        25,
+        25
+      ],
+      "fill": "#333333",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 300,
+      "subpaths": 2,
+      "fillRule": "evenodd"
+    },
+    {
+      "name": "ring-nonzero",
+      "bbox": [
+        35,
+        5,
+        55,
+        25
+      ],
+      "fill": "#333333",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 300,
+      "subpaths": 2,
+      "fillRule": "nonzero"
+    },
+    {
+      "name": "no-hole",
+      "bbox": [
+        65,
+        5,
+        85,
+        25
+      ],
+      "fill": "#333333",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 400,
+      "subpaths": 2,
+      "fillRule": "nonzero"
+    }
+  ],
+  "threads": [
+    "#333333"
+  ],
+  "warnings": {}
+}

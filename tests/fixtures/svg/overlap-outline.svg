@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60mm" height="40mm" viewBox="0 0 60 40">
+  <!-- A stroked circle partly covered by a bar: the fill is clipped, the outline must stay whole. -->
+  <circle id="disc" cx="20" cy="20" r="15" fill="#e63946" stroke="#1d3557" stroke-width="1.5"/>
+  <rect id="bar" x="15" y="15" width="40" height="10" fill="#2a9d8f"/>
+  <!-- Two letters as one compound path with an outline: no overlap, so it must not be split. -->
+  <path id="letters" d="M2 36 h6 v3 h-6 z M12 36 h6 v3 h-6 z" fill="#f4a261" stroke="#000000" stroke-width="0.4"/>
+</svg>

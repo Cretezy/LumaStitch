@@ -1,0 +1,4 @@
+<!-- xMaxYMax slice: scale = max(10, 5) = 10 mm/unit; content overflows the viewport at the top. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="50mm" viewBox="0 0 10 10" preserveAspectRatio="xMaxYMax slice">
+  <rect id="r" x="0" y="6" width="10" height="4" fill="#000000"/>
+</svg>

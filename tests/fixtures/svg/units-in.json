@@ -1,0 +1,31 @@
+{
+  "description": "width/height in inches with viewBox.",
+  "shapes": [
+    {
+      "name": "full",
+      "bbox": [
+        0,
+        0,
+        50.8,
+        25.4
+      ],
+      "fill": "#000000",
+      "stroke": null,
+      "strokeWidth": null
+    }
+  ],
+  "threads": [
+    "#000000"
+  ],
+  "warnings": {},
+  "anchors": [
+    {
+      "user": [
+        0,
+        0
+      ],
+      "shape": "full",
+      "node": 0
+    }
+  ]
+}

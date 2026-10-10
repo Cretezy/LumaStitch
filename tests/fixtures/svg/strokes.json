@@ -1,0 +1,101 @@
+{
+  "description": "Stroke widths under uniform/non-uniform scaling and units; zero-width and transparent strokes.",
+  "shapes": [
+    {
+      "name": "s1",
+      "bbox": [
+        0,
+        0,
+        50,
+        0
+      ],
+      "fill": null,
+      "stroke": "#000000",
+      "strokeWidth": 2,
+      "closed": false
+    },
+    {
+      "name": "s2",
+      "bbox": [
+        3,
+        30,
+        90,
+        30
+      ],
+      "fill": null,
+      "stroke": "#000000",
+      "strokeWidth": 1.5,
+      "closed": false
+    },
+    {
+      "name": "s3",
+      "bbox": [
+        0,
+        50,
+        50,
+        50
+      ],
+      "fill": null,
+      "stroke": "#000000",
+      "strokeWidth": 2,
+      "closed": false
+    },
+    {
+      "name": "s4",
+      "bbox": [
+        0,
+        70,
+        50,
+        70
+      ],
+      "fill": null,
+      "stroke": "#000000",
+      "strokeWidth": 3.7795275590551185,
+      "closed": false
+    },
+    {
+      "name": "invisible-stroke",
+      "bbox": [
+        60,
+        0,
+        70,
+        10
+      ],
+      "fill": "#ff0000",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "both",
+      "bbox": [
+        60,
+        20,
+        80,
+        30
+      ],
+      "fill": "#00ff00",
+      "stroke": "#0000ff",
+      "strokeWidth": 4
+    },
+    {
+      "name": "closed-poly",
+      "bbox": [
+        60,
+        40,
+        80,
+        60
+      ],
+      "fill": null,
+      "stroke": "#0000ff",
+      "strokeWidth": 1,
+      "closed": true
+    }
+  ],
+  "threads": [
+    "#000000",
+    "#ff0000",
+    "#00ff00",
+    "#0000ff"
+  ],
+  "warnings": {}
+}

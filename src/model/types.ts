@@ -1,0 +1,160 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * LumaStitch document model. Everything here is plain, serialisable JSON:
+ * no class instances, all geometry in millimetres (+x right, +y down).
+ */
+
+export type Id = string;
+/** A point or vector in mm. */
+export type Vec2 = [x: number, y: number];
+/** 2D affine matrix in SVG order: [a, b, c, d, e, f] → x' = a·x + c·y + e, y' = b·x + d·y + f. */
+export type Matrix = [a: number, b: number, c: number, d: number, e: number, f: number];
+
+/** Bézier node in the style of Paper.js segments. Handles are relative to `p`. */
+export interface Node {
+  p: Vec2;
+  in?: Vec2;
+  out?: Vec2;
+  smooth?: boolean;
+}
+export interface Subpath {
+  closed: boolean;
+  nodes: Node[];
+}
+export interface PathGeom {
+  subpaths: Subpath[];
+  fillRule: 'nonzero' | 'evenodd';
+}
+
+export interface ArtPaint {
+  fill?: string;
+  stroke?: string;
+  strokeWidth?: number;
+}
+
+export interface Shape {
+  id: Id;
+  name: string;
+  /** Absolute mm, transforms baked in. */
+  geom: PathGeom;
+  hidden?: boolean;
+  locked?: boolean;
+  /** Original paint (artwork view, auto-digitize). */
+  art: ArtPaint;
+  /** Always null if the shape has no closed subpath. */
+  fill: StitchElement | null;
+  outline: StitchElement | null;
+}
+
+export type FillType =
+  | 'tatami'
+  | 'satinFill'
+  | 'contour'
+  | 'meander'
+  | 'ripple'
+  | 'gradientFill'
+  | 'patternFill'
+  | 'crossStitch'
+  | 'applique';
+export type OutlineType = 'running' | 'triple' | 'satin' | 'zigzag' | 'motifRun' | 'blanket' | 'manual';
+export type StitchType = FillType | OutlineType;
+export type ParamValue = number | boolean | string;
+export type TieMode = 'auto' | 'on' | 'off';
+export type TrimMode = 'auto' | 'always' | 'never';
+export type ElementRole = 'fill' | 'outline';
+
+export interface StitchElement {
+  id: Id;
+  role: ElementRole;
+  type: StitchType;
+  threadId: Id;
+  /** Overrides only; effective values = type defaults ← fabric preset ← these. */
+  params: Record<string, ParamValue>;
+  /** User entry point; the engine snaps it to the geometry. */
+  entry?: Vec2;
+  /** User exit point. */
+  exit?: Vec2;
+  /** Satin direction lines (rungs); type-specific. */
+  guides?: [Vec2, Vec2][];
+  /** satinFill: outline parameters (0..1 of outer ring arc length) where the rails split. */
+  railSplit?: [number, number];
+  tieIn: TieMode;
+  tieOut: TieMode;
+  trimAfter: TrimMode;
+  /** Set on manual change; auto-digitize can skip. */
+  userEdited?: boolean;
+}
+
+export interface Thread {
+  id: Id;
+  name: string;
+  /** #rrggbb */
+  color: string;
+  chart?: string;
+  code?: string;
+}
+
+export type SequenceEntry = { kind: 'element'; elementId: Id } | { kind: 'stop'; id: Id; note?: string };
+
+export type FabricId = 'woven' | 'knit' | 'pile' | 'lightweight';
+
+export interface DesignSettings {
+  /** Same-colour connectors shorter than this (mm) are stitched; longer ones are trimmed. */
+  trimThreshold: number;
+  minStitchLength: number;
+  maxStitchLength: number;
+  tieLength: number;
+  /** Stitches per minute, for time estimates and 1× simulation. */
+  machineSpm: number;
+  trimSeconds: number;
+  colorChangeSeconds: number;
+  /** Default tie behaviour used when an element's tie mode is 'auto'. */
+  defaultTie: 'auto' | 'always' | 'never';
+  /** Scale satin/stroke widths when shapes are resized. */
+  scaleStrokeWidths: boolean;
+}
+
+export interface PaletteEdit {
+  /** Index of the quantised colour this edit applies to. */
+  index: number;
+  /** Merge into another index. */
+  mergeInto?: number;
+  /** Replacement colour. */
+  color?: string;
+  /** Don't stitch this colour. */
+  skip?: boolean;
+}
+
+export interface TraceSettings {
+  colors: number | 'auto';
+  palette: PaletteEdit[];
+  /** 'auto' = detect from border/transparency, 'none' = stitch everything, or a #rrggbb colour. */
+  background: 'auto' | 'none' | string;
+  /** 0..1, higher = keep finer detail. */
+  detail: number;
+  /** 0..1, higher = smoother curves. */
+  smoothness: number;
+  lineArt: boolean;
+}
+
+export type Artwork = { matrix: Matrix; visible: boolean; opacity: number } & (
+  | { kind: 'svg'; svg: string }
+  | { kind: 'image'; dataUrl: string; pxWidth: number; pxHeight: number; trace: TraceSettings }
+);
+
+export interface Design {
+  schemaVersion: 1;
+  name: string;
+  fabric: FabricId;
+  threadChart: string;
+  settings: DesignSettings;
+  threads: Record<Id, Thread>;
+  shapes: Record<Id, Shape>;
+  /** Artwork stacking, bottom → top. */
+  zOrder: Id[];
+  /** Sewing order. */
+  sequence: SequenceEntry[];
+  artwork?: Artwork;
+}
+
+export const CURRENT_SCHEMA_VERSION = 1 as const;

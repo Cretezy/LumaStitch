@@ -1,0 +1,31 @@
+{
+  "description": "width/height in cm with viewBox (1 unit = 1 mm).",
+  "shapes": [
+    {
+      "name": "r",
+      "bbox": [
+        10,
+        5,
+        40,
+        15
+      ],
+      "fill": "#000000",
+      "stroke": null,
+      "strokeWidth": null
+    }
+  ],
+  "threads": [
+    "#000000"
+  ],
+  "warnings": {},
+  "anchors": [
+    {
+      "user": [
+        10,
+        5
+      ],
+      "shape": "r",
+      "node": 0
+    }
+  ]
+}

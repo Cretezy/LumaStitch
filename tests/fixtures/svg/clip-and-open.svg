@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="50mm" viewBox="0 0 100 50">
+  <defs>
+    <clipPath id="half" clipPathUnits="objectBoundingBox"><rect x="0" y="0" width="0.5" height="1"/></clipPath>
+    <clipPath id="disc"><circle cx="75" cy="25" r="10"/></clipPath>
+  </defs>
+  <rect id="half-rect" x="0" y="0" width="40" height="20" fill="#ff0000" clip-path="url(#half)"/>
+  <rect id="disc-clipped" x="65" y="15" width="10" height="10" fill="#00ff00" clip-path="url(#disc)"/>
+  <g clip-path="url(#disc)">
+    <line id="clipped-line" x1="50" y1="25" x2="100" y2="25" stroke="#000000"/>
+  </g>
+  <path id="open-filled" d="M0 30 L20 30 L20 50" fill="#0000ff"/>
+  <path id="open-stroked" d="M30 30 L50 30 L50 50" fill="none" stroke="#000000"/>
+</svg>

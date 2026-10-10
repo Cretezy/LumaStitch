@@ -1,0 +1,78 @@
+{
+  "description": "clip-path with objectBoundingBox units, curved userSpaceOnUse clip on a shape and on a group with a stroke; open filled path is closed; open stroked path stays open.",
+  "shapes": [
+    {
+      "name": "half-rect",
+      "bbox": [
+        0,
+        0,
+        20,
+        20
+      ],
+      "fill": "#ff0000",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 400
+    },
+    {
+      "name": "disc-clipped",
+      "bbox": [
+        65,
+        15,
+        75,
+        25
+      ],
+      "fill": "#00ff00",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 78.53981633974483
+    },
+    {
+      "name": "clipped-line",
+      "bbox": [
+        65,
+        25,
+        85,
+        25
+      ],
+      "fill": null,
+      "stroke": "#000000",
+      "strokeWidth": 1,
+      "closed": false
+    },
+    {
+      "name": "open-filled",
+      "bbox": [
+        0,
+        30,
+        20,
+        50
+      ],
+      "fill": "#0000ff",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 200,
+      "closed": true
+    },
+    {
+      "name": "open-stroked",
+      "bbox": [
+        30,
+        30,
+        50,
+        50
+      ],
+      "fill": null,
+      "stroke": "#000000",
+      "strokeWidth": 1,
+      "closed": false
+    }
+  ],
+  "threads": [
+    "#ff0000",
+    "#00ff00",
+    "#000000",
+    "#0000ff"
+  ],
+  "warnings": {}
+}

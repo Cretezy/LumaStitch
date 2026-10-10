@@ -1,0 +1,98 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Janome JEF thread palette (index 0 is a placeholder, used in JEF colour lists for stops).
+// Ported from pyembroidery's EmbThreadJef.py (pyembroidery, MIT License, Copyright (c) 2018 Tatarize).
+
+export interface JefThread {
+  /** #rrggbb */
+  color: string;
+  name: string;
+  code: string;
+}
+
+/** [color, name, code] in JEF palette order. */
+const RAW: readonly (readonly [string, string, string] | null)[] = [
+  null,
+  ['#000000', 'Black', '002'],
+  ['#ffffff', 'White', '001'],
+  ['#ffff17', 'Yellow', '204'],
+  ['#ff6600', 'Orange', '203'],
+  ['#2f5933', 'Olive Green', '219'],
+  ['#237336', 'Green', '226'],
+  ['#65c2c8', 'Sky', '217'],
+  ['#ab5a96', 'Purple', '208'],
+  ['#f669a0', 'Pink', '201'],
+  ['#ff0000', 'Red', '225'],
+  ['#b1704e', 'Brown', '214'],
+  ['#0b2f84', 'Blue', '207'],
+  ['#e4c35d', 'Gold', '003'],
+  ['#481a05', 'Dark Brown', '205'],
+  ['#ac9cc7', 'Pale Violet', '209'],
+  ['#fcf294', 'Pale Yellow', '210'],
+  ['#f999b7', 'Pale Pink', '211'],
+  ['#fab381', 'Peach', '212'],
+  ['#c9a480', 'Beige', '213'],
+  ['#970533', 'Wine Red', '215'],
+  ['#a0b8cc', 'Pale Sky', '216'],
+  ['#7fc21c', 'Yellow Green', '218'],
+  ['#e5e5e5', 'Silver Gray', '220'],
+  ['#889b9b', 'Gray', '221'],
+  ['#98d6bd', 'Pale Aqua', '227'],
+  ['#b2e1e3', 'Baby Blue', '228'],
+  ['#368ba0', 'Powder Blue', '229'],
+  ['#4f83ab', 'Bright Blue', '230'],
+  ['#386a91', 'Slate Blue', '231'],
+  ['#071650', 'Navy Blue', '232'],
+  ['#f999a2', 'Salmon Pink', '233'],
+  ['#f9676b', 'Coral', '234'],
+  ['#e3311f', 'Burnt Orange', '235'],
+  ['#e2a188', 'Cinnamon', '236'],
+  ['#b59474', 'Umber', '237'],
+  ['#e4cf99', 'Blond', '238'],
+  ['#ffcb00', 'Sunflower', '239'],
+  ['#e1add4', 'Orchid Pink', '240'],
+  ['#c3007e', 'Peony Purple', '241'],
+  ['#80004b', 'Burgundy', '242'],
+  ['#540571', 'Royal Purple', '243'],
+  ['#b10525', 'Cardinal Red', '244'],
+  ['#cae0c0', 'Opal Green', '245'],
+  ['#899856', 'Moss Green', '246'],
+  ['#5c941a', 'Meadow Green', '247'],
+  ['#003114', 'Dark Green', '248'],
+  ['#5dae94', 'Aquamarine', '249'],
+  ['#4cbf8f', 'Emerald Green', '250'],
+  ['#007772', 'Peacock Green', '251'],
+  ['#595b61', 'Dark Gray', '252'],
+  ['#fffff2', 'Ivory White', '253'],
+  ['#b15818', 'Hazel', '254'],
+  ['#cb8a07', 'Toast', '255'],
+  ['#986c80', 'Salmon', '256'],
+  ['#98692d', 'Cocoa Brown', '257'],
+  ['#4d3419', 'Sienna', '258'],
+  ['#4c330b', 'Sepia', '259'],
+  ['#33200a', 'Dark Sepia', '260'],
+  ['#523a97', 'Violet Blue', '261'],
+  ['#0d217e', 'Blue Ink', '262'],
+  ['#1e77ac', 'Sola Blue', '263'],
+  ['#b2dd53', 'Green Dust', '264'],
+  ['#f33689', 'Crimson', '265'],
+  ['#de649e', 'Floral Pink', '266'],
+  ['#984161', 'Wine', '267'],
+  ['#4c5612', 'Olive Drab', '268'],
+  ['#4c881f', 'Meadow', '269'],
+  ['#e4de79', 'Mustard', '270'],
+  ['#cb8a1a', 'Yellow Ocher', '271'],
+  ['#cba21c', 'Old Gold', '272'],
+  ['#ff9805', 'Honey Dew', '273'],
+  ['#fcb257', 'Tangerine', '274'],
+  ['#ffe505', 'Canary Yellow', '275'],
+  ['#f0331f', 'Vermilion', '202'],
+  ['#1a842d', 'Bright Green', '206'],
+  ['#386cae', 'Ocean Blue', '222'],
+  ['#e3c4b4', 'Beige Gray', '223'],
+  ['#e3ac81', 'Bamboo', '224'],
+];
+
+/** The JEF palette; entry 0 is `null` (the stop placeholder). */
+export const JEF_THREADS: readonly (JefThread | null)[] = RAW.map((r) =>
+  r ? { color: r[0], name: r[1], code: r[2] } : null,
+);

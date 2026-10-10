@@ -1,0 +1,61 @@
+{
+  "description": "display:none (attribute, class, ancestor), visibility hidden/override, opacity 0 (element and group), transparent paints, half opacity kept.",
+  "shapes": [
+    {
+      "name": "visible",
+      "bbox": [
+        0,
+        0,
+        10,
+        10
+      ],
+      "fill": "#ff0000",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "vis-override",
+      "bbox": [
+        10,
+        10,
+        20,
+        20
+      ],
+      "fill": "#00ff00",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "fo0-stroke",
+      "bbox": [
+        20,
+        20,
+        30,
+        30
+      ],
+      "fill": null,
+      "stroke": "#000000",
+      "strokeWidth": 1,
+      "closed": true
+    },
+    {
+      "name": "half",
+      "bbox": [
+        30,
+        30,
+        40,
+        40
+      ],
+      "fill": "#ffff00",
+      "stroke": null,
+      "strokeWidth": null
+    }
+  ],
+  "threads": [
+    "#ff0000",
+    "#00ff00",
+    "#000000",
+    "#ffff00"
+  ],
+  "warnings": {}
+}

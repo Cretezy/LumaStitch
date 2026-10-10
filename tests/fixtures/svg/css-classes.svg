@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="50mm" height="50mm" viewBox="0 0 100 100">
+  <style>
+    .a { fill: #e31b23 }
+    .b { fill: none; stroke: #1b75bb; stroke-width: 3 }
+    #special { fill: #00a651 }
+    rect.c { fill: #ffcc00 }
+    g.grp path { fill: #662d91 }
+    .moved { transform: translate(10px, 10px) }
+  </style>
+  <rect class="a" id="r1" x="0" y="0" width="20" height="20"/>
+  <circle class="b" id="c1" cx="50" cy="10" r="10"/>
+  <rect class="a" id="special" x="70" y="0" width="20" height="20"/>
+  <rect class="c" id="r3" fill="#000000" x="0" y="40" width="20" height="20"/>
+  <g class="grp" id="Group A"><path id="p1" d="M40 40 h20 v20 h-20 z"/></g>
+  <rect class="a" id="r4" style="fill:#abcdef" x="70" y="40" width="20" height="20"/>
+  <g style="color:#008080"><rect id="cc" x="0" y="80" width="20" height="10" fill="currentColor"/></g>
+  <rect class="moved" id="css-moved" x="80" y="80" width="10" height="10" fill="#ff00ff"/>
+</svg>

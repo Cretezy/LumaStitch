@@ -1,0 +1,10 @@
+{
+  "description": "Stroked circle partly covered by a bar, and a stroked compound path (auto-digitize outline handling).",
+  "shapes": [
+    { "name": "disc", "bbox": [5, 5, 35, 35], "fill": "#e63946", "stroke": "#1d3557", "strokeWidth": 1.5, "area": 706.86, "subpaths": 1, "fillRule": "nonzero" },
+    { "name": "bar", "bbox": [15, 15, 55, 25], "fill": "#2a9d8f", "stroke": null, "strokeWidth": null, "area": 400, "subpaths": 1, "fillRule": "nonzero" },
+    { "name": "letters", "bbox": [2, 36, 18, 39], "fill": "#f4a261", "stroke": "#000000", "strokeWidth": 0.4, "area": 36, "subpaths": 2, "fillRule": "nonzero" }
+  ],
+  "threads": ["#e63946", "#1d3557", "#2a9d8f", "#f4a261", "#000000"],
+  "warnings": {}
+}

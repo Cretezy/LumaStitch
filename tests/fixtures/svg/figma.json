@@ -1,0 +1,77 @@
+{
+  "description": "Figma export: clip-path wrapper groups, fill=\"none\" on root, fill-rule/clip-rule attributes, a stroke crossing the clip, a partially clipped circle.",
+  "shapes": [
+    {
+      "name": "rect 1",
+      "bbox": [
+        0.0,
+        0.0,
+        31.75,
+        21.1667
+      ],
+      "fill": "#ffffff",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "path 1",
+      "bbox": [
+        5.2917,
+        5.2917,
+        15.875,
+        15.875
+      ],
+      "fill": "#ff5733",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 84.00520833333333,
+      "subpaths": 2
+    },
+    {
+      "name": "circle 1",
+      "bbox": [
+        17.1979,
+        3.9688,
+        30.4271,
+        17.1979
+      ],
+      "fill": "#3498db",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "path 2",
+      "bbox": [
+        26.4583,
+        18.5208,
+        31.75,
+        18.5208
+      ],
+      "fill": null,
+      "stroke": "#2c3e50",
+      "strokeWidth": 1.0583333333333333,
+      "closed": false
+    },
+    {
+      "name": "circle 2",
+      "bbox": [
+        0.0,
+        0.0,
+        5.2917,
+        5.2917
+      ],
+      "fill": "#8e44ad",
+      "stroke": null,
+      "strokeWidth": null,
+      "area": 21.992512113606676
+    }
+  ],
+  "threads": [
+    "#ffffff",
+    "#ff5733",
+    "#3498db",
+    "#2c3e50",
+    "#8e44ad"
+  ],
+  "warnings": {}
+}

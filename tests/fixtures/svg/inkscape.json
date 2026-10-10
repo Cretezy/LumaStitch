@@ -1,0 +1,72 @@
+{
+  "description": "Inkscape export: layers with inkscape:label, sodipodi/metadata, auto ids, relative/smooth path commands.",
+  "shapes": [
+    {
+      "name": "Background/Sky",
+      "bbox": [
+        20,
+        30,
+        100,
+        70
+      ],
+      "fill": "#2e3192",
+      "stroke": null,
+      "strokeWidth": null
+    },
+    {
+      "name": "Details/Sun group/path12",
+      "bbox": [
+        77,
+        32,
+        93,
+        48
+      ],
+      "fill": "#fcee21",
+      "stroke": "#f15a24",
+      "strokeWidth": 2
+    },
+    {
+      "name": "Details/Hill line",
+      "bbox": [
+        25,
+        52.5,
+        85,
+        67.5
+      ],
+      "fill": null,
+      "stroke": "#000000",
+      "strokeWidth": 0.5,
+      "closed": false
+    },
+    {
+      "name": "Details/ellipse16",
+      "bbox": [
+        25,
+        65,
+        55,
+        75
+      ],
+      "fill": "#39b54a",
+      "stroke": null,
+      "strokeWidth": null
+    }
+  ],
+  "threads": [
+    "#2e3192",
+    "#fcee21",
+    "#f15a24",
+    "#000000",
+    "#39b54a"
+  ],
+  "warnings": {},
+  "anchors": [
+    {
+      "user": [
+        25,
+        60
+      ],
+      "shape": "Details/Hill line",
+      "node": 0
+    }
+  ]
+}

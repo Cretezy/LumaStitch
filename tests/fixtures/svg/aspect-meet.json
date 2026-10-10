@@ -1,0 +1,31 @@
+{
+  "description": "square viewBox in a 2:1 viewport, xMidYMid meet.",
+  "shapes": [
+    {
+      "name": "r",
+      "bbox": [
+        35,
+        0,
+        75,
+        50
+      ],
+      "fill": "#000000",
+      "stroke": null,
+      "strokeWidth": null
+    }
+  ],
+  "threads": [
+    "#000000"
+  ],
+  "warnings": {},
+  "anchors": [
+    {
+      "user": [
+        2,
+        0
+      ],
+      "shape": "r",
+      "node": 0
+    }
+  ]
+}

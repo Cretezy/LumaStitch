@@ -1,0 +1,5 @@
+dist
+node_modules
+src/threads/charts/*.json
+tests/fixtures
+LICENSE
