@@ -446,7 +446,8 @@ interface ParamDef {
 **Running / triple**
 
 - Flatten to a polyline. Split it at corners (turn angle > 30°). Resample each piece at `n = ceil(len / L)` evenly spaced points, so no stitch is longer than `L` and stitch lengths stay even.
-- Closed paths start at the point nearest `hints.entry`, with a vertex inserted there. Open paths start at whichever end is nearer.
+- Several subpaths (a word's letters, a letter's counters): every subpath is tried as the first one and the rest follow greedily; the order with the least jump length wins (up to 40 subpaths). A closed path ends where it starts, so its start point (a vertex inserted on the ring) is then chosen to minimise the distance from the previous path's end plus the distance to the next path; open paths start at whichever end makes that sum smaller. The same ordering serves satin outlines.
+- Jumps between subpaths carry `TRIM` (there is nothing to travel through; a short stitched connector would cross bare fabric or the fill), so only hops of 1 mm or less are sewn. Blanket and motif runs do the same.
 - Bean repeats: each stitch a→b becomes a→b→a→b (bean = 1) or a→b→a→b→a→b (bean = 2).
 - Passes: alternate forward and reverse traversal.
 
@@ -514,7 +515,8 @@ interface EngineApi {
 main      collect target shapes (selection or all, minus userEdited if "keep my edits")
 worker    colours: merge (ΔE00 < 5), k-means in Lab if > maxColors, nearest chart thread
 main      overlap removal with Paper booleans (keeps curves): for each fill bottom→top,
-          subtract union(inset(fills above, overlapMargin)); split disconnected parts;
+          subtract union(inset(fills above, overlapMargin)); split disconnected parts
+          (optionally also untouched multi-part fills: "Split separate parts", off by default);
           strokes wider than maxSatin → outline-stroke into fill shapes
 worker    per region: flatten, area, holes, medial axis → widths, branchiness → classify
           (SPEC §9); tatami angle from min-area rect + neighbour rule; satin railSplit

@@ -89,12 +89,30 @@ export function sewPath(
   }
 }
 
-/** Orders paths greedily from `start` and orients each; returns oriented polylines. */
-export function orderPaths(
+/** Where a path ends after `passes` passes (closed paths end where they start). */
+function pathEnd(item: PathItem, passes: number): [number, number] {
+  const p = item.pts,
+    n = p.length;
+  return passes % 2 === 1 || item.closed ? [p[n - 2], p[n - 1]] : [p[0], p[1]];
+}
+
+/** Distance from q to the nearest place a path could start (any vertex if closed, else an end). */
+function startDistance(item: PathItem, q: [number, number]): number {
+  const p = item.pts,
+    n = p.length;
+  if (!item.closed) return Math.min(dist(q[0], q[1], p[0], p[1]), dist(q[0], q[1], p[n - 2], p[n - 1]));
+  let d = Infinity;
+  for (let k = 0; k < n; k += 2) d = Math.min(d, dist(q[0], q[1], p[k], p[k + 1]));
+  return d;
+}
+
+/** Greedy order from `start` (optionally forcing the first path), each path oriented. */
+function greedyOrder(
   paths: PathItem[],
   start: [number, number] | undefined,
   passes: number,
-  exit?: [number, number],
+  exit: [number, number] | undefined,
+  first?: number,
 ): PathItem[] {
   const remaining = paths.slice();
   const out: PathItem[] = [];
@@ -104,10 +122,11 @@ export function orderPaths(
       bd = Infinity,
       brev = false;
     for (let i = 0; i < remaining.length; i++) {
+      if (out.length === 0 && first !== undefined && remaining[i] !== paths[first]) continue;
       const p = remaining[i].pts;
       const n = p.length;
       if (!cur) {
-        bi = 0;
+        bi = i;
         break;
       }
       if (remaining[i].closed) {
@@ -145,10 +164,86 @@ export function orderPaths(
       if (cur) pts = rotateClosedTo(pts, cur[0], cur[1]);
     } else if (brev) pts = reversePolyline(pts);
     out.push({ pts, closed: item.closed });
-    const n = pts.length;
-    cur = passes % 2 === 1 || item.closed ? [pts[n - 2], pts[n - 1]] : [pts[0], pts[1]];
+    cur = pathEnd(out[out.length - 1], passes);
   }
   return out;
+}
+
+/** Total jump length of an ordered, oriented list (plus half the distance to the exit). */
+function orderCost(
+  order: PathItem[],
+  start: [number, number] | undefined,
+  passes: number,
+  exit: [number, number] | undefined,
+): number {
+  let c = 0;
+  let cur = start;
+  for (const it of order) {
+    if (cur) c += dist(cur[0], cur[1], it.pts[0], it.pts[1]);
+    cur = pathEnd(it, passes);
+  }
+  if (exit && cur) c += 0.5 * dist(cur[0], cur[1], exit[0], exit[1]);
+  return c;
+}
+
+/**
+ * Orders and orients paths so the jumps between them are short. Every path is tried as the first
+ * one (up to 40 paths), the rest follow greedily, and the cheapest order wins. A closed path ends
+ * where it starts, so its start point is then chosen between the previous path's end and the next
+ * path (not just next to the previous one).
+ */
+export function orderPaths(
+  paths: PathItem[],
+  start: [number, number] | undefined,
+  passes: number,
+  exit?: [number, number],
+): PathItem[] {
+  let best = greedyOrder(paths, start, passes, exit);
+  if (paths.length > 1 && paths.length <= 40) {
+    let bc = orderCost(best, start, passes, exit);
+    for (let f = 0; f < paths.length; f++) {
+      const o = greedyOrder(paths, start, passes, exit, f);
+      const c = orderCost(o, start, passes, exit);
+      if (c < bc - 1e-9) {
+        bc = c;
+        best = o;
+      }
+    }
+  }
+  // Refine start points and orientations along the chosen order.
+  let cur = start;
+  for (let k = 0; k < best.length; k++) {
+    const it = best[k];
+    const next = best[k + 1];
+    const p = it.pts,
+      n = p.length;
+    if (it.closed) {
+      let bx = p[0],
+        by = p[1],
+        bd = Infinity;
+      for (let q = 0; q < n; q += 2) {
+        let d = cur ? dist(cur[0], cur[1], p[q], p[q + 1]) : 0;
+        if (next) d += startDistance(next, [p[q], p[q + 1]]);
+        else if (exit) d += 0.5 * dist(p[q], p[q + 1], exit[0], exit[1]);
+        if (d < bd) {
+          bd = d;
+          bx = p[q];
+          by = p[q + 1];
+        }
+      }
+      if (cur || next || exit) best[k] = { pts: rotateClosedTo(p, bx, by), closed: true };
+    } else if (cur) {
+      const rev = { pts: reversePolyline(p), closed: false };
+      const cost = (o: PathItem) => {
+        const e = pathEnd(o, passes);
+        const tail = next ? startDistance(next, e) : exit ? 0.5 * dist(e[0], e[1], exit[0], exit[1]) : 0;
+        return dist(cur![0], cur![1], o.pts[0], o.pts[1]) + tail;
+      };
+      if (cost(rev) < cost(it)) best[k] = rev;
+    }
+    cur = pathEnd(best[k], passes);
+  }
+  return best;
 }
 
 export function routeRunning(
@@ -159,7 +254,9 @@ export function routeRunning(
   const b = new RunBuilder();
   const ordered = orderPaths(prep.paths, entry, prep.passes, exit);
   ordered.forEach(({ pts }, i) => {
-    if (i > 0) b.jumpTo(pts[0], pts[1]);
+    // Separate paths have nothing inside to travel through: the jump between them is trimmed
+    // (the sequencer still sews hops of 1 mm or less).
+    if (i > 0) b.jumpTo(pts[0], pts[1], F.TRIM);
     const before = b.length;
     sewPath(b, pts, prep.stitchLength, prep.bean, prep.passes);
     if (i > 0 && b.length > before) {

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /** Satin column (outline) and zigzag outline. */
 import { flattenToPaths } from '@/geom/flatten';
-import { rotateClosedTo } from '@/geom/polyline';
 import type { StitchTypeDef } from '../../def';
 import { bool, num, str, type ParamDef } from '../../params/types';
+import { F } from '../../types';
 import { RunBuilder } from '../common';
 import { orderPaths, type PathItem } from '../running';
 import {
@@ -148,9 +148,9 @@ function routeColumns(prep: SatinColumnPrep, entry?: [number, number], exit?: [n
   const b = new RunBuilder();
   const ordered = orderPaths(prep.paths, entry, 1, exit);
   ordered.forEach(({ pts, closed }, i) => {
-    let center = pts;
+    // orderPaths already chose where closed paths start (between the previous and next path).
+    const center = pts;
     const cur = b.last() ?? entry;
-    if (closed && cur) center = rotateClosedTo(pts, cur[0], cur[1]);
     const col = columnFromCenterline(center, closed, prep.halfWidth);
     if (col.length <= 0) return;
     const start = b.length;
@@ -181,7 +181,8 @@ function routeColumns(prep: SatinColumnPrep, entry?: [number, number], exit?: [n
         i === ordered.length - 1 ? exit : undefined,
       );
     }
-    if (i > 0 && b.length > start) b.flags[start] |= 1; // internal jump to the next column
+    // Internal jump to the next column; nothing to travel through between separate paths.
+    if (i > 0 && b.length > start) b.flags[start] |= F.JUMP | F.TRIM;
   });
   return b.build();
 }

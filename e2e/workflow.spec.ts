@@ -175,10 +175,23 @@ test('auto-digitize keeps outlines whole when fills are clipped, and keeps compo
   expect(r.discOutlineWidth).toBeGreaterThan(29.5);
   expect(r.discOutlineSubpaths).toBe(1);
   expect(r.discFill).toBe(true);
-  // Compound path with no overlaps stays one shape with its outline.
+  // Compound path with no overlaps stays one shape with its outline (splitting parts is opt-in).
   expect(r.letters).toBe(1);
   expect(r.lettersHaveOutline).toBe(true);
   expect(r.lettersSubpaths).toBe(2);
+  // With "Split separate parts", each letter becomes its own shape and keeps its outline.
+  const split = await page.evaluate(async () => {
+    const L = (window as any).__lumastitch;
+    await L.autoDigitize({ splitParts: true });
+    const shapes = Object.values(L.useDoc.getState().design.shapes) as any[];
+    const letters = shapes.filter((s) => s.name.startsWith('letters'));
+    return {
+      n: letters.length,
+      outlines: letters.every((s) => s.outline),
+      subpaths: letters.map((s) => s.geom.subpaths.length),
+    };
+  });
+  expect(split).toEqual({ n: 2, outlines: true, subpaths: [1, 1] });
 });
 
 test('exports DST, JEF, EXP, VP3 and the PDF worksheet from the dialog', async ({ page }) => {

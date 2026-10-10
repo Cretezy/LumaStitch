@@ -359,7 +359,7 @@ The aim is a sensible, sewable first pass that matches what an experienced digit
 
 1. **Normalise.** Repair invalid geometry (self-intersections). Drop invisible shapes: no fill and no stroke, zero area, or fully transparent.
 2. **Colours.** Collect the fill and stroke colours. Merge colours closer than ΔE00 5. If there are more colours than the maximum (default: no limit), cluster them in CIELAB down to the maximum. Keep the exact colours (default), or map each to the nearest thread in the chosen chart or in My threads. Gradients use their average colour.
-3. **Remove overlaps** (default on). Working from the bottom up, subtract from each fill region every fill region above it in the artwork stacking order. The upper shape is first inset by the **overlap margin** (default 0.4 mm) so the lower fill slightly underlaps it and no gaps open up. Strokes are not subtracted, because outlines are sewn on top and the fill should run under them. Disconnected leftovers become separate shapes, for example "Sky (part 2)". Leftovers smaller than the minimum detail size are dropped and reported.
+3. **Remove overlaps** (default on). Working from the bottom up, subtract from each fill region every fill region above it in the artwork stacking order. The upper shape is first inset by the **overlap margin** (default 0.4 mm) so the lower fill slightly underlaps it and no gaps open up. Strokes are not subtracted, because outlines are sewn on top and the fill should run under them. Disconnected leftovers become separate shapes, for example "Sky (part 2)". Leftovers smaller than the minimum detail size are dropped and reported. **Split separate parts** (default off) also makes each separate closed part of an untouched fill (each letter of a word set as one path) its own shape with its own outline, so with same-colour outlines each letter is finished before the next; the parts are then classified on their own, so narrow letters may become satin.
 4. **Strokes become outline elements**, based on stroke width _w_:
    - _w_ < 0.6: Running
    - 0.6 ≤ _w_ < 1.2: Triple run
@@ -378,6 +378,7 @@ The aim is a sensible, sewable first pass that matches what an experienced digit
    - Each element's entry and exit points are chosen from its neighbours: it starts at its edge point nearest to where the previous element finished, and it finishes next to the following element when that one uses the same thread.
    - **A fill with several separate parts** (for example a word set as one SVG path) is sewn one part at a time, each part completely (underlay and top layer), in the shortest order. The jump between parts goes edge to edge, so it is as short as possible and isn't sewn over by the part it lands in.
    - Within a part, the order of row sections minimises travel, and travel runs under areas still to be sewn rather than on top of finished rows.
+   - **An outline with several separate loops** (a word's letters, a letter's counters) is sewn loop by loop in the order with the shortest jumps, each loop starting where the move in and the move out to the next loop are shortest. Moves between loops are jumps, never stitches across the gap (hops of 1 mm or less excepted).
 8. **Connections.** Trims and ties follow the design settings.
 9. **Commit** as a single undoable step and show the summary.
 

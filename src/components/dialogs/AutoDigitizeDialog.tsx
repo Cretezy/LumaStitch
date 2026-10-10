@@ -193,6 +193,20 @@ export default function AutoDigitizeDialog({ open, onClose }: DialogProps) {
               </label>
               <label className="flex items-start gap-2 text-sm">
                 <Checkbox
+                  checked={opts.splitParts}
+                  onCheckedChange={(c) => set({ splitParts: !!c })}
+                  className="mt-0.5"
+                />
+                <span>
+                  Split separate parts
+                  <span className="block text-xs text-muted-foreground">
+                    Each separate piece, like each letter of a word, becomes its own shape: fewer jumps with
+                    same-colour outlines, and narrow pieces may become satin.
+                  </span>
+                </span>
+              </label>
+              <label className="flex items-start gap-2 text-sm">
+                <Checkbox
                   checked={opts.keepEdits}
                   onCheckedChange={(c) => set({ keepEdits: !!c })}
                   className="mt-0.5"

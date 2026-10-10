@@ -8,7 +8,7 @@ import { buildPlan } from '../plan';
 import { F, type StitchPlan } from '../types';
 import { optimizeSequence } from './optimize';
 
-function design(items: { geom: PathGeom; color?: string; outline?: boolean }[]): Design {
+function design(items: { geom: PathGeom; color?: string; outline?: boolean; fill?: boolean }[]): Design {
   const d = createDesign();
   for (const it of items) {
     const color = it.color ?? '#ff0000';
@@ -18,11 +18,11 @@ function design(items: { geom: PathGeom; color?: string; outline?: boolean }[]):
       d.threads[thread.id] = thread;
     }
     const s = createShape('S' + d.zOrder.length, it.geom, {});
-    s.fill = createElement('fill', 'tatami', thread.id, {});
+    if (it.fill !== false) s.fill = createElement('fill', 'tatami', thread.id, {});
     if (it.outline) s.outline = createElement('outline', 'running', thread.id, {});
     d.shapes[s.id] = s;
     d.zOrder.push(s.id);
-    d.sequence.push({ kind: 'element', elementId: s.fill.id });
+    if (s.fill) d.sequence.push({ kind: 'element', elementId: s.fill.id });
     if (s.outline) d.sequence.push({ kind: 'element', elementId: s.outline.id });
   }
   return d;
@@ -63,6 +63,24 @@ describe('multi-part fills', () => {
       expect(d).toBeLessThan(4);
     }
     expect(plan.stats.trims).toBeLessThanOrEqual(4);
+  });
+});
+
+describe('outlines with several loops', () => {
+  it('jumps between separate loops instead of stitching across the gap', () => {
+    // Two squares 2 mm apart (under the 3 mm trim threshold) in one shape, running outline only;
+    // the first square starts at (0, 0), right next to the second one.
+    const geom = compound([rectGeom(0, 0, 10, 10), rectGeom(-12, 0, 10, 10)]);
+    const plan = buildPlan(design([{ geom, outline: true, fill: false }]));
+    for (let i = 1; i < plan.flags.length; i++) {
+      if (plan.flags[i] & (F.JUMP | F.TRIM | F.COLOR_CHANGE | F.STOP | F.END)) continue;
+      if (plan.flags[i - 1] & (F.TRIM | F.COLOR_CHANGE | F.STOP)) continue;
+      // No stitch has one end on each square.
+      const a = plan.x[i - 1] >= -0.01,
+        b = plan.x[i] >= -0.01;
+      expect(a, `stitch ${i}: ${plan.x[i - 1].toFixed(2)} → ${plan.x[i].toFixed(2)}`).toBe(b);
+    }
+    expect(plan.stats.trims).toBe(1);
   });
 });
 

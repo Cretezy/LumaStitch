@@ -35,6 +35,12 @@ export interface AutoDigitizeOptions {
   /** 0 = no limit. */
   maxColors: number;
   removeOverlaps: boolean;
+  /**
+   * Make each separate part of a fill (e.g. each letter of a word set as one path) its own shape,
+   * so it is finished, outline included, before the next. Off by default: parts are classified on
+   * their own then (narrow letters become satin), which changes the look.
+   */
+  splitParts: boolean;
   /** mm */
   minDetail: number;
   outlines: 'auto' | 'running' | 'triple' | 'satin' | 'none';
@@ -61,6 +67,7 @@ export const DEFAULT_AUTO_OPTIONS: AutoDigitizeOptions = {
   colors: 'exact',
   maxColors: 0,
   removeOverlaps: true,
+  splitParts: false,
   minDetail: 0.8,
   outlines: 'auto',
   keepEdits: false,
@@ -286,6 +293,21 @@ async function run(partial: Partial<AutoDigitizeOptions>): Promise<AutoDigitizeS
         }
       }
     }
+    // Separate closed parts (letters of a word) become shapes of their own; each keeps the stroke.
+    let split = false;
+    if (
+      opts.splitParts &&
+      !clipped &&
+      parts.length === 1 &&
+      s.geom.subpaths.length > 1 &&
+      s.geom.subpaths.every((sp) => sp.closed)
+    ) {
+      const pieces = splitSubpaths(s.geom);
+      if (pieces.length > 1) {
+        parts = pieces;
+        split = true;
+      }
+    }
     // The stroke rides on the main fill region only when that region is the untouched shape.
     const strokeOnMain = !!p.stroke && !clipped && parts.length > 0;
     parts.forEach((g, i) => {
@@ -295,8 +317,8 @@ async function run(partial: Partial<AutoDigitizeOptions>): Promise<AutoDigitizeS
         name: i === 0 ? s.name : `${s.name} (part ${i + 1})`,
         geom: g,
         fillColor: p.fill,
-        strokeColor: i === 0 && strokeOnMain ? p.stroke : undefined,
-        strokeWidth: i === 0 && strokeOnMain ? p.strokeWidth : undefined,
+        strokeColor: (i === 0 || split) && strokeOnMain ? p.stroke : undefined,
+        strokeWidth: (i === 0 || split) && strokeOnMain ? p.strokeWidth : undefined,
         isNew: i > 0,
       });
     });

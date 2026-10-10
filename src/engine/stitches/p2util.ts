@@ -9,6 +9,7 @@ import {
 } from '@/geom/polyline';
 import type { Polyline, Ring } from '@/geom/types';
 import type { Vec2 } from '@/model/types';
+import { F } from '../types';
 import { RunBuilder, dist } from './common';
 
 /** Deterministic 32-bit PRNG (mulberry32). Returns floats in [0, 1). */
@@ -117,7 +118,7 @@ function rotateAt(pts: Polyline, i: number): Polyline {
 /**
  * Sews precomputed penetration sequences: greedy nearest order from `entry`, closed paths start
  * at their nearest anchor vertex, open paths from their nearer end; internal jumps between paths
- * (the sequencer decides whether to trim).
+ * are trimmed (nothing to travel through; the sequencer still sews hops of 1 mm or less).
  */
 export function routeFixedPaths(paths: FixedPath[], entry?: Vec2, exit?: Vec2): RunBuilder {
   const b = new RunBuilder();
@@ -160,7 +161,7 @@ export function routeFixedPaths(paths: FixedPath[], entry?: Vec2, exit?: Vec2): 
     }
     const item = remaining.splice(bi, 1)[0];
     const pts = item.closed ? rotateAt(item.pts, bStart) : bRev ? reversePolyline(item.pts) : item.pts;
-    if (b.length) b.jumpTo(pts[0], pts[1]);
+    if (b.length) b.jumpTo(pts[0], pts[1], F.TRIM);
     b.pushPolyline(pts, 0, b.length > 0);
     cur = b.last() ?? undefined;
   }
