@@ -1,0 +1,718 @@
+# LumaStitch — Architecture
+
+Status: **Draft v0.2** · 2026-10-10 · Companion doc: [SPEC.md](./SPEC.md) · Licence: GPL-3.0-or-later
+
+## 1. Principles
+
+1. **Client-only static SPA.** There is no backend. It is served as static assets from Cloudflare Workers (§23) and works offline after load.
+2. **One source of truth.** The document is plain, serialisable JSON with no class instances, with all geometry in millimetres. Every change goes through commands, which provide undo/redo.
+3. **Stitches are derived data.** `StitchPlan = buildPlan(Design)`. The plan is never edited directly and never persisted; it is regenerated on load. A future manual-stitch type would be just another stitch type whose parameters hold points.
+4. **One plan feeds everything.** The preview, simulator, stats and exporter all read the same `StitchPlan`. This is how the "WYSIWYG" goal (G3) is met.
+5. **Pure engine.** The stitch engine is TypeScript with no DOM or React. It runs in a Web Worker and is unit-tested in Node.
+6. **Adapters around third-party geometry.** Paper.js and Clipper are only touched from `src/geom/`.
+7. **Registries for extension.** Stitch types, export formats and thread charts are registered, not hard-coded.
+
+## 2. Tech stack
+
+| Concern | Choice | Why |
+|---------|--------|-----|
+| Build | **Vite** + **TypeScript** (strict) | Simple and fast; native worker support (`new Worker(new URL(...), { type: 'module' })`). |
+| UI | **React** + **Tailwind CSS v4** + **shadcn/ui** (Radix) + lucide-react | Requested stack; accessible primitives. |
+| State | **Zustand** + **Immer** | Minimal boilerplate. Usable outside React (tools, worker bridge). Structural sharing makes undo snapshots cheap. |
+| Vector geometry (editing) | **Paper.js** (`paper-core`, no view) | Booleans that preserve curves, Bézier maths, path-data parsing including arcs, nearest-point helpers. |
+| Polygon ops (engine) | **Clipper2** TypeScript port (`clipper2-ts`; alternatives `clipper2-js` or `clipper2-wasm`) | Robust integer offset, union, difference and intersection on flattened polygons. Port to be chosen in the M0 spike. |
+| Medial axis | **d3-delaunay** | Voronoi-based skeleton for satin rails and width analysis. |
+| Image tracing | **potrace** as WASM (`esm-potrace-wasm`; the approach used by Google's SVGcode). Fallback: imagetracerjs. | Best-quality bitmap-to-Bézier tracing. GPL-2.0-or-later, which is compatible with our licence. Quantisation, filtering and morphology are our own TypeScript. |
+| Hosting | **Cloudflare Workers static assets** + Wrangler | Requested. Static assets only, no Worker script. |
+| Worker RPC | **Comlink** | Typed async calls; transfers typed arrays without copying. |
+| Sortable lists | **dnd-kit** | Sequence panel. |
+| SVG sanitising | **DOMPurify** (SVG profile) | SVG files are untrusted input. |
+| Storage | **idb-keyval** (IndexedDB) | Autosave and recent projects. |
+| Schema | **zod** | Validating project files and migrations. |
+| Tests | **Vitest** (Node, plus browser mode via Playwright for DOM/canvas code), **fast-check** (property tests), **Playwright** (e2e) | |
+| Lint/format | ESLint + Prettier | |
+
+**Rejected alternatives**
+
+- **Python backend running pyembroidery or Ink/Stitch.** Needs a server, which hurts offline use and privacy. Ink/Stitch is also tied to Inkscape (`inkex`).
+- **Pyodide running Ink/Stitch in the browser.** Tens of MB to download (Shapely, NetworkX, lxml), slow start-up, and still tied to `inkex`.
+
+**Ink/Stitch as a reference.** LumaStitch is GPL-3.0-or-later, so Ink/Stitch's stitch algorithms (fill routing, satin, underlay, auto-satin and others) can be **ported to TypeScript** directly, not just studied. Ported files keep the original copyright notice, a link to the source file and commit, and an SPDX header. The same applies to pyembroidery (MIT) for PES, and to Ink/Stitch's thread palettes.
+- **Fabric.js or Konva for the canvas.** Their object models would duplicate ours, and their node editing is weak. We render ourselves: an SVG overlay for editing plus Canvas2D for stitches.
+- **WebGL renderer.** Not needed for the v1 targets. Revisit for Realistic mode above about 200k stitches.
+
+## 3. System overview
+
+```
+┌──────────────────────────────── Main thread ─────────────────────────────────┐
+│ React UI (shadcn)                                                            │
+│  MenuBar · Toolbar · ToolPalette · Inspector · SequencePanel · Threads       │
+│  CanvasView = [Canvas2D: grid] [SVG: shapes] [Canvas2D: stitches]            │
+│               [SVG: editing overlay]                                         │
+│        ▲ render                                │ pointer / keys → tools      │
+│        │                                       ▼                             │
+│ Zustand: documentStore (undoable) · uiStore (selection, tool, viewport,      │
+│          view options, simulator) · planStore (latest StitchPlan, status)    │
+│        │ design + revision (debounced)          ▲ StitchPlan (transferable)  │
+│ geom/paperAdapter (booleans, node ops)          │                            │
+└────────┼────────────────────────────────────────┼────────────────────────────┘
+         ▼                                        │
+┌──────────────────────────── Engine worker (Comlink) ─────────────────────────┐
+│ resolve params → prepare (cached) → route (cached) → sequencer → postprocess │
+│ auto-digitize analysis · sequence optimiser · diagnostics                    │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────── Raster worker (Comlink) ─────────────────────────┐
+│ resample → filter → k-means (Lab) → masks → morphology → potrace (WASM)      │
+└──────────────────────────────────────────────────────────────────────────────┘
+      StitchPlan ──► stitch renderer · simulator · stats · PES writer
+```
+
+## 4. Repository layout
+
+```
+lumastitch/
+├─ SPEC.md  ARCHITECTURE.md  LICENSE (GPL-3.0)  NOTICE.md (third-party attributions)
+├─ index.html  vite.config.ts  tsconfig.json  components.json  wrangler.jsonc
+├─ public/_headers        # cache + security headers for Workers static assets
+├─ src/
+│  ├─ main.tsx  App.tsx
+│  ├─ model/              # Design types, factories, invariants, zod schema, migrations
+│  ├─ store/              # documentStore (commands, history), uiStore, planStore
+│  │  └─ commands/        # importSvg, transformShapes, booleanOp, setParams, reorder, autoDigitize…
+│  ├─ geom/               # PURE except paperAdapter
+│  │  ├─ types.ts         # Ring, PolyShape, Polyline
+│  │  ├─ flatten.ts       # PathGeom → rings/polylines (no Paper, worker-safe)
+│  │  ├─ clipper.ts       # offset/union/difference/intersection/makeValid
+│  │  ├─ paperAdapter.ts  # PathGeom ⇄ paper.CompoundPath; booleans; node ops (main thread)
+│  │  ├─ polyline.ts      # length, resample, nearest point, split, normals
+│  │  ├─ polygon.ts       # area, bbox, centroid, contains, min-area rect, PCA
+│  │  ├─ scanline.ts      # rows at angle/spacing → intervals
+│  │  ├─ medialAxis.ts    # Voronoi skeleton, radii, pruning, diameter path
+│  │  └─ matrix.ts
+│  ├─ engine/             # PURE TS, no DOM; runs in worker and in Node tests
+│  │  ├─ types.ts         # StitchRun, StitchPlan, flags, Diagnostic
+│  │  ├─ registry.ts      # stitch type registry
+│  │  ├─ params/          # ParamDef, defaults, fabric presets, resolveParams
+│  │  ├─ stitches/        # running/ satin/ zigzag/ tatami/ contour/  (one folder per type)
+│  │  ├─ underlay/        # fill + satin underlays
+│  │  ├─ sequence/        # connectors, ties, trims, colour blocks, optimiser
+│  │  ├─ postprocess.ts
+│  │  ├─ plan.ts          # buildPlan(design, cache)
+│  │  ├─ cache.ts
+│  │  └─ autodigitize/    # colour clustering, classify, angle choice, rails, config.ts
+│  ├─ raster/             # image digitizer: resample, filter, quantise, masks, morphology,
+│  │                      #   potrace wrapper, line-art skeleton (pure TS + WASM, worker-only)
+│  ├─ worker/             # engine.worker.ts · raster.worker.ts (Comlink expose) · clients
+│  ├─ io/
+│  │  ├─ svg-import/      # sanitize, units, transforms, styles, shapes → PathGeom
+│  │  ├─ pes/             # pesWriter, pecEncoder, thumbnails, pecPalette, pesReader
+│  │  ├─ export/          # format registry, validation
+│  │  └─ project/         # save/open/autosave, migrations
+│  ├─ threads/            # charts/*.json (generated from Ink/Stitch .gpl), colour math, nearest, k-means
+│  ├─ library/            # local project library (IndexedDB), thumbnails, My threads
+│  ├─ canvas/             # viewport, CanvasView, layers, stitchRenderer, hit index
+│  ├─ tools/              # select, directSelect, pen, rect, ellipse, hand, zoom, angle, entryExit, satinDirection
+│  ├─ simulator/          # playback controller, progress renderer, Timeline
+│  ├─ components/         # panels, dialogs, inspector forms
+│  │  └─ ui/              # shadcn-generated
+│  └─ lib/                # ids (nanoid), hash, keymap, misc
+├─ tests/
+│  ├─ fixtures/svg/       # importer + auto-digitize fixtures
+│  ├─ fixtures/pes/       # golden files generated with pyembroidery
+│  └─ tools/              # python scripts to generate goldens / cross-check (dev only)
+└─ e2e/
+```
+
+## 5. Units and coordinate systems
+
+| Space | Definition |
+|-------|------------|
+| **Document** | Millimetres, float64. +x right, **+y down** (same as SVG and PES). Imports are centred on the origin (0, 0), but the position has no meaning for export because machines centre the design. There is no hoop or artboard. |
+| **Angles** | Stored and shown in degrees, counter-clockwise from +x as seen on screen (Illustrator/Wilcom convention). Because y points down, the engine negates angles when building rotation matrices. This is done in one helper, `rotationFor(angleDeg)`. |
+| **Screen** | CSS px. Viewport `{ zoom: px per mm, pan: [x, y] }`, with `screen = doc · zoom + pan`. Canvas backing stores are scaled by `devicePixelRatio`. |
+| **PES** | Integer units of 0.1 mm. `u = Math.round(mm · 10)`. Deltas are computed from the rounded absolute positions, so rounding never accumulates. |
+| **SVG import** | User units are converted to mm using the root `width`/`height` and `viewBox`. Unitless or px values are taken at 96 dpi (`25.4 / 96` mm per px). |
+| **Tolerances** | Curve flattening uses 0.05 mm chord error. Clipper scale is ×1000 (1 µm integer units). Geometric epsilon is 1e-6 mm. |
+
+## 6. Document model (`src/model`)
+
+```ts
+export type Id = string;                        // nanoid
+export type Vec2 = [x: number, y: number];      // mm
+
+/** Bézier node in the style of Paper.js segments. Handles are relative to `p`. */
+export interface Node { p: Vec2; in?: Vec2; out?: Vec2; smooth?: boolean }
+export interface Subpath { closed: boolean; nodes: Node[] }
+export interface PathGeom { subpaths: Subpath[]; fillRule: 'nonzero' | 'evenodd' }
+
+export interface Shape {
+  id: Id;
+  name: string;
+  geom: PathGeom;                 // absolute mm, transforms baked in
+  hidden?: boolean;
+  locked?: boolean;
+  art: { fill?: string; stroke?: string; strokeWidth?: number }; // original paint (artwork view, auto-digitize)
+  fill: StitchElement | null;     // always null if the shape has no closed subpath
+  outline: StitchElement | null;
+}
+
+export type FillType = 'tatami' | 'satinFill' | 'contour';
+export type OutlineType = 'running' | 'triple' | 'satin' | 'zigzag';
+export type StitchType = FillType | OutlineType;
+export type ParamValue = number | boolean | string;
+
+export interface StitchElement {
+  id: Id;
+  role: 'fill' | 'outline';
+  type: StitchType;
+  threadId: Id;
+  params: Record<string, ParamValue>;  // overrides only (see §11.3)
+  entry?: Vec2;                        // user entry point; engine snaps it to the geometry
+  exit?: Vec2;                         // user exit point
+  guides?: [Vec2, Vec2][];             // satin direction lines (rungs); type-specific
+  railSplit?: [number, number];        // satinFill: outline params where rails split
+  tieIn: 'auto' | 'on' | 'off';
+  tieOut: 'auto' | 'on' | 'off';
+  trimAfter: 'auto' | 'always' | 'never';
+  userEdited?: boolean;                // set on manual change; auto-digitize can skip
+}
+
+export interface Thread { id: Id; name: string; color: string; chart?: string; code?: string }
+
+export type SequenceEntry =
+  | { kind: 'element'; elementId: Id }
+  | { kind: 'stop'; id: Id; note?: string };
+
+export interface Design {
+  schemaVersion: 1;
+  name: string;
+  fabric: FabricId;              // no hoop: design size = bounds of its shapes
+  threadChart: string;
+  settings: DesignSettings;    // see SPEC §8.8
+  threads: Record<Id, Thread>;
+  shapes: Record<Id, Shape>;
+  zOrder: Id[];                // artwork stacking, bottom → top
+  sequence: SequenceEntry[];   // sewing order
+  artwork?: Artwork;
+}
+
+export type Artwork = { matrix: Matrix; visible: boolean; opacity: number } & (
+  | { kind: 'svg'; svg: string }                            // sanitised SVG text
+  | { kind: 'image'; dataUrl: string; pxWidth: number; pxHeight: number; trace: TraceSettings }
+);
+// TraceSettings = { colors: number | 'auto'; palette: PaletteEdit[]; background: 'auto' | 'none' | string;
+//                   detail: number; smoothness: number; lineArt: boolean }  — kept so a re-trace is reproducible
+```
+
+**Resizing the design** (`resizeDesign(width?, height?)`) applies `transformShapes(allShapeIds, scaleAboutCentre)` and scales the artwork matrix to match. Stitches are regenerated, so density is preserved.
+
+**Two orders.** `zOrder` is how the artwork *looks* when layered. It drives artwork-view rendering, overlap removal and the auto-digitizer's ordering constraints. `sequence` is how the design is *sewn*. Import initialises both from SVG paint order. "Bring to front" changes only `zOrder`; reordering the Sequence panel changes only `sequence`. In stitch views, what appears on top follows `sequence`, because that is physically true.
+
+**Fill and outline live on the shape.** One geometry drives both elements, so editing a path regenerates both. The sequence gives them independent order. This is Ink/Stitch's model (fill and stroke on one element) combined with Wilcom-style sequencing.
+
+**Invariants** (`model/invariants.ts`, asserted in dev builds and after loading):
+
+- Every element appears exactly once in `sequence`, and `sequence` only references elements that exist.
+- `zOrder` is a permutation of the shape ids.
+- Every `threadId` exists in `threads`.
+- A shape with no closed subpath has `fill === null`.
+
+A memoised selector builds an `elementId → { shapeId, role }` index.
+
+**Transforming a shape** (`transformShapes(ids, matrix)`) bakes the matrix into node anchors and handles. It also transforms `entry`, `exit`, `guides` and `railSplit` points, adds the matrix's rotation to angle parameters (`angle`, and `underlayAngle` if overridden), and scales width parameters when the "scale stroke widths" preference is on.
+
+## 7. State management (`src/store`)
+
+| Store | Contents | Undoable | Persisted |
+|-------|----------|----------|-----------|
+| `documentStore` | `design`, `past[]`, `future[]`, `revision` | yes | IndexedDB autosave |
+| `uiStore` | selection (shapes, elements, nodes), active tool, viewport, view options, panel state, drag preview, simulator state | no | view prefs in localStorage |
+| `planStore` | latest `StitchPlan`, generation status, diagnostics | no | no |
+
+**Commands.** `exec(label, recipe: (draft: Design) => void)` runs Immer `produce`, pushes the previous `design` onto `past` (structural sharing keeps this cheap), clears `future` and bumps `revision`. History is capped at 200 entries. Each history entry also stores the selection, so undo restores it.
+
+**Interactive drags.** While dragging, a transient `{ shapeIds, matrix }` (or a node delta) lives in `uiStore.dragPreview`. The overlay draws the transformed geometry, and the dragged shapes' stitches are dimmed. On pointer-up, exactly one command is executed. Escape cancels. There is no stitch regeneration mid-drag in v1.
+
+**Command catalogue** (initial): `importSvg`, `addShape`, `deleteShapes`, `duplicateShapes`, `transformShapes`, `editNodes`, `booleanOp`, `pathOp`, `arrange`, `setElement` (type, enable/disable), `setParams`, `resetParam`, `setThread`, `upsertThread`, `reorderSequence`, `insertStop`, `removeStop`, `setEntryExit`, `setGuides`, `autoDigitize`, `optimizeSequence`, `setDesignSettings`.
+
+**Plan regeneration.** A store subscription watches `revision` and calls `engine.buildPlan(design, revision)` after a debounce (about 80 ms). Stale results are discarded (§11.6).
+
+## 8. SVG import (`src/io/svg-import`)
+
+1. **Sanitise.** Read the file text and run DOMPurify with the SVG profile. This forbids `script`, `foreignObject`, `on*` attributes, and `javascript:` or external hrefs.
+2. **Parse and mount.** Parse with `DOMParser`, then mount into a hidden, off-screen `<div>` in the live document. Mounting is required for `getComputedStyle` to apply `<style>` CSS rules.
+3. **Root scale.** Build the `userToMm` matrix from `width`/`height` (mm, cm, in, pt, pc, px) and `viewBox`, using `preserveAspectRatio` (default xMidYMid meet).
+4. **Expand and skip.** Expand `<use>` (clone the referenced node and apply its x/y). Skip `defs`, unused `symbol`, `clipPath`/`mask` contents, `marker` and `pattern`.
+5. **Walk in document order** (which is paint order). For each `path | rect | circle | ellipse | line | polyline | polygon`:
+   - **Matrix** = `userToMm × Π(ancestor transforms) × own transform`. Read via `transform.baseVal.consolidate()`, and include nested `<svg>` viewports. This avoids depending on layout (`getCTM`).
+   - **Geometry.** Convert to path data (rect with rx/ry, ellipse to 4 cubics, and so on). Parse it with Paper (`new paper.CompoundPath(d)`, which turns arcs into cubics), apply the matrix and read the segments into a `PathGeom`.
+   - **Style** (`getComputedStyle`): `fill`, `fill-rule`, `stroke`, `stroke-width` (multiplied by `sqrt(|det(matrix)|)`), the opacities, `display` and `visibility`. Colours are normalised to `#rrggbb`. `url(#gradient)` becomes the average of the stop colours, with a warning.
+   - **Skip** hidden elements, fully transparent paint, and elements with no fill area and no stroke.
+   - **clip-path** (P1): intersect with the clip geometry via the Paper boolean.
+   - **Warn** on `text`, `image`, `filter`, `mask`, `pattern`.
+6. **Name** each shape from `inkscape:label`, `data-name` (Illustrator), `id`, or tag plus index, prefixed with ancestor group names.
+7. **Threads.** Create one per unique colour (exact). Mapping to a chart happens via the import option or auto-digitize.
+8. **Default elements.** A closed shape with a fill gets a tatami fill element; a stroke gets a running outline element. If "Auto-digitize after import" is ticked, auto-digitize then replaces these.
+9. **Place** the artwork's bounding box at the origin, scaled to the target width or height if one was given.
+10. **Keep** the sanitised SVG and its matrix as the `artwork` backdrop. It is rendered via `<img src="blob:...">`, which never runs scripts.
+11. **Unmount** and return `{ shapes, zOrder, threads, warnings }`.
+
+## 9. Geometry kernel (`src/geom`)
+
+**Representations**
+
+- `PathGeom` (model): editable Béziers.
+- `Ring = Float64Array` (`x0,y0,x1,y1,…`, implicitly closed). `PolyShape = { outer: Ring; holes: Ring[] }[]` (multi-polygon, normalised orientation). `Polyline = Float64Array` (open).
+
+**Modules**
+
+- `flatten.ts`: adaptive Bézier subdivision with a 0.05 mm chord tolerance. Contains no Paper code, so the worker bundle stays small and DOM-free.
+- `clipper.ts`: `offset(polys, delta, join='round')`, `union`, `difference`, `intersection`, and `makeValid` (union with the fill rule, then PolyTree to outer/holes). It also offsets open paths (for the stroke-to-shape operation).
+- `paperAdapter.ts` (main thread): converts `PathGeom ⇄ paper.CompoundPath`; booleans (`unite/subtract/intersect/exclude/divide`); `divideAt` for inserting nodes; nearest-point; path-data parsing; `simplify` (curve fitting). Offset path is done as flatten → Clipper offset → Paper `simplify` to refit curves.
+- `scanline.ts`: rotate a polygon by −θ, intersect it with horizontal lines `y = k·s` (aligned to a global grid), and return the sorted x-intervals per row.
+- `medialAxis.ts`: sample the boundary every ~0.3 mm, build the Voronoi diagram (d3-delaunay), and keep the edges whose endpoints are both inside the polygon. Each node gets a radius (its distance to the nearest site). Spurs shorter than k·radius are pruned. Returns a skeleton graph plus helpers: maximum width, width histogram, branch count, and the diameter path (longest path in the tree).
+- `polyline.ts`: arc length, even resampling with corner preservation, nearest point and parameter, split at a parameter, smoothed normals, offset by per-vertex normal with a miter limit.
+- `polygon.ts`: area, bounding box, centroid, point-in-polygon, convex hull, minimum-area rectangle (rotating calipers), PCA.
+
+## 10. Canvas and editing (`src/canvas`, `src/tools`)
+
+### 10.1 Layers (bottom to top, one shared viewport)
+
+1. **Background** (Canvas2D): fabric colour, grid, origin mark, and the design's bounding box with a W×H dimension label.
+2. **Artwork backdrop**: `<img>` of the original SVG or image with a CSS transform (optional).
+3. **Shapes** (SVG): one `<path>` per shape. Artwork view uses the original paint or thread colour. Stitch views use transparent fills that act as hit areas. The `d` strings are memoised by `geom` object identity, so only changed shapes re-render.
+4. **Stitches** (Canvas2D): see §13.
+5. **Editing overlay** (SVG): selection outlines, bounding-box handles, nodes and handles, angle/entry/exit/guide handles, marquee, pen preview, snap guides.
+
+The SVG shape layer comfortably handles a few thousand shapes. Beyond that, a canvas fallback is a P2 item.
+
+**Hit testing.** Shapes and handles use native SVG pointer events, with a minimum 6 px stroke hit width. Stitches are hit-tested through a uniform-grid spatial index of stitch segments, rebuilt per plan, which returns the owning element.
+
+### 10.2 Tools
+
+```ts
+interface Tool {
+  id: ToolId;
+  cursor: string;
+  shortcut?: string;
+  onPointerDown?(e: CanvasPointerEvent, ctx: ToolContext): void;
+  onPointerMove?(e: CanvasPointerEvent, ctx: ToolContext): void;
+  onPointerUp?(e: CanvasPointerEvent, ctx: ToolContext): void;
+  onDoubleClick?(e: CanvasPointerEvent, ctx: ToolContext): void;
+  onKeyDown?(e: KeyboardEvent, ctx: ToolContext): void;
+  Overlay?: React.FC;                    // tool-specific overlay content
+}
+// CanvasPointerEvent: { doc: Vec2; screen: Vec2; mods; hit: HitTarget | null; nativeEvent }
+// ToolContext: { exec, ui, design, viewport, snap(pt) }
+```
+
+| Tool | Key | Behaviour |
+|------|-----|-----------|
+| Select | V | Click or marquee select. Drag to move (Shift constrains the axis, Alt duplicates). Handles scale (Shift keeps proportions, Alt scales from the centre). Corner zones rotate (Shift snaps to 15°). |
+| Direct select | A | Node and handle editing. Double-click a segment to add a node. Delete removes nodes. Shift+C toggles smooth/corner. Alt-drag a handle breaks symmetry. |
+| Pen (P1) | P | Click for a corner, drag for a smooth node. Click the first node to close the path. |
+| Rectangle / Ellipse (P1) | M / L | Shift for square/circle, Alt to draw from the centre. |
+| Hand / Zoom | H, hold Space / Z | |
+| Stitch angle | — | Drag across a fill to set its `angle`. |
+| Entry / Exit | — | Click to place entry or exit points on the selected element. |
+| Satin direction | — | Draw guide lines and drag rail split points. |
+
+Keyboard shortcuts live in one place (`lib/keymap.ts`) and are ignored while focus is in an input.
+
+**Booleans** (`booleanOp(op, shapeIds)`): convert to Paper, run the operation, convert back. Results inherit stitch settings as described in SPEC FR-1.3. A result takes the `zOrder` slot of the topmost input (the backmost for Subtract) and the `sequence` slot of the first input's elements. New elements get fresh ids.
+
+## 11. Stitch engine (`src/engine`)
+
+### 11.1 Types
+
+```ts
+export const enum F {
+  STITCH = 0, JUMP = 1, TRIM = 2, COLOR_CHANGE = 4, STOP = 8, END = 16,
+  // informational only (rendering/stats); export ignores them
+  TIE = 32, UNDERLAY = 64, TRAVEL = 128,
+}
+
+/** Output of one element generator: needle points in sewing order. */
+export interface StitchRun {
+  xy: Float64Array;     // interleaved mm
+  flags: Uint8Array;    // per point: JUMP for internal jumps, UNDERLAY, TRAVEL, TIE
+}
+
+export interface StitchPlan {
+  revision: number;
+  x: Float32Array; y: Float32Array; flags: Uint8Array;   // one entry per command
+  element: Uint32Array;                                   // index into elementIds
+  elementIds: Id[];
+  elementRanges: { elementId: Id; start: number; end: number }[];
+  colorBlocks: { threadId: Id; color: string; start: number; end: number }[];
+  bounds: { minX: number; minY: number; maxX: number; maxY: number };
+  stats: { stitches: number; jumps: number; trims: number; colorChanges: number;
+           stops: number; threadLengthMm: number; estSeconds: number };
+  diagnostics: Diagnostic[];   // { severity, code, message, elementId?, at?: Vec2 }
+}
+```
+
+### 11.2 Pipeline (`buildPlan`)
+
+```
+prev = { pos: designStartPoint, thread: null }
+for entry in design.sequence:
+  if entry is stop → tie-off, TRIM, STOP
+  else:
+    el, shape  = lookup(entry)
+    params     = resolveParams(el, design.fabric)                  // §11.3
+    prepared   = cache(hash(type, shape.geom, params, el.guides, el.railSplit),
+                       () => def.prepare(shape.geom, params, el))  // expensive: flatten, offsets, rows, rails
+    hints      = { entry: el.entry ?? prev.pos, exit: el.exit ?? nextElementCentroid }
+    run        = cache(prepared.key + quantize(hints, 0.5mm),
+                       () => def.route(prepared, hints))           // pick start/end, order sections, emit points
+    connect(prev, run.start, thread change?, trimAfter, ties)      // §11.5
+    append(run)
+postprocess → END
+derive colorBlocks, elementRanges, bounds, stats, diagnostics
+```
+
+Splitting generation into `prepare` (heavy work that depends only on geometry and parameters) and `route` (cheap work that depends on neighbours) means reordering the sequence or moving a neighbour doesn't redo the heavy work.
+
+### 11.3 Stitch type registry and parameters
+
+```ts
+interface StitchTypeDef<P = any, Prep = any> {
+  id: StitchType;
+  label: string;
+  role: 'fill' | 'outline';
+  params: ParamDef[];                     // drives Inspector UI, defaults, validation
+  defaults: P;
+  aliasOf?: StitchType;                   // e.g. 'triple' reuses 'running' with bean = 1
+  appliesTo(shape: ShapeInfo): boolean;   // e.g. fills need a closed subpath
+  prepare(geom: PathGeom, params: P, el: StitchElement, ctx: EngineCtx): Prep;
+  route(prep: Prep, hints: { entry?: Vec2; exit?: Vec2 }, ctx: EngineCtx): StitchRun;
+}
+
+interface ParamDef {
+  key: string; label: string; help?: string;
+  kind: 'length' | 'number' | 'angle' | 'fraction' | 'boolean' | 'enum';
+  unit?: 'mm' | '°' | '%';
+  min?: number; max?: number; step?: number;
+  options?: { value: string; label: string }[];
+  group: 'basic' | 'underlay' | 'compensation' | 'advanced';
+  visibleIf?: (p: Record<string, ParamValue>) => boolean;
+}
+```
+
+- **Resolution**: `effective = { ...def.defaults, ...FABRIC_PRESETS[fabric][type], ...el.params }`. The Inspector shows inherited values as muted and overrides with a reset dot.
+- **Adding a stitch type** means a new folder in `engine/stitches/<type>/` that exports a `StitchTypeDef`, plus one line in `registry.ts`. The Inspector form is generated from `ParamDef`s.
+- `EngineCtx` = `{ settings, diag(code, msg, at?), tolerance }`.
+
+### 11.4 Algorithms
+
+**Running / triple**
+
+- Flatten to a polyline. Split it at corners (turn angle > 30°). Resample each piece at `n = ceil(len / L)` evenly spaced points, so no stitch is longer than `L` and stitch lengths stay even.
+- Closed paths start at the point nearest `hints.entry`, with a vertex inserted there. Open paths start at whichever end is nearer.
+- Bean repeats: each stitch a→b becomes a→b→a→b (bean = 1) or a→b→a→b→a→b (bean = 2).
+- Passes: alternate forward and reverse traversal.
+
+**Satin column (outline)**
+
+1. **Rails.** Resample the centreline finely (~0.2 mm). Compute smoothed normals. Then `railA/B = c ± n·(w/2 + pullComp)`, with a miter limit at sharp corners. A closed centreline gives two closed rails.
+2. **Pairing.** Walk the centreline in steps of `density / 2`. Each step adds one penetration, alternating between rail A and rail B at the corresponding normalised position, which gives a zigzag with `density` peak-to-peak.
+3. **Short stitches (P1).** Where the inner rail's spacing drops below about 50% of the outer rail's, alternate penetrations on the inner rail are pulled toward the centre (inset about 15–25%).
+4. **Underlay**, emitted first. Centre walk: a run along the centreline. Edge walk: a run along both rails inset by `underlayInset`. Zigzag underlay: a zigzag at `zigzagUnderlaySpacing` between the inset rails. Passes alternate direction. `route` picks the starting end so the total pass count leaves the exit nearest `hints.exit`.
+5. **Split satin (P1).** Stitches longer than `splitAbove` get evenly spaced intermediate penetrations, staggered between neighbouring stitches.
+
+**Satin fill (shape)**
+
+- **Auto-turning.** The rails are the two parts of the outer ring, split at two points. The defaults are the boundary points nearest the ends of the medial-axis diameter path; the user can override them with `railSplit`. Rail B is reversed. Correspondence comes from user `guides` (rungs) plus automatic rungs from skeleton nodes (perpendicular projections onto both rails), with arc-length interpolation between rungs. Pull compensation offsets the rails outward along their normals. From there, stitches are paired exactly like a satin column.
+- **Fixed angle.** This is the fallback for holes or branches. Scanline intervals at the given angle each become one edge-to-edge stitch, sewn back and forth per section (the same section decomposition as tatami). Intervals longer than `splitAbove` are split.
+
+**Zigzag**: the same rails as the satin column (no pull compensation) and the same pairing, with `spacing` peak-to-peak. No underlay.
+
+**Tatami fill**
+
+1. **Prepare.** `poly = makeValid(flatten(geom))`, then `offset(poly, +pullComp)`, then rotate by −θ so rows are horizontal.
+2. **Rows.** `y_k = k·s` on a global grid, so shapes sharing an angle line up. Intersect with the polygon to get the x-intervals per row.
+3. **Sections.** Sweep the rows and link each interval to the one that overlaps it in the next row, but only while the link is 1:1. A split or merge starts a new section. Each section is a strip that can be sewn back and forth in one pass.
+4. **Penetrations.** In row `k`, the penetrations are `x = (j + frac(k·offset))·L` on a global grid (so the texture is uniform across sections), plus both interval endpoints. A penetration that would leave an end stitch shorter than `minStitch` is dropped.
+5. **Ordering and travel.** Each section can start at any of its four corners (top/bottom × left/right); the exit follows from the row-count parity. A greedy pass picks the nearest unsewn section entry from the current position. Travel between sections is a shortest path **inside** the inset polygon: a visibility graph over the Douglas–Peucker-simplified inset rings (0.3 mm), searched with A\*. It is sewn as a `TRAVEL` running stitch. If no inside path exists, or it is more than 3× the straight-line distance, the connector becomes tie-off + trim + jump instead. P2: bias the order so travel runs over sections that will be sewn later, keeping it hidden.
+6. **Underlay**, emitted before the top layer. Edge run: running stitch around `offset(poly, −inset)`. Tatami underlay: the same algorithm at θ+90°, with `underlaySpacing` and `underlayStitchLength`, on the inset polygon. The underlay exit connects to the top layer's entry by inside travel.
+7. **Entry and exit.** A user entry point puts the section containing its nearest boundary point first. A user exit point puts the section nearest the exit last and travels to the exit. Everything is then rotated back by +θ.
+
+**Contour fill (P1).** Repeatedly offset inward by `spacing` until empty. Resample each ring. Connect ring k to ring k+1 at their nearest points, going inner → outer.
+
+### 11.5 Sequencer: connectors, ties and trims
+
+For each transition from the previous element's exit E to the next element's entry S:
+
+| Situation | Emitted |
+|-----------|---------|
+| Same thread, `dist(E,S) ≤ trimThreshold`, `trimAfter ≠ always` | Direct stitch(es) E→S, no ties. |
+| Same thread, longer distance (or `trimAfter = always`) | Tie-off, TRIM, JUMP to S, tie-in. |
+| `trimAfter = never` | Stitched connector, split at the maximum stitch length. Warning if longer than 10 mm. |
+| Thread changes | Tie-off, TRIM, COLOR_CHANGE, JUMP to S, tie-in. |
+| Stop entry | Tie-off, TRIM, STOP. The next element starts with a jump and tie-in. |
+
+- **Ties.** A tie-in is 3 tiny stitches of length `tieLength` along the first segment, back, then forward again. A tie-off does the same along the last segment, reversed. `auto` means on wherever there is a trim, colour change, stop, or the start/end of the design.
+- **Postprocess.** Split stitches longer than `maxStitchLength` (not jumps). Merge stitches shorter than `minStitchLength` (ties exempt). Remove zero-length duplicates. Append END.
+
+### 11.6 Worker, caching and cancellation
+
+```ts
+interface EngineApi {
+  buildPlan(design: Design, revision: number): Promise<StitchPlan | { stale: true }>;
+  analyze(input: AnalyzeInput): Promise<AnalyzeResult>;                 // auto-digitize analysis
+  optimizeSequence(design: Design, opts: OptimizeOpts): Promise<SequenceEntry[]>;
+}
+```
+
+- **Transfer.** v1 sends the whole `Design` each revision (structured clone takes a few ms for typical designs). The worker diffs by hash. If profiling shows a need, switch to sending patches.
+- **Caches.** Two LRUs, `prepared` and `runs`, each capped at about 2,000 entries. The key is FNV-1a/xxhash over a stable serialisation of `{type, geom, effectiveParams, guides, railSplit}` (plus quantised hints for runs).
+- **Cancellation.** Every 10 ms or so the generation loop yields (`await new Promise(r => setTimeout(r))`) so newer messages are received. If a newer revision has arrived, it returns `{ stale: true }`. The main thread also ignores results whose revision is older than the current one.
+- **Transferables.** The plan's typed arrays are transferred, not copied.
+
+## 12. Auto-digitizer (`src/engine/autodigitize` + `store/commands/autoDigitize.ts`)
+
+```
+main      collect target shapes (selection or all, minus userEdited if "keep my edits")
+worker    colours: merge (ΔE00 < 5), k-means in Lab if > maxColors, nearest chart thread
+main      overlap removal with Paper booleans (keeps curves): for each fill bottom→top,
+          subtract union(inset(fills above, overlapMargin)); split disconnected parts;
+          strokes wider than maxSatin → outline-stroke into fill shapes
+worker    per region: flatten, area, holes, medial axis → widths, branchiness → classify
+          (SPEC §9); tatami angle from min-area rect + neighbour rule; satin railSplit
+worker    sequence optimiser
+main      exec('Auto-digitize', draft => apply all)  → one undo step; show summary
+```
+
+All thresholds live in `autodigitize/config.ts`. Long main-thread steps yield between shapes and report progress to the dialog.
+
+### 12.1 Image digitizer (`src/raster`, raster worker)
+
+This implements SPEC FR-10 and §9.1. It has its own worker, so tracing never competes with stitch generation.
+
+```ts
+interface RasterApi {
+  load(bitmap: ImageBitmap, targetMm: { width?: number; height?: number }): Promise<ImageInfo>; // resample + filter, cached
+  quantize(opts: QuantizeOpts): Promise<QuantizeResult>;   // palette, suggested k, background guess, label-map preview
+  trace(opts: TraceSettings, preview: boolean): Promise<TracedShapes>; // preview = ¼ resolution for the dialog
+}
+// TracedShapes = { shapes: { color: string; geom: PathGeom; lineArt?: boolean }[]; warnings: string[] }
+```
+
+**Pipeline** (each stage is cached by its inputs, so moving the detail slider doesn't re-run quantisation):
+
+1. **Decode.** `createImageBitmap(file)` runs on the main thread and the bitmap is transferred to the worker. The worker uses `OffscreenCanvas` to resample to about 0.1 mm per px at the target size, capped at about 4 MP, and reads the result as `ImageData`.
+2. **Pre-filter.** A separable bilateral filter, or a 3×3 median for speed in preview mode. Transparent pixels are marked as background.
+3. **Quantise.** k-means++ in CIELAB on a pixel sample of about 50k, then full assignment into a `Uint8Array` label map. **Auto k**: run k = 2…16 and take the elbow, where the drop in within-cluster error is under 8%. **Blend absorption**: label-map pixels whose colour sits on the segment between two neighbouring clusters, and which form thin runs (2 px or less), are relabelled to the nearer of those two clusters.
+4. **User palette edits** (merge, recolour, don't stitch) are applied as a label remap, which is cheap.
+5. **Masks.** One bitmask per stitched label. Apply morphological open then close (radius from `detail`). Connected components (two-pass union-find) smaller than `minDetailArea` are relabelled to the neighbour sharing the longest border, and the masks are rebuilt.
+6. **Trace.** potrace (`esm-potrace-wasm`) runs per mask, with `turdsize` (speckle size), `alphamax` (corner threshold) and `opttolerance` driven by `smoothness`. The SVG path output is parsed into `PathGeom` with the px → mm matrix applied.
+7. **Line art (P1).** Run a distance transform on dark masks. If the maximum width is under 1.5 mm, skeletonise (Zhang–Suen), walk the skeleton into polylines, simplify (Douglas–Peucker 0.1 mm) and record the mean width. These become stroke shapes, which the vector rules map to running or satin.
+8. **Hand-off.** The main thread runs `exec('Import image', …)` to create the shapes, threads (exact colours, or mapped to a chart or My threads), the `artwork` backdrop with its `TraceSettings`, and the default sequence. If auto-digitize is on, it runs with `removeOverlaps = false` and `cutoutGrowth = overlapMargin`.
+
+**Cutout growth** happens at plan-build time, not in the stored geometry. For each fill whose `cutout` flag is set (by the image digitizer), the engine's `prepare` offsets the polygon by the overlap margin, clipped to `union(regions sewn later that touch it)`. This happens before pull compensation, so the shared seam is covered by whichever region is sewn last. The flag lives in element params (`cutoutGrowth: number`, default 0), so reordering the sequence correctly changes which side grows.
+
+**Sequence optimiser**
+
+1. **Precedence graph.** For each pair (a, b) with a below b in `zOrder`, add an edge a→b if they intersect: a bounding-box test first (via a grid index), then polygon intersection area > 0.5 mm². Each shape's fill gets an edge to its own outline.
+2. **Greedy topological order.** Keep the current thread `c` and position `p`. Among the elements whose predecessors are all done, pick the one with thread `c` nearest `p`. If none qualifies, switch to the thread with the most available stitches, with one step of lookahead to avoid an extra change later.
+3. **Improvement (P2).** Local 2-opt within colour blocks, constrained by the precedence graph.
+
+## 13. Stitch rendering (`src/canvas/stitchRenderer.ts`)
+
+- The canvas is sized to the viewport × DPR. It redraws when the plan, viewport, view options or highlight change.
+- **Flat mode.** One `Path2D` per colour block is built in document units once per plan. Drawing applies `ctx.setTransform(viewport)` with `lineWidth = max(0.35 mm, 1 px / zoom)`. Jumps are a separate thin dashed `Path2D` (toggle). Needle-point dots are drawn only above a zoom threshold.
+- **Realistic mode (P1).** Each stitch is drawn as a thick line (thread width ~0.4 mm, darkened colour) plus a thinner, lighter highlight line offset toward a fixed light direction, with round caps. It renders into an offscreen cache bitmap at the current zoom.
+- **Gestures.** During pan or zoom, the cached bitmap is transformed (`drawImage` with scale and offset). A full re-render happens about 120 ms after the gesture ends. This keeps 60 fps on large designs in both modes.
+- **Highlight.** Selected or hovered elements are redrawn on top with an outline. Others can optionally be dimmed.
+- **Diagnostics** markers are drawn on top.
+- The same functions also produce PNG export and the PES thumbnails (at low resolution).
+
+## 14. Simulator (`src/simulator`)
+
+- **Controller.** A `requestAnimationFrame` loop runs outside React. It holds `{ playing, speed, index (float), stopAtColorChange }` and pushes a throttled snapshot (~10 Hz) to `uiStore` for counters, the timeline and Sequence panel highlighting.
+- **Speeds.** 1× equals `machineSpm / 60` stitches per second. Presets are 1×, 2×, 5×, 10×, 25× and 100×, plus "max" (as fast as frames allow).
+- **Progress rendering.** An offscreen canvas holds the stitches drawn so far. Moving forward from i to j draws only the stitches (i, j]. Seeking backwards, or changing the viewport, redraws 0..j. Flat mode is fast enough to redraw 100k segments directly. Realistic mode keeps an `ImageBitmap` checkpoint every 10k stitches, invalidated when the viewport changes.
+- **Overlay.** A needle crosshair at the current point, the upcoming jump drawn dashed, and the current thread swatch.
+- **Timeline.** Colour-block segments proportional to stitch count, ticks for trims and stops, a draggable handle, and a hover tooltip (stitch number, element name).
+- **Time model.** `t = stitches · 60 / spm + trims · trimSeconds + colourChanges · colorChangeSeconds`.
+
+## 15. PES export (`src/io/pes`)
+
+The reference is **pyembroidery** (MIT): `PesWriter.py`, `PecWriter.py`, `EmbThreadPec.py`. Port it carefully, keep its quirks, and credit it in file headers.
+
+### 15.1 Pipeline
+
+`StitchPlan` → `toMachineCommands()` produces absolute integer 0.1 mm coordinates with commands `STITCH | JUMP | TRIM | COLOR_CHANGE | STOP | END`. It then:
+
+- rounds absolute coordinates and computes deltas from the rounded values;
+- encodes a **trim** as the jump that follows it with the TRIM flag set (PEC has no standalone trim);
+- encodes a **stop** as a colour change to the same thread, which repeats the palette index in the colour list;
+- validates (§15.5), then writes the PES header, the PES body and the PEC section.
+
+### 15.2 File layout (v1)
+
+```
+"#PES0001"                                 8 bytes
+uint32le   pecOffset
+PES body   v1 header (scale-to-fit, hoop flag 0=100×100 / 1=130×180 chosen from the design bounds, block count),
+           then CEmbOne + CSewSeg blocks (absolute stitches per colour block).
+           Port pyembroidery write_version_1 exactly. Its "truncated" variant
+           (empty body) is available as a debug option.
+PEC @pecOffset
+  "LA:" + name padded to 16 + "\r"
+  0x20 ×12, 0xFF 0x00, 0x06 (icon bytes per row), 0x26 (icon rows = 38)
+  0x20 ×12, (numColours − 1), palette index ×numColours, pad with 0x20 to 463 bytes
+  0x00 0x00, uint24le stitchBlockLength, 0x31 0xFF 0xF0,
+  uint16le width, uint16le height, uint16le 0x01E0, uint16le 0x01B0,
+  uint16be 0x9000 | (−minX), uint16be 0x9000 | (−minY)
+  encoded stitches … 0xFF
+  thumbnails: (1 + numColours) × 228 bytes  (48×38 px, 1 bit per pixel, 6 bytes per row)
+```
+
+**v6** (`#PES0060`) adds a full header with hoop dimensions, design metadata and a thread table (catalogue code, RGB, description, chart/brand). Port `write_version_6`. v1's header hoop flag only distinguishes 100×100 and 130×180. Machines read the PEC section, so this is believed harmless for larger designs, but it needs to be verified on a larger-field machine when one is available. The SE600 (100×100) is unaffected.
+
+### 15.3 Stitch encoding (PEC)
+
+- **Per axis.** A small delta uses one byte, `d & 0x7F` (pyembroidery's short-form condition is `-64 < d < 63`). Otherwise two bytes big-endian: `0x8000 | (flag << 8) | (d & 0x0FFF)`, with `flag ∈ {0, 0x10 JUMP, 0x20 TRIM}`.
+- **Jumps** write both axes in long form with a flag. pyembroidery uses JUMP for the first move and TRIM for later jumps; match it. After a jump, the first real stitch is preceded by a `(0, 0)` stitch when both deltas are non-zero (another pyembroidery quirk; match it).
+- **Colour change**: `0xFE 0xB0` followed by alternating `0x02` / `0x01`. **End**: `0xFF`.
+- Deltas range over ±2047 units (±204.7 mm), so jumps never need splitting for PES.
+
+### 15.4 Colours
+
+- `pecPalette.ts` holds the 64 Brother PEC colours, from pyembroidery's `EmbThreadPec`.
+- v1 maps each design thread to its nearest PEC index by ΔE2000. The export dialog shows a "machine will display" swatch row.
+- v6 also writes the real RGB values and chart codes.
+
+### 15.5 Validation
+
+- **Errors**: empty plan; a delta out of range after splitting; zero colours.
+- **Warnings**: stitches over 12 mm; more than about 200 trims. There are no hoop or size warnings (SPEC §7).
+
+### 15.6 Reader and verification
+
+- `pesReader.ts` parses the PEC stitch block (plus the v6 thread table) back into commands. It powers "Open .pes" (P1) and the tests.
+- **Golden tests.** Small synthetic patterns are written by both our writer and pyembroidery (`tests/tools/make_goldens.py`, run manually; outputs committed) and compared byte for byte.
+- **Round trip.** Plan → PES → read → identical command list and stats.
+- **Manual checks**: open in Ink/Stitch and PE-Design or a viewer, then sew on the machine. Results go in `docs/sew-tests.md`.
+
+### 15.7 Export registry
+
+```ts
+interface ExportFormat { id: string; ext: string; label: string;
+  validate(plan: StitchPlan, design: Design): Diagnostic[];
+  write(plan: StitchPlan, design: Design, opts: unknown): Uint8Array }
+```
+
+PES is the only registered format in v1. DST, JEF and others can be added later without touching the engine.
+
+## 16. Threads and colour (`src/threads`)
+
+- Charts are JSON: `{ id, name, brand, threads: [{ code, name, color }] }`. They are generated from Ink/Stitch's GIMP `.gpl` palette files (GPL, compatible) by `scripts/import-palettes.ts`, with attribution in `NOTICE.md`. The **Brother PEC 64** palette, needed for PES v1 export, comes from pyembroidery.
+- **Exact colours are the default.** A `Thread` with no `chart` is simply a colour. Charts and My threads only matter for colour mapping and for the names and codes shown in the colour sequence. The machine never sees a brand.
+- **My threads** (P1) is a user-level palette in IndexedDB (`library/myThreads.ts`), shared across designs. It can be built from scratch, from a chart, or from the colours of an existing design. Auto-digitize and the image digitizer can restrict mapping to it.
+- Colour maths: sRGB → linear → XYZ (D65) → CIELAB, ΔE2000, nearest-thread lookup, and k-means in Lab for colour reduction.
+
+## 17. Persistence (`src/io/project`)
+
+- **Local library** (`src/library`, P0). IndexedDB stores: `designs` (id → design JSON), `meta` (id → name, updatedAt, thumbnail PNG blob rendered from the stitch plan), `prefs`, and `myThreads`. At first launch the app calls `navigator.storage.persist()` so the browser doesn't evict designs under storage pressure. The home screen lists `meta`. Opening a design loads it into `documentStore`, and autosave writes back to its entry. Library backup and restore (P1) is a zip of project files.
+- **Project file** (`*.lumastitch`, JSON): `{ format: 'lumastitch-project', schemaVersion, design }`. Loading parses, validates with zod, runs `migrate[v]` up to the current version, and checks invariants. The stitch plan is never stored.
+- **Autosave.** About 1 s after each command, write the open design to its library entry. Startup reopens the last open design.
+- **Files.** Use the File System Access API (`showOpenFilePicker` / `showSaveFilePicker`) where available, so Save writes in place. Otherwise fall back to `<input type=file>` and `<a download>`.
+
+## 18. UI composition (`src/components`)
+
+- `AppShell`: `MenuBar`, `Toolbar` (Import, Auto-digitize, view mode, Simulate, Export), `ToolPalette`, `CanvasView`, `Sidebar` (tabs: `Inspector`, `SequencePanel`, `ThreadsPanel`, `IssuesPanel`), `StatusBar`, and `SimulatorBar` (Simulate mode only).
+- `Inspector`: a Shape section (X/Y/W/H/rotation, name, hide/lock), then **Fill** and **Outline** sections. Each has an enable switch, type `Select`, thread swatch picker, and a `ParamForm` generated from `ParamDef`s: Basic is open; Underlay, Compensation and Advanced are collapsed. Controls are a slider + number input with unit, `Select`, `Switch`, and an angle dial. Multiple selections show "Mixed".
+- `SequencePanel`: a virtualised list of colour-block headers (swatch, block number, stitch count) and element rows (role icon, shape name, stitch count), plus stop rows. dnd-kit handles reordering. During simulation it highlights and auto-scrolls to the current element.
+- `HomeScreen`: the project library grid (thumbnail, name, edited date; open, rename, duplicate, delete), plus New design, Open file and Import buttons. Routing is just "home vs. editor" state, so no router is needed.
+- `DesignSizeField`: W × H in mm with an aspect lock, at the top of the sidebar. It calls `resizeDesign`.
+- Dialogs: `ImportDialog` (SVG), `ImageImportDialog` (original vs. traced preview, target size, colour count and editable swatches, background, detail and smoothness sliders, line-art toggle, auto-digitize checkbox), `AutoDigitizeDialog`, `MyThreadsDialog` (P1), `ExportDialog` (version, palette mapping preview, validation list), `DesignSettingsDialog`, `ThreadPickerDialog`, `ShortcutsDialog`.
+
+## 19. Performance budget
+
+| Operation | Budget | Technique |
+|-----------|--------|-----------|
+| Single element regeneration | < 100 ms | `prepare`/`route` caches; worker |
+| Full plan, 50k stitches | < 2 s | worker; typed arrays; transfer |
+| Pan/zoom, 100k stitches | 60 fps | cached `Path2D` / bitmap transform during gestures |
+| Simulator | 60 fps | incremental drawing; rAF outside React |
+| SVG import, 2,000 paths | < 3 s | single DOM pass; memoised `d` strings |
+| Undo snapshot | O(changed) | Immer structural sharing |
+
+## 20. Testing
+
+- **Unit (Vitest, Node)**:
+  - `geom`: flatten tolerance, offset, scanline, medial axis on known shapes (rectangle, ring, L-shape, Y-shape).
+  - Each stitch generator, as property tests with fast-check on random polygons: every penetration lies within `offset(poly, pullComp + tol)`; no stitch exceeds its maximum; row spacing equals density; satin alternates rails; output is deterministic.
+  - Sequencer: tie, trim, colour-change and stop emission.
+  - PES encoder: golden files.
+  - ΔE2000: Sharma et al. reference vectors.
+- **Browser mode (Vitest + Playwright)**: the SVG importer (needs real `getComputedStyle`), Paper adapter booleans, and canvas rendering snapshots (P1).
+- **E2E (Playwright)**: import fixture → auto-digitize → export → read back with `pesReader` → assert stats; undo/redo across commands; reload restores the design.
+- **Fixtures**: `tests/fixtures/svg/` (basic shapes, holes, transforms, CSS classes, units, Illustrator, Inkscape and Figma exports, stroke widths, unsupported features) and `tests/fixtures/pes/` (goldens), plus `tests/fixtures/raster/` (flat logos, anti-aliased clip art, transparent PNGs, a noisy JPG and a photo, each with its expected colour count and background).
+- **Raster unit tests**: k-means determinism (seeded RNG), auto-k on synthetic n-colour images, blend absorption on anti-aliased edges, connected components, morphology, and potrace output bounds in mm.
+- **Physical sew tests**: `docs/sew-tests.md` records the machine (reference: Brother SE600, 4×4" hoop), fabric, settings, photo and verdict for each milestone.
+
+## 21. Risks and spikes
+
+| Risk | Mitigation |
+|------|------------|
+| Machine rejects or misreads the PES | Port pyembroidery exactly; golden tests; **sew test at the end of M1**; offer the v6 option. |
+| Fill quality (gaps, visible travel, too many trims) | Port Ink/Stitch's fill routing where it beats ours; inside-only travel; diagnostics; iterate with sew tests. |
+| Image tracing quality (noisy regions, slivers, gaps between colours) | Edge-preserving pre-filter; absorb anti-aliasing blends; morphological cleanup; cutouts plus overlap growth; editable swatches; a fixture set of real logos and clip art with expected colour counts. |
+| SE600 has no automatic trimming (unverified) | Confirm in sew test #1. If so, minimising jumps matters more: favour inside travel over trims, and keep the trim threshold configurable. |
+| Paper.js booleans fail on messy imports; Paper.js updates slowly | It sits behind `paperAdapter`. Fallback: Clipper on flattened geometry, then `simplify` to refit curves. |
+| Paper.js can't run in a worker (unverified) | **M0 spike.** If it can't, run booleans on the main thread in chunks with progress. The engine never depends on Paper. |
+| Clipper2 JS port maturity | **M0 spike**: compare `clipper2-ts`, `clipper2-js` and `clipper2-wasm` on correctness tests and speed. |
+| Auto-satin rail detection on complex shapes | Conservative classification with a tatami fallback; manual rail-split and guide handles. |
+| Huge SVGs (10k+ paths) | Warning on import; optional simplify; canvas shape layer as a P2 fallback. |
+| Scope creep toward full Illustrator parity | Hold to P0/P1/P2; vector tools limited to the SPEC list. |
+
+## 22. Build order
+
+| Milestone | Scope | Exit criteria |
+|-----------|-------|---------------|
+| **M0 Foundations** | Scaffold (Vite, React, TS, Tailwind, shadcn); GPL `LICENSE`; Cloudflare Workers deploy from the repo (§23); AppShell layout; viewport (pan, zoom, grid, dimensions); model, stores, undo; local library + autosave; SVG import → shapes rendered; select and move; design size field. Spikes: Paper.js in a worker, Clipper2 port choice, `esm-potrace-wasm` in a worker. | Fixture SVGs import at the correct size; main branch auto-deploys. |
+| **M1 Vertical slice to the machine** | Engine worker; running, satin column and tatami (jumps between sections, no underlay); basic sequencer (trims, colour changes, ties); flat preview; PES v1 writer + reader; export dialog. | Round-trip tests pass; **sew test #1**. |
+| **M2 Configure and sequence** | ParamDef-driven Inspector; fabric presets and inheritance; threads panel and Brother chart; Sequence panel with drag and drop; stops; trim and tie options; stats; design settings; autosave and project files. | Full manual workflow works without auto-digitize. |
+| **M3 Simulator** | Playback, speeds, timeline, stepping, element highlight. | Matches read-back PES exactly. |
+| **M4 Stitch quality** | Tatami inside travel; fill and satin underlays; pull compensation; satin fill (auto rails, guides); zigzag; contour fill; angle and entry/exit tools. | **Sew test #2** on woven and knit fabric. |
+| **M5 Vector editing** | Transform handles; node editing; pen, rectangle and ellipse; booleans; path operations; align; snapping. | Boolean fixtures pass; undo for all. |
+| **M6 Auto-digitizer** | Colour mapping; overlap removal; classification; satin rails; sequence optimiser; dialog and summary. | Acceptance criterion 2 on the logo fixtures. |
+| **M7 Image digitizer** | Raster worker; resample, filter, quantise, auto-k, background; masks and cleanup; potrace; cutout growth; `ImageImportDialog` with live preview; hand-off to auto-digitize. Line-art mode is P1. | Acceptance criterion 3; **sew test #3** with a traced logo. |
+| **M8 Polish** | Realistic rendering; Issues panel; My threads; PES v6; PNG/SVG export; open `.pes`; library backup; shortcuts dialog; performance pass. | All SPEC §12 criteria. |
+
+## 23. Deployment (Cloudflare Workers static assets)
+
+The app is a static Vite build served by Workers static assets. There is no Worker script (`main`), so every request is a static asset request.
+
+```jsonc
+// wrangler.jsonc
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "lumastitch",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}
+```
+
+```
+# public/_headers  (copied into dist/ by Vite)
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Content-Security-Policy: default-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; connect-src 'self'
+```
+
+- **CI/CD**: connect the GitHub repo in the Cloudflare dashboard (Workers Builds). Build command: `npm ci && npm run build`. Deploy command: `npx wrangler deploy`. Non-production branches use `npx wrangler versions upload` to get preview URLs. CI also runs `npm test` before the build.
+- **Local**: `npm run dev` (Vite). `npx wrangler dev` serves `dist/` the same way production does, which is useful for checking `_headers` and the SPA fallback.
+- **Limits to remember**: each static asset must be under 25 MiB (the potrace WASM is far below this). Vite's content-hashed `/assets/*` filenames make long-lived immutable caching safe, while `index.html` is revalidated, so a new deploy reaches users on their next load.
+- **No cross-origin isolation** (COOP/COEP) is needed in v1, because nothing uses `SharedArrayBuffer`. If threaded WASM is added later, add those headers to `_headers`.
+- **Offline (P2)**: a service worker precaching the build (e.g. `vite-plugin-pwa`) makes the app installable and fully offline.
