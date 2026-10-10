@@ -214,3 +214,33 @@ test('exports DST, JEF, EXP, VP3 and the PDF worksheet from the dialog', async (
     await expect(page.getByRole('dialog')).toBeHidden({ timeout: 10000 });
   }
 });
+
+test('exports a stitch-out video at a chosen speed', async ({ page }) => {
+  await openApp(page);
+  await importFile(page, 'svg/basic-shapes.svg', 'image/svg+xml');
+  await page.getByRole('dialog').getByRole('button', { name: 'Import', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeHidden({ timeout: 20000 });
+  await waitIdle(page);
+  await page.evaluate(() =>
+    (window as any).__lumastitch.useUi.getState().openDialog('export', { format: 'video' }),
+  );
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('radio', { name: 'Speed' }).click();
+  const speed = dialog.getByRole('textbox', { name: 'Speed relative to the machine' });
+  await speed.fill('100');
+  await speed.press('Enter');
+  await expect(dialog.getByTestId('video-timing')).toContainText('Video length');
+  await dialog.getByRole('radio', { name: 'HD', exact: true }).click();
+  const button = dialog.getByRole('button', { name: /^Export (MP4|WebM)$/ });
+  await expect(button).toBeEnabled({ timeout: 20000 });
+  const dl = page.waitForEvent('download');
+  await button.click();
+  const download = await dl;
+  const name = download.suggestedFilename();
+  expect(name).toMatch(/\.(mp4|webm)$/);
+  const bytes = readFileSync((await download.path())!);
+  if (name.endsWith('.mp4')) expect(bytes.subarray(4, 8).toString('latin1')).toBe('ftyp');
+  else expect([...bytes.subarray(0, 4)]).toEqual([0x1a, 0x45, 0xdf, 0xa3]);
+  expect(bytes.length).toBeGreaterThan(5000);
+  await expect(dialog).toBeHidden({ timeout: 10000 });
+});

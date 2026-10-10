@@ -1,6 +1,6 @@
 # LumaStitch
 
-Open-source, browser-based machine embroidery digitizer. Import an SVG or an image, auto-digitize it, adjust stitches per object, simulate the stitch-out, and export a `.pes` file for Brother and Baby Lock machines (DST, JEF, EXP and VP3 are also available, plus a PNG preview, SVG geometry and a PDF production worksheet).
+Open-source, browser-based machine embroidery digitizer. Import an SVG or an image, auto-digitize it, adjust stitches per object, simulate the stitch-out, and export a `.pes` file for Brother and Baby Lock machines (DST, JEF, EXP and VP3 are also available, plus a PNG preview, SVG geometry, a PDF production worksheet and an MP4/WebM stitch-out video).
 
 - Runs entirely in your browser. There is no account and no backend, and designs never leave your computer.
 - Designs are kept in a local project library (IndexedDB) and can be saved as `.lumastitch` project files.

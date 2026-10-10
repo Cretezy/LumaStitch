@@ -8,6 +8,9 @@ import { parseHex, toHex } from '@/threads/color';
 import type { Id } from '@/model/types';
 import type { Viewport } from '@/store/uiStore';
 
+/** A 2D context of an on-screen or offscreen canvas. */
+export type Ctx2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+
 const MOVE = F.JUMP | F.TRIM | F.COLOR_CHANGE | F.STOP | F.END;
 
 export interface PlanPaths {
@@ -206,13 +209,7 @@ export function drawPlan(
 }
 
 /** Flat drawing of commands 0..upTo, iterating directly (used by the simulator). */
-export function drawPrefixFlat(
-  ctx: CanvasRenderingContext2D,
-  plan: StitchPlan,
-  vp: Viewport,
-  upTo: number,
-  from = 0,
-): void {
+export function drawPrefixFlat(ctx: Ctx2D, plan: StitchPlan, vp: Viewport, upTo: number, from = 0): void {
   ctx.lineWidth = flatWidth(vp.zoom);
   ctx.lineCap = 'round';
   for (const b of plan.colorBlocks) {
@@ -242,7 +239,7 @@ export function drawPrefixFlat(
 
 /** Thread-like rendering: dark core + light highlight offset toward a fixed light direction. */
 export function drawRealistic(
-  ctx: CanvasRenderingContext2D,
+  ctx: Ctx2D,
   plan: StitchPlan,
   vp: Viewport,
   upTo: number,

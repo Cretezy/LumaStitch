@@ -2,13 +2,15 @@
 /**
  * Export dialog (SPEC FR-6, §3.3): machine files — Brother PES (v1/v6, the default) with a
  * machine colour preview, or DST / JEF / EXP / VP3 — with stats and validation, plus PNG
- * preview, SVG geometry and the PDF production worksheet. The last machine format is
- * remembered. Opened with `{ viewPes: true, file }` it becomes a read-only PES viewer (FR-6.6).
+ * preview, SVG geometry, the PDF production worksheet and a stitch-out video. The last machine
+ * format is remembered. Opened with `{ viewPes: true, file }` it becomes a read-only PES viewer
+ * (FR-6.6).
  *
- * data: { format?: 'pes' | 'dst' | 'jef' | 'exp' | 'vp3' | 'png' | 'svg' | 'pdf' }
+ * data: { format?: 'pes' | 'dst' | 'jef' | 'exp' | 'vp3' | 'png' | 'svg' | 'pdf' | 'video'; speed?: number }
+ *     (speed: open the video tab timed at this multiple of the machine speed, e.g. the simulator's)
  *     | { viewPes: true; file: File }
  */
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Download, LoaderCircle } from 'lucide-react';
 import type { DialogProps } from '@/components/DialogHost';
 import { Button } from '@/components/ui/button';
@@ -28,6 +30,7 @@ import { exportPdf } from '@/io/export/pdf';
 import { PNG_MAX_SIDE, exportPng } from '@/io/export/png';
 import { getMachineFormat } from '@/io/export/registry';
 import { exportSvg } from '@/io/export/svg';
+import { exportVideo, videoContainer } from '@/io/export/video';
 import { hasErrors, validateMachineExport, validatePesExport } from '@/io/export/validation';
 import { safeFileName } from '@/io/project/files';
 import { getPref, setPref } from '@/library/library';
@@ -41,6 +44,13 @@ import { PdfExportTab, type PdfBackground } from './export/PdfExportTab';
 import { PesExportTab, type PesVersion } from './export/PesExportTab';
 import { PesViewer } from './export/PesViewer';
 import {
+  DEFAULT_VIDEO_SETTINGS,
+  VideoExportTab,
+  readVideoSettings,
+  videoTiming,
+  type VideoSettings,
+} from './export/VideoExportTab';
+import {
   ACCEPT_PDF,
   ACCEPT_PNG,
   ACCEPT_SVG,
@@ -50,11 +60,12 @@ import {
 } from './export/save';
 
 /** Dialog tabs. Machine files share one tab with a format picker. */
-type Tab = 'machine' | 'png' | 'svg' | 'pdf';
+type Tab = 'machine' | 'png' | 'svg' | 'pdf' | 'video';
 const PREF_PES_VERSION = 'export.pesVersion';
 const PREF_MACHINE_FORMAT = 'export.machineFormat';
 const PREF_PNG = 'export.png';
 const PREF_PDF = 'export.pdf';
+const PREF_VIDEO = 'export.video';
 
 export default function ExportDialog({ open, onClose, data }: DialogProps) {
   const viewFile: File | null = data?.viewPes === true && data.file instanceof File ? data.file : null;
@@ -79,6 +90,7 @@ export default function ExportDialog({ open, onClose, data }: DialogProps) {
             onClose={onClose}
             initialTab={isTab(data?.format) ? data.format : 'machine'}
             requestedMachine={isMachineFormat(data?.format) ? data.format : null}
+            videoSpeed={typeof data?.speed === 'number' && data.speed > 0 ? data.speed : null}
           />
         )}
       </DialogContent>
@@ -87,16 +99,19 @@ export default function ExportDialog({ open, onClose, data }: DialogProps) {
 }
 
 function isTab(v: unknown): v is Tab {
-  return v === 'machine' || v === 'png' || v === 'svg' || v === 'pdf';
+  return v === 'machine' || v === 'png' || v === 'svg' || v === 'pdf' || v === 'video';
 }
 
 function ExportBody({
   onClose,
   initialTab,
   requestedMachine,
+  videoSpeed,
 }: {
   onClose: () => void;
   initialTab: Tab;
+  /** Start the video tab at this speed (from the simulator). */
+  videoSpeed: number | null;
   /** A machine format asked for by the caller (wins over the remembered one). */
   requestedMachine: MachineChoice | null;
 }) {
@@ -110,8 +125,15 @@ function ExportBody({
   const [pngMode, setPngMode] = useState<PngMode>('realistic');
   const [pngBackground, setPngBackground] = useState<PngBackground>('transparent');
   const [pdfBackground, setPdfBackground] = useState<PdfBackground>('white');
+  const [video, setVideo] = useState<VideoSettings>(DEFAULT_VIDEO_SETTINGS);
+  const [container, setContainer] = useState<'mp4' | 'webm' | null | undefined>(undefined);
+  const [videoProgress, setVideoProgress] = useState<number | null>(null);
+  const videoAbort = useRef<AbortController | null>(null);
   const [busy, setBusy] = useState(false);
   const nameId = useId();
+
+  // Stop encoding if the dialog closes.
+  useEffect(() => () => videoAbort.current?.abort(), []);
 
   useEffect(() => {
     let alive = true;
@@ -121,6 +143,11 @@ function ExportBody({
       void getPref<MachineChoice>(PREF_MACHINE_FORMAT).then(
         (v) => alive && isMachineFormat(v) && setMachine(v),
       );
+    void getPref<unknown>(PREF_VIDEO).then((v) => {
+      if (!alive) return;
+      const saved = readVideoSettings(v);
+      setVideo(videoSpeed ? { ...saved, timing: 'speed', factor: videoSpeed } : saved);
+    });
     void getPref<{ background?: PdfBackground }>(PREF_PDF).then((p) => {
       if (alive && (p?.background === 'white' || p?.background === 'fabric')) setPdfBackground(p.background);
     });
@@ -132,14 +159,27 @@ function ExportBody({
     return () => {
       alive = false;
     };
-  }, [requestedMachine]);
+  }, [requestedMachine, videoSpeed]);
 
   const diagnostics = useMemo(
     () => (!plan ? [] : machine === 'pes' ? validatePesExport(plan) : validateMachineExport(plan, machine)),
     [plan, machine],
   );
   const blocked = hasErrors(diagnostics);
-  const ext = tab === 'machine' ? machine : tab;
+
+  // Which file type (if any) this browser can encode at the chosen size.
+  useEffect(() => {
+    if (tab !== 'video' || !plan) return;
+    let alive = true;
+    void videoContainer(plan, video.size)
+      .catch(() => null)
+      .then((c) => alive && setContainer(c));
+    return () => {
+      alive = false;
+    };
+  }, [tab, plan, video.size]);
+
+  const ext = tab === 'machine' ? machine : tab === 'video' ? (container ?? 'mp4') : tab;
   const fileName = safeFileName(stripExt(baseName.trim()) || 'Untitled', ext);
 
   async function run(task: () => Promise<boolean>) {
@@ -192,6 +232,35 @@ function ExportBody({
       return saveWithToast(blob, fileName, 'PNG image', ACCEPT_PNG);
     });
 
+  const exportVideoFile = () =>
+    run(async () => {
+      if (!plan || !design) return false;
+      void setPref(PREF_VIDEO, video);
+      const ctrl = new AbortController();
+      videoAbort.current = ctrl;
+      setVideoProgress(0);
+      try {
+        const res = await exportVideo(plan, {
+          mode: video.mode,
+          background: video.background === 'fabric' ? fabricColor : '#ffffff',
+          maxSide: video.size,
+          timing: videoTiming(video),
+          machineSpm: design.settings.machineSpm,
+          needle: video.needle,
+          signal: ctrl.signal,
+          onProgress: setVideoProgress,
+        });
+        const name = safeFileName(stripExt(baseName.trim()) || 'Untitled', res.ext);
+        return await saveWithToast(res.blob, name, 'Video', { [res.mime]: [`.${res.ext}`] });
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return false;
+        throw err;
+      } finally {
+        videoAbort.current = null;
+        setVideoProgress(null);
+      }
+    });
+
   const svg = useMemo(() => (tab === 'svg' && design ? exportSvg(design) : ''), [tab, design]);
   const exportSvgFile = () =>
     run(async () => {
@@ -203,7 +272,8 @@ function ExportBody({
     <DialogHeader>
       <DialogTitle>Export</DialogTitle>
       <DialogDescription>
-        Save a machine file for your embroidery machine, a preview image or a printable worksheet.
+        Save a machine file for your embroidery machine, a preview image, a printable worksheet or a
+        stitch-out video.
       </DialogDescription>
     </DialogHeader>
   );
@@ -231,7 +301,14 @@ function ExportBody({
         ? { label: 'Export PNG', onClick: exportPngFile, disabled: !planReady }
         : tab === 'pdf'
           ? { label: 'Export PDF', onClick: exportPdfFile, disabled: !planReady }
-          : { label: 'Export SVG', onClick: exportSvgFile, disabled: false };
+          : tab === 'video'
+            ? {
+                label: `Export ${container === 'webm' ? 'WebM' : 'MP4'}`,
+                onClick: exportVideoFile,
+                disabled: !planReady || !container,
+              }
+            : { label: 'Export SVG', onClick: exportSvgFile, disabled: false };
+  const encoding = videoProgress !== null;
   const noStitches = (
     <p className="py-12 text-sm text-muted-foreground">The design has no stitches to render yet.</p>
   );
@@ -258,12 +335,13 @@ function ExportBody({
         </div>
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => isTab(v) && setTab(v)}>
+      <Tabs value={tab} onValueChange={(v) => !encoding && isTab(v) && setTab(v)}>
         <TabsList className="w-full">
           <TabsTrigger value="machine">Machine file (.{machine})</TabsTrigger>
           <TabsTrigger value="png">PNG preview</TabsTrigger>
           <TabsTrigger value="svg">SVG (geometry)</TabsTrigger>
           <TabsTrigger value="pdf">Worksheet (PDF)</TabsTrigger>
+          <TabsTrigger value="video">Video</TabsTrigger>
         </TabsList>
 
         {needsPlan && plan === undefined ? (
@@ -318,6 +396,22 @@ function ExportBody({
             <TabsContent value="svg" className="pt-2">
               <SvgExportTab design={design} svg={svg} />
             </TabsContent>
+            <TabsContent value="video" className="pt-2">
+              {plan &&
+                (planReady ? (
+                  <VideoExportTab
+                    plan={plan}
+                    design={design}
+                    settings={video}
+                    onChange={setVideo}
+                    fabricColor={fabricColor}
+                    container={container}
+                    progress={videoProgress}
+                  />
+                ) : (
+                  noStitches
+                ))}
+            </TabsContent>
             <TabsContent value="pdf" className="pt-2">
               {plan &&
                 (planReady ? (
@@ -340,9 +434,15 @@ function ExportBody({
         {tab === 'machine' && blocked && (
           <p className="mr-auto text-xs text-destructive">Fix the errors above to export.</p>
         )}
-        <Button variant="outline" onClick={onClose} disabled={busy}>
-          Cancel
-        </Button>
+        {encoding ? (
+          <Button variant="outline" onClick={() => videoAbort.current?.abort()}>
+            Stop
+          </Button>
+        ) : (
+          <Button variant="outline" onClick={onClose} disabled={busy}>
+            Cancel
+          </Button>
+        )}
         <Button onClick={primary.onClick} disabled={primary.disabled || busy}>
           {busy ? <LoaderCircle className="animate-spin" aria-hidden /> : <Download aria-hidden />}
           {primary.label}
@@ -354,5 +454,5 @@ function ExportBody({
 
 /** Removes a known export/project extension the user may have typed. */
 function stripExt(name: string): string {
-  return name.replace(/\.(pes|dst|jef|exp|vp3|png|svg|pdf|lumastitch)$/i, '');
+  return name.replace(/\.(pes|dst|jef|exp|vp3|png|svg|pdf|mp4|webm|lumastitch)$/i, '');
 }

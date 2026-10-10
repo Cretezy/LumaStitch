@@ -10,6 +10,7 @@ import {
   SkipForward,
   StepBack,
   StepForward,
+  Video,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -214,6 +215,13 @@ export function SimulatorBar() {
           Stops
         </label>
       </Tip>
+      {btn('Export as video…', <Video />, () => {
+        sim.pause();
+        useUi.getState().openDialog('export', {
+          format: 'video',
+          ...(Number.isFinite(simState.speed) ? { speed: simState.speed } : {}),
+        });
+      })}
       {btn('Close simulator (Esc)', <X />, toggleSimulate)}
     </div>
   );

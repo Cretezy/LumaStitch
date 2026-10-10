@@ -77,6 +77,9 @@ export function MenuBar() {
           <MenubarItem onSelect={() => ui.openDialog('export', { format: 'pdf' })}>
             Export worksheet (PDF)…
           </MenubarItem>
+          <MenubarItem onSelect={() => ui.openDialog('export', { format: 'video' })}>
+            Export stitch-out video…
+          </MenubarItem>
           <MenubarItem onSelect={() => void A.openFile()}>View a .pes file…</MenubarItem>
           <MenubarSeparator />
           <MenubarItem onSelect={() => ui.openDialog('designSettings')}>Design settings…</MenubarItem>

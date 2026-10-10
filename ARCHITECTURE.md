@@ -622,6 +622,7 @@ Machine formats write synchronously; document formats (the PDF worksheet) are as
 - Per-format notes: DST and EXP carry no colours (the dialog lists the thread order to set at the machine); JEF maps colours to the 78-colour Janome palette and names the smallest Janome hoop that fits (the only hoop check in the app, a warning); VP3 stores exact RGB, brand and code.
 - `validateMachineExport(plan, format)` adds per-format limits to the shared checks of §15.5.
 - **PDF worksheet** (`src/io/export/pdfWriter.ts`, `pdf.ts`): a dependency-free PDF 1.4 writer (Helvetica, WinAnsi text, embedded JPEG). A4 sheet with design name, date, size, stitch/colour/trim/stop counts, estimated time, fabric and stabiliser, a realistic preview and the colour sequence table (continued over further pages when long).
+- **Stitch-out video** (`src/io/export/video.ts`): the simulator's playback rendered offscreen and encoded with WebCodecs through mediabunny (MPL-2.0), as MP4/H.264 or, where H.264 encoding isn't available, WebM (VP9, VP8 or AV1). Timing is a length in seconds or a multiple of the machine's stitch rate; penetrations advance at a constant rate and jumps, trims and colour changes are instant. Frames are drawn incrementally (`createStitchOutRenderer`, shared with the dialog's live preview), 30 fps, then the finished design is held for 2 s. Encoding runs faster than real time and can be stopped.
 
 ## 16. Threads and colour (`src/threads`)
 
