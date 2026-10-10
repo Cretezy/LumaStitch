@@ -174,8 +174,8 @@ function flatStyle(scale: number): FlatStyle {
   const min = 2 / scale;
   const width = solidWidth(TW, scale);
   const wpx = width * scale;
-  const edge = wpx >= 5 ? Math.min(2.5, Math.max(0.9, wpx * 0.09)) / scale : 0;
-  const dot = wpx >= 9 ? Math.min(0.11, edge * 1.3) : 0;
+  const edge = wpx >= 9 ? Math.min(2.5, Math.max(0.9, wpx * 0.09)) / scale : 0;
+  const dot = wpx >= 14 ? Math.min(0.11, edge * 1.3) : 0;
   return { width, under: Math.max(width * 0.6, min), edge, dot };
 }
 
@@ -444,7 +444,7 @@ function drawRealisticMasked(
   const px = TW * scale; // thread width in device pixels
   const solid = solidWidth(TW, scale);
   // Level of detail: shaded body only (tiny threads); + a sheen line; full tube with shadow.
-  const tier = px < 2.2 ? 0 : px < 5 ? 1 : 2;
+  const tier = px < 1.6 ? 0 : px < 3.5 ? 1 : 2;
   const [vx0, vy0, vx1, vy1] = viewRect(ctx, TW * 2);
   const { x, y, flags, element } = plan;
   const { nx, ny, len } = g;
@@ -552,9 +552,10 @@ function drawRealisticMasked(
         continue;
       }
       if (tier === 1) {
-        // Small threads: shaded body plus a sheen line.
+        // Small threads: dark edge, shaded body and a sheen line.
         pass(pal.under, solid, 1, top, n);
-        for (let t = 0; t < LEVELS; t++) pass(pal.body[t], solid, 1, at[t], at[t + 1]);
+        pass(pal.edge, solid, 1, 0, top);
+        for (let t = 0; t < LEVELS; t++) pass(pal.body[t], TW * 0.8, 1, at[t], at[t + 1]);
         for (let t = 0; t < LEVELS; t++)
           pass(pal.sheen, TW * 0.35, 0.25 + 0.5 * (t / (LEVELS - 1)), at[t], at[t + 1], TW * 0.15);
         continue;
