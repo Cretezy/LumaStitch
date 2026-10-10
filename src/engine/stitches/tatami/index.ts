@@ -87,6 +87,11 @@ export function travelTo(b: RunBuilder, to: Vec2, t: TravelCtx, flag = 0): void 
 
 /** Extra cost (mm of travel) of a trim + jump inside a fill: a cut by hand on many machines. */
 const JUMP_COST = 10;
+/**
+ * Cost of choosing a trim + jump over travel that would show on top (plus the jump's length): a
+ * cut is better than a permanent line across the fill, but not worth it for a small blip.
+ */
+const JUMP_OPTION_COST = 20;
 
 function polyLength(p: Float64Array): number {
   let l = 0;
@@ -194,6 +199,10 @@ function sectionCostModel(layer: FillLayer, idx: number[], t: TravelCtx) {
   const H = new Float64Array(W * W).fill(NaN);
   const X = new Int32Array(W * W);
   const XC: (Coverage | undefined)[] = new Array(W * W);
+  // The alternative to visible travel: trim and jump straight there. JX: sections the jump line
+  // crosses (a jump over a section sewn later would be locked in by it, so that is not allowed).
+  const JD = new Float64Array(W * W);
+  const JX = new Int32Array(W * W);
   /** Part of a path's length that runs over sections in `mask`. */
   const visibleLen = (len: number, cv: Coverage | undefined, mask: number) => {
     if (!cv) return 0;
@@ -219,6 +228,8 @@ function sectionCostModel(layer: FillLayer, idx: number[], t: TravelCtx) {
       const cv = coveredAlong(path, coveredBy);
       for (const mk of cv.masks) X[at] |= mk;
       if (X[at]) XC[at] = cv;
+      JD[at] = d;
+      for (const mk of coveredAlong(Float64Array.of(e[0], e[1], p[0], p[1]), coveredBy).masks) JX[at] |= mk;
     }
     return at;
   };
@@ -232,13 +243,22 @@ function sectionCostModel(layer: FillLayer, idx: number[], t: TravelCtx) {
     // Travel over rows already sewn stays on top: charge it, plus a fixed cost per hop.
     return h + visibleLen(h, XC[i], mask) * VISIBLE_FACTOR + VISIBLE_COST;
   };
+  const jumpCost = (i: number, mask: number, j: number) =>
+    // Only where travel would show, and only if no section sewn later covers the jump thread.
+    X[i] & mask && JD[i] > 0 && !(JX[i] & ~mask & ~(1 << j)) ? JD[i] + JUMP_OPTION_COST : Infinity;
   return {
     m,
     corner,
     exitOf,
     /** Cost of the hop from the exit of (k, c) to the start of (j, cj), given the sections sewn. */
     hop(k: number, c: number, j: number, cj: number, mask: number): number {
-      return insideCost(at(k, c, j, cj), mask);
+      const i = at(k, c, j, cj);
+      return Math.min(insideCost(i, mask), jumpCost(i, mask, j));
+    },
+    /** True when that hop is better done as a trim and jump than as (visible) travel. */
+    jump(k: number, c: number, j: number, cj: number, mask: number): boolean {
+      const i = at(k, c, j, cj);
+      return jumpCost(i, mask, j) < insideCost(i, mask);
     },
     start(from: Vec2 | undefined, k: number, c: number): number {
       if (!from) return 0;
@@ -505,7 +525,19 @@ export function sewLayer(
       allowed.length <= EXACT_SECTIONS
         ? exactSectionOrder(model, from, exit)
         : beamSectionOrder(model, from, exit);
-    for (const [k, c] of order) sew(allowed[k], c);
+    let mask = 0,
+      pk = -1,
+      pc = 0;
+    for (const [k, c] of order) {
+      if (pk >= 0 && model.jump(pk, pc, k, c, mask)) {
+        const p = model.corner(k, c);
+        b.jumpTo(p[0], p[1], F.TRIM | flag);
+      }
+      sew(allowed[k], c);
+      mask |= 1 << k;
+      pk = k;
+      pc = c;
+    }
     return;
   }
   while (remaining > 0) {
