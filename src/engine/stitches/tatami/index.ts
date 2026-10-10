@@ -942,7 +942,7 @@ function nearestOnRing(ring: Float64Array, p: Vec2): Vec2 {
 }
 
 /** The point of ring `to` closest to ring `from` (vertices of `to`, sampled for long rings). */
-function nearestPointTo(to: Float64Array, from: Float64Array): Vec2 {
+export function nearestPointTo(to: Float64Array, from: Float64Array): Vec2 {
   const step = Math.max(1, Math.floor(to.length / 2 / 200)) * 2;
   let best: Vec2 = [to[0], to[1]],
     bd = Infinity;
@@ -967,7 +967,11 @@ function ringGap(a: Float64Array, b: Float64Array): number {
  * consecutive parts), starting near the entry and ending at the part nearest the exit, if any.
  * Small part counts try every start and improve with 2-opt; large ones use bounding-box gaps.
  */
-function partOrder(parts: FillPart[], from: Vec2 | undefined, exit: Vec2 | undefined): number[] {
+export function partOrder(
+  parts: { outer: Float64Array }[],
+  from: Vec2 | undefined,
+  exit: Vec2 | undefined,
+): number[] {
   const n = parts.length;
   if (n <= 1) return n ? [0] : [];
   const exact = n <= 24;

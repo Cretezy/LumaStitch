@@ -443,6 +443,8 @@ interface ParamDef {
 
 ### 11.4 Algorithms
 
+**Multi-part fills (all fill types).** A fill whose polygon has several connected parts is sewn one part at a time, in the shortest order, each part finishing next to the following one, with a trimmed jump between parts. Tatami (and gradient and pattern fills, which share its routing) does this natively (see Tatami step 5); satin fill, contour, ripple, meander and cross-stitch are wrapped by `perPart` (`stitches/multipart.ts`), which prepares each part as its own shape and routes them in that order.
+
 **Running / triple**
 
 - Flatten to a polyline. Split it at corners (turn angle > 30°). Resample each piece at `n = ceil(len / L)` evenly spaced points, so no stitch is longer than `L` and stitch lengths stay even.

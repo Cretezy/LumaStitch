@@ -16,6 +16,7 @@ import { runningDef, tripleDef } from './stitches/running';
 import { satinDef, zigzagDef } from './stitches/satin';
 import { satinFillDef } from './stitches/satinFill';
 import { tatamiDef } from './stitches/tatami';
+import { perPart } from './stitches/multipart';
 
 const REGISTRY = new Map<StitchType, StitchTypeDef<any>>();
 
@@ -23,15 +24,24 @@ export function registerStitchType(def: StitchTypeDef<any>): void {
   REGISTRY.set(def.id, def);
 }
 
-for (const d of [tatamiDef, satinFillDef, contourDef, runningDef, tripleDef, satinDef, zigzagDef])
+// Fills without native multi-part handling are sewn part by part (see stitches/multipart.ts).
+for (const d of [
+  tatamiDef,
+  perPart(satinFillDef),
+  perPart(contourDef),
+  runningDef,
+  tripleDef,
+  satinDef,
+  zigzagDef,
+])
   registerStitchType(d);
 // P2 types.
 for (const d of [
   patternFillDef,
   gradientFillDef,
-  meanderDef,
-  rippleDef,
-  crossStitchDef,
+  perPart(meanderDef),
+  perPart(rippleDef),
+  perPart(crossStitchDef),
   appliqueDef,
   motifRunDef,
   blanketDef,

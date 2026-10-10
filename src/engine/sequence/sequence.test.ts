@@ -2,13 +2,15 @@
 /** Sewing order: multi-part fills, jumps between parts, and the sequence optimiser. */
 import { describe, expect, it } from 'vitest';
 import { createDesign, createElement, createShape, createThread } from '@/model/factories';
-import type { Design, PathGeom } from '@/model/types';
+import type { Design, PathGeom, StitchType } from '@/model/types';
 import { compound, rectGeom } from '@/geom/shapes';
 import { buildPlan } from '../plan';
 import { F, type StitchPlan } from '../types';
 import { optimizeSequence } from './optimize';
 
-function design(items: { geom: PathGeom; color?: string; outline?: boolean; fill?: boolean }[]): Design {
+function design(
+  items: { geom: PathGeom; color?: string; outline?: boolean; fill?: boolean; fillType?: StitchType }[],
+): Design {
   const d = createDesign();
   for (const it of items) {
     const color = it.color ?? '#ff0000';
@@ -18,7 +20,7 @@ function design(items: { geom: PathGeom; color?: string; outline?: boolean; fill
       d.threads[thread.id] = thread;
     }
     const s = createShape('S' + d.zOrder.length, it.geom, {});
-    if (it.fill !== false) s.fill = createElement('fill', 'tatami', thread.id, {});
+    if (it.fill !== false) s.fill = createElement('fill', it.fillType ?? 'tatami', thread.id, {});
     if (it.outline) s.outline = createElement('outline', 'running', thread.id, {});
     d.shapes[s.id] = s;
     d.zOrder.push(s.id);
@@ -52,6 +54,16 @@ describe('multi-part fills', () => {
     // Neighbour to neighbour, not back and forth.
     for (let k = 1; k < v.length; k++) expect(Math.abs(v[k] - v[k - 1])).toBe(1);
   });
+
+  it.each(['satinFill', 'contour', 'ripple', 'gradientFill', 'patternFill'] as StitchType[])(
+    '%s also sews one part at a time',
+    (fillType) => {
+      const plan = buildPlan(design([{ geom: word, fillType }]));
+      const v = visits(plan, letters);
+      expect(new Set(v).size).toBe(5);
+      expect(v.length).toBe(5);
+    },
+  );
 
   it('jumps between parts at their nearest edges', () => {
     const plan = buildPlan(design([{ geom: word }]));
