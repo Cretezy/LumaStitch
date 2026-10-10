@@ -92,6 +92,8 @@ const JUMP_COST = 10;
  * cut is better than a permanent line across the fill, but not worth it for a small blip.
  */
 const JUMP_OPTION_COST = 20;
+/** Length (mm) of a jump's end that may lie over the section it lands on. */
+const JUMP_LANDING = 1.5;
 
 function polyLength(p: Float64Array): number {
   let l = 0;
@@ -229,7 +231,15 @@ function sectionCostModel(layer: FillLayer, idx: number[], t: TravelCtx) {
       for (const mk of cv.masks) X[at] |= mk;
       if (X[at]) XC[at] = cv;
       JD[at] = d;
-      for (const mk of coveredAlong(Float64Array.of(e[0], e[1], p[0], p[1]), coveredBy).masks) JX[at] |= mk;
+      // The jump lands on section j, so j may cover its last stretch, but not more: a jump that
+      // runs along j (say up a letter's stem to its far corner) is sewn over when j is.
+      const jc = coveredAlong(Float64Array.of(e[0], e[1], p[0], p[1]), coveredBy);
+      let onJ = 0;
+      jc.masks.forEach((mk, q) => {
+        JX[at] |= mk & ~(1 << j);
+        if (mk & (1 << j)) onJ += jc.counts[q];
+      });
+      if ((d * onJ) / (jc.n + 1) > JUMP_LANDING) JX[at] |= 1 << j;
     }
     return at;
   };
@@ -243,9 +253,9 @@ function sectionCostModel(layer: FillLayer, idx: number[], t: TravelCtx) {
     // Travel over rows already sewn stays on top: charge it, plus a fixed cost per hop.
     return h + visibleLen(h, XC[i], mask) * VISIBLE_FACTOR + VISIBLE_COST;
   };
-  const jumpCost = (i: number, mask: number, j: number) =>
+  const jumpCost = (i: number, mask: number) =>
     // Only where travel would show, and only if no section sewn later covers the jump thread.
-    X[i] & mask && JD[i] > 0 && !(JX[i] & ~mask & ~(1 << j)) ? JD[i] + JUMP_OPTION_COST : Infinity;
+    X[i] & mask && JD[i] > 0 && !(JX[i] & ~mask) ? JD[i] + JUMP_OPTION_COST : Infinity;
   return {
     m,
     corner,
@@ -253,12 +263,12 @@ function sectionCostModel(layer: FillLayer, idx: number[], t: TravelCtx) {
     /** Cost of the hop from the exit of (k, c) to the start of (j, cj), given the sections sewn. */
     hop(k: number, c: number, j: number, cj: number, mask: number): number {
       const i = at(k, c, j, cj);
-      return Math.min(insideCost(i, mask), jumpCost(i, mask, j));
+      return Math.min(insideCost(i, mask), jumpCost(i, mask));
     },
     /** True when that hop is better done as a trim and jump than as (visible) travel. */
     jump(k: number, c: number, j: number, cj: number, mask: number): boolean {
       const i = at(k, c, j, cj);
-      return jumpCost(i, mask, j) < insideCost(i, mask);
+      return jumpCost(i, mask) < insideCost(i, mask);
     },
     start(from: Vec2 | undefined, k: number, c: number): number {
       if (!from) return 0;
