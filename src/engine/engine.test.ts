@@ -59,6 +59,39 @@ function stitchSegments(plan: StitchPlan, filter?: (f: number) => boolean) {
 }
 
 describe('tatami', () => {
+  it('keeps the bars of a small italic E horizontal across width changes', () => {
+    // E outline from logo-dark(1).svg, scaled with the 606-unit logo to 80 mm.
+    const points: [number, number][] = [
+      [340.5, 98],
+      [355.295, 27.9805],
+      [402.316, 27.9805],
+      [400.021, 39.0156],
+      [393.283, 44.4844],
+      [369.797, 44.4844],
+      [367.6, 54.9824],
+      [386.594, 54.9824],
+      [383.225, 70.998],
+      [364.182, 70.998],
+      [361.984, 81.4961],
+      [390.988, 81.4961],
+      [387.521, 98],
+    ];
+    for (const pullComp of [0, 0.2]) {
+      const geom = polylineGeom(
+        points.map(([x, y]) => [(x * 80) / 606, (y * 80) / 606]),
+        true,
+      );
+      const d = designWith([{ geom, fill: 'tatami', params: { angle: 0, underlay: 'none', pullComp } }]);
+      d.settings.defaultTie = 'never';
+      const plan = buildPlan(d);
+      const top = stitchSegments(plan, (f) => !(f & (F.TRAVEL | F.TIE | F.UNDERLAY)));
+      expect(top.length).toBeGreaterThan(30);
+      // Short turns follow the italic stem; long stitches must stay on their fill row.
+      for (const [ax, ay, bx, by] of top)
+        if (Math.abs(bx - ax) > 1) expect(Math.abs(by - ay)).toBeLessThan(0.01);
+    }
+  });
+
   it('fills a rectangle within the pull-compensated outline', () => {
     const geom = rectGeom(0, 0, 30, 20);
     const d = designWith([{ geom, fill: 'tatami' }]);

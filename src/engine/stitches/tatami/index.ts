@@ -998,21 +998,12 @@ function outlineWalk(ps: PolyShape, a: Vec2, b: Vec2, maxLen: number): Float64Ar
 const shortTurn = (layer: FillLayer) => Math.max(1, 2.5 * layer.spacing);
 
 /**
- * Splits sections where the turn from one row to the next can't follow the outline on one of the
- * sides (a step in the outline, e.g. where a letter's bar meets a narrower ear above it). Sewn as
- * one section, that turn becomes travel along the top of the row just sewn, a visible line; split,
- * the section order can reach the narrower rows from the right corner instead.
+ * Splits sections at large sideways steps on either edge (e.g. a letter's stem meeting a bar).
+ * Even a turn entirely inside the fill cuts diagonally across the bar instead of following its
+ * horizontal edge. Separate sections let the router choose a clean entry at the width change.
  */
 function splitAtTurns(layer: FillLayer): FillLayer {
-  const ok = (x0: number, y0: number, x1: number, y1: number) => {
-    // Short turns (slanted or curved edges) are fine whatever the inside test says.
-    if (Math.abs(x1 - x0) <= shortTurn(layer)) return true;
-    const a = toDocPoint(layer, x0, y0),
-      b = toDocPoint(layer, x1, y1);
-    for (const u of [0.25, 0.5, 0.75])
-      if (!layer.inside(a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u)) return false;
-    return true;
-  };
+  const limit = shortTurn(layer);
   const sections: Section[] = [];
   for (const s of layer.sections) {
     let cur: Section = { rows: [s.rows[0]] };
@@ -1020,7 +1011,7 @@ function splitAtTurns(layer: FillLayer): FillLayer {
     for (let i = 1; i < s.rows.length; i++) {
       const p = s.rows[i - 1],
         r = s.rows[i];
-      if (!ok(p.x0, p.y, r.x0, r.y) || !ok(p.x1, p.y, r.x1, r.y)) {
+      if (Math.abs(r.x0 - p.x0) > limit || Math.abs(r.x1 - p.x1) > limit) {
         cur = { rows: [] };
         sections.push(cur);
       }
