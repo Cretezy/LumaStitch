@@ -1185,7 +1185,7 @@ export function partOrder(
   };
   const starts = exact ? parts.map((_, i) => i).filter((i) => i !== lastPart || n === 1) : [];
   if (!exact) {
-    let s0 = 0;
+    let s0 = lastPart === 0 ? 1 : 0;
     for (let i = 1; i < n; i++) if (i !== lastPart && d0[i] < d0[s0]) s0 = i;
     starts.push(s0);
   }

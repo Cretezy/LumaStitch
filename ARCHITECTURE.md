@@ -495,7 +495,7 @@ For each transition from the previous element's exit E to the next element's ent
 | Stop entry                                                     | Tie-off, TRIM, STOP. The next element starts with a jump and tie-in.                  |
 
 - **Ties.** A tie-in is 3 tiny stitches of length `tieLength` along the first segment, back, then forward again. A tie-off does the same along the last segment, reversed. `auto` means on wherever there is a trim, colour change, stop, or the start/end of the design.
-- **Postprocess.** Split stitches longer than `maxStitchLength` (not jumps). Merge stitches shorter than `minStitchLength` (ties exempt). Remove zero-length duplicates. Append END.
+- **Postprocess.** Split stitches longer than `maxStitchLength` (not jumps). Merge stitches shorter than `minStitchLength` only when removing the point deviates from the replacement segment by at most 0.01 mm (ties exempt). Preserve corners and reversals even below the minimum length so dense fill rows keep their direction. Remove zero-length duplicates. Append END.
 
 ### 11.6 Worker, caching and cancellation
 

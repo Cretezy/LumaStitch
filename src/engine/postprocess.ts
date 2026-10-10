@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /** Per-run cleanup: split long stitches, merge very short ones (ties exempt), drop duplicates. */
 import type { DesignSettings } from '@/model/types';
+import { segDist2 } from '@/geom/polygon';
 import { F, type StitchRun } from './types';
 
 export function postprocessRun(
@@ -29,7 +30,13 @@ export function postprocessRun(
     if (d < 1e-6 && !(f & F.TIE)) continue;
     const isLast = i === n - 1;
     const nextIsJump = !isLast && run.flags[i + 1] & F.JUMP;
-    if (d < minL && !(f & F.TIE) && !isLast && !nextIsJump && !(flags[k - 1] & F.JUMP)) continue;
+    if (d < minL && !(f & F.TIE) && !isLast && !nextIsJump && !(flags[k - 1] & F.JUMP)) {
+      // Removing a row-turn corner would replace the next row with a diagonal. Only merge
+      // points within 0.01 mm of the replacement segment, including its endpoints (so short
+      // reversals are preserved too). The minimum length is subordinate to the sewn geometry.
+      const [deviation2] = segDist2(x, y, px, py, run.xy[i * 2 + 2], run.xy[i * 2 + 3]);
+      if (deviation2 <= 0.01 ** 2) continue;
+    }
     if (d > maxL) {
       const m = Math.ceil(d / maxL);
       for (let j = 1; j < m; j++) {
