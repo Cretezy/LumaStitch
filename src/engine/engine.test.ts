@@ -111,7 +111,8 @@ describe('tatami', () => {
       for (const angle of [0, 90, 45]) {
         const d = designWith([{ geom, fill: 'tatami', params: { angle } }]);
         const plan = buildPlan(d);
-        const inside = createPointTester(offset(makeValid(flattenGeom(geom).rings, geom.fillRule), 0.25));
+        // Pull compensation (0.2 mm) plus the 0.15 mm row turns may brush past the outline.
+        const inside = createPointTester(offset(makeValid(flattenGeom(geom).rings, geom.fillRule), 0.35));
         for (const [ax, ay, bx, by] of stitchSegments(plan)) {
           for (const t of [0.25, 0.5, 0.75])
             expect(

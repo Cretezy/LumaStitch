@@ -3,7 +3,7 @@
  * buildPlan(design) → StitchPlan. The single source of stitches for preview, simulator, stats
  * and export. Pure and deterministic; runs in the engine worker and in Node tests.
  */
-import { flattenGeom } from '@/geom/flatten';
+import { flattenGeom, flattenToPaths } from '@/geom/flatten';
 import { makeValid, unionAll } from '@/geom/clipper';
 import { bboxIntersects, createPointTester, emptyBBox, extendBBox } from '@/geom/polygon';
 import type { BBox, PolyShape } from '@/geom/types';
@@ -31,10 +31,18 @@ export interface PlanCache {
   runs: LRU<string, StitchRun>;
   geomHash: WeakMap<PathGeom, string>;
   polys: LRU<string, { poly: PolyShape; bbox: BBox }>;
+  /** Exit targets between pairs of shapes (see exitToward). */
+  exits: LRU<string, Vec2>;
 }
 
 export function createPlanCache(): PlanCache {
-  return { prepared: new LRU(2000), runs: new LRU(2000), geomHash: new WeakMap(), polys: new LRU(2000) };
+  return {
+    prepared: new LRU(2000),
+    runs: new LRU(2000),
+    geomHash: new WeakMap(),
+    polys: new LRU(2000),
+    exits: new LRU(2000),
+  };
 }
 
 export interface BuildOptions {
@@ -43,6 +51,8 @@ export interface BuildOptions {
 }
 
 const TOL = 0.05;
+/** Internal jumps up to this length (mm) are sewn as one stitch instead of being trimmed. */
+const SHORT_HOP = 1.0;
 
 function geomKey(cache: PlanCache, g: PathGeom): string {
   let h = cache.geomHash.get(g);
@@ -76,6 +86,57 @@ function geomCenter(cache: PlanCache, shape: Shape): Vec2 {
     cache.polys.set(key, v);
   }
   return [(v.bbox.minX + v.bbox.maxX) / 2, (v.bbox.minY + v.bbox.maxY) / 2];
+}
+
+/** Outline vertices of a shape (all subpaths, open or closed), sampled to at most ~400 points. */
+function outlinePoints(shape: Shape): Float64Array {
+  const all: number[] = [];
+  for (const p of flattenToPaths(shape.geom, TOL * 4)) for (const v of p.pts) all.push(v);
+  const n = all.length / 2;
+  const step = Math.max(1, Math.ceil(n / 400));
+  const out: number[] = [];
+  for (let i = 0; i < n; i += step) out.push(all[i * 2], all[i * 2 + 1]);
+  return Float64Array.from(out);
+}
+
+function nearestVertex(pts: Float64Array, p: Vec2): Vec2 {
+  let bx = pts[0],
+    by = pts[1],
+    bd = Infinity;
+  for (let i = 0; i < pts.length; i += 2) {
+    const d = (pts[i] - p[0]) ** 2 + (pts[i + 1] - p[1]) ** 2;
+    if (d < bd) {
+      bd = d;
+      bx = pts[i];
+      by = pts[i + 1];
+    }
+  }
+  return [bx, by];
+}
+
+/**
+ * Where an element of `cur` should finish so the move to `next` is short: the point of `next`'s
+ * outline closest to `cur` (found by alternating nearest-point steps between the two outlines).
+ */
+function exitToward(cache: PlanCache, cur: Shape, next: Shape): Vec2 {
+  const key = geomKey(cache, cur.geom) + '>' + geomKey(cache, next.geom);
+  let v = cache.exits.get(key);
+  if (!v) {
+    const a = outlinePoints(cur),
+      b = outlinePoints(next);
+    if (!a.length || !b.length) v = geomCenter(cache, next);
+    else {
+      let p = geomCenter(cache, cur);
+      let q = nearestVertex(b, p);
+      for (let k = 0; k < 3; k++) {
+        p = nearestVertex(a, q);
+        q = nearestVertex(b, p);
+      }
+      v = q;
+    }
+    cache.exits.set(key, v);
+  }
+  return v;
 }
 
 const q = (v: number) => Math.round(v * 2) / 2;
@@ -274,18 +335,13 @@ export function* planGenerator(design: Design, opts: BuildOptions = {}): Generat
     for (const d of prepared.diags) diagnostics.push({ ...d, elementId: el.id });
     if (prepared.prep === null) continue;
 
-    // Hints.
-    let nextShape: Shape | null = null;
-    for (let jj = ii + 1; jj < items.length; jj++) {
-      const it = items[jj];
-      if (it.kind === 'el') {
-        nextShape = it.shape;
-        break;
-      }
-    }
+    // Hints. Finish next to the following element when it continues in the same thread without a
+    // stop; after a stop or colour change the thread is cut anyway, so the exit doesn't matter.
+    const nextItem = items[ii + 1];
+    const nextShape = nextItem?.kind === 'el' && nextItem.el.threadId === el.threadId ? nextItem.shape : null;
     const hints: Hints = {
       entry: el.entry ?? em.pos ?? undefined,
-      exit: el.exit ?? (nextShape ? geomCenter(cache, nextShape) : undefined),
+      exit: el.exit ?? (nextShape ? exitToward(cache, shape, nextShape) : undefined),
       userEntry: !!el.entry,
       userExit: !!el.exit,
     };
@@ -415,9 +471,11 @@ export function* planGenerator(design: Design, opts: BuildOptions = {}): Generat
       if (f & F.JUMP) {
         const E = em.pos!;
         const d = Math.hypot(x - E[0], y - E[1]);
-        // Generators mark jumps that have no inside path with TRIM: those are always cut.
+        // Generators mark jumps that have no inside path with TRIM: those are cut, unless the hop is
+        // so short that one small stitch beats a tie-off, trim and tie-in (and, on machines
+        // without a trimmer, a thread to cut by hand).
         const trim =
-          (f & F.TRIM) !== 0 ||
+          ((f & F.TRIM) !== 0 && d > SHORT_HOP) ||
           (el.trimAfter !== 'never' && (el.trimAfter === 'always' || d > settings.trimThreshold));
         if (trim) {
           // Tie off along the part just sewn.

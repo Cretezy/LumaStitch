@@ -251,4 +251,27 @@ describe('inside router', () => {
     }
     expect(polylineLength(p!)).toBeLessThan(30);
   });
+
+  it('finds paths along curves (nodes, edges and the inside test share one simplified outline)', async () => {
+    const { InsideRouter } = await import('./visibility');
+    // A thick ring: getting from one side to the other means following the curve.
+    const ring = makeValid(flattenGeom(compoundCircles()).rings, 'evenodd');
+    const r = new InsideRouter(offset(ring, -0.25), 0.3);
+    for (const [ax, ay, bx, by] of [
+      [8, 0, -8, 0],
+      [0, 8, 0, -8],
+      [5.7, 5.7, -5.7, -5.7],
+    ]) {
+      const p = r.path(ax, ay, bx, by);
+      expect(p).not.toBeNull();
+      // Around the half circle (≈ π·8), not a huge detour.
+      expect(polylineLength(p!)).toBeLessThan(Math.PI * 8 * 1.3);
+    }
+  });
 });
+
+function compoundCircles(): PathGeom {
+  const outer = circleGeom(0, 0, 10),
+    inner = circleGeom(0, 0, 6);
+  return { fillRule: 'evenodd', subpaths: [...outer.subpaths, ...inner.subpaths] };
+}

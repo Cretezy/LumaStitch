@@ -97,13 +97,10 @@ export function optimizeSequence(design: Design, opts: OptimizeOpts = {}): Seque
         continue;
       }
       if (!bboxIntersects(a.bbox, b.bbox)) continue;
-      const lower = a.z < b.z;
-      // Edges only from i to j; each pair considered in both orders.
-      let need = false;
-      if (a.role === 'fill' && b.role === 'outline')
-        need = true; // outlines after fills they overlap
-      else if (a.role === b.role && lower) need = true; // lower before upper
-      if (!need) continue;
+      // Edges only from i to j; each pair considered in both orders. Overlapping elements follow
+      // the stacking order whatever their roles, so a lower shape (fill and outline) can be
+      // finished before the shape above it; the upper one covers whatever it overlaps.
+      if (!(a.z < b.z)) continue;
       if (polyShapeArea(intersection(a.poly, b.poly)) <= AUTO.precedenceMinOverlap) continue;
       edge(i, j);
     }
@@ -112,12 +109,24 @@ export function optimizeSequence(design: Design, opts: OptimizeOpts = {}): Seque
   // Elements that are not being re-placed keep their relative order.
   for (let k = 1; k < fixedIdx.length; k++) edge(fixedIdx[k - 1], fixedIdx[k]);
 
+  // Distance from a point to an element's bounding box (0 inside).
+  const distTo = (p: [number, number], i: number) => {
+    const b = nodes[i].bbox;
+    return Math.hypot(Math.max(0, b.minX - p[0], p[0] - b.maxX), Math.max(0, b.minY - p[1], p[1] - b.maxY));
+  };
+  // Start at the design's top-left corner (a predictable, reading-order start).
+  const start: [number, number] = [Infinity, Infinity];
+  for (const n of nodes) {
+    start[0] = Math.min(start[0], n.bbox.minX);
+    start[1] = Math.min(start[1], n.bbox.minY);
+  }
+
   // Greedy topological order.
   const done = new Uint8Array(nodes.length);
   const indeg = nodes.map((n) => n.preds.size);
   const order: number[] = [];
   let thread: Id | null = null;
-  let pos: [number, number] | null = null;
+  let pos: [number, number] | null = nodes.length ? start : null;
   const available = () => nodes.map((_, i) => i).filter((i) => !done[i] && indeg[i] === 0);
   const closureWeight = (t: Id): number => {
     // Weight of all elements of thread t that can be sewn now without changing thread.
@@ -149,13 +158,24 @@ export function optimizeSequence(design: Design, opts: OptimizeOpts = {}): Seque
     }
     let cand = av.filter((i) => nodes[i].thread === thread);
     if (!cand.length) {
+      // Next thread: prefer one whose remaining elements can all be sewn now (no extra change of
+      // that colour later), then the nearest; otherwise the largest block that can be sewn now.
       const threads = [...new Set(av.map((i) => nodes[i].thread))];
+      const remaining = (t: Id) => {
+        let w = 0;
+        for (let i = 0; i < nodes.length; i++) if (!done[i] && nodes[i].thread === t) w += nodes[i].weight;
+        return w;
+      };
+      const near = (t: Id) =>
+        Math.min(...av.filter((i) => nodes[i].thread === t).map((i) => distTo(pos!, i)));
       let bt = threads[0],
-        bw = -1;
+        bScore: [number, number] = [Infinity, Infinity];
       for (const t of threads) {
         const w = closureWeight(t);
-        if (w > bw) {
-          bw = w;
+        const complete = w >= remaining(t) - 1e-9;
+        const score: [number, number] = complete ? [0, near(t)] : [1, -w];
+        if (score[0] < bScore[0] || (score[0] === bScore[0] && score[1] < bScore[1])) {
+          bScore = score;
           bt = t;
         }
       }
@@ -166,7 +186,7 @@ export function optimizeSequence(design: Design, opts: OptimizeOpts = {}): Seque
     if (pos) {
       let bd = Infinity;
       for (const i of cand) {
-        const d = Math.hypot(nodes[i].center[0] - pos[0], nodes[i].center[1] - pos[1]);
+        const d = distTo(pos, i);
         // Prefer a shape's own outline right after its fill.
         const bonus = order.length && nodes[order[order.length - 1]].shapeId === nodes[i].shapeId ? -1e6 : 0;
         if (d + bonus < bd) {
@@ -177,7 +197,14 @@ export function optimizeSequence(design: Design, opts: OptimizeOpts = {}): Seque
     }
     done[pick] = 1;
     order.push(pick);
-    pos = nodes[pick].center;
+    // The element is entered at the side nearest the current position and left on the far side.
+    {
+      const nb = nodes[pick].bbox;
+      const c = nodes[pick].center;
+      const ex = pos ? Math.min(nb.maxX, Math.max(nb.minX, pos[0])) : c[0];
+      const ey = pos ? Math.min(nb.maxY, Math.max(nb.minY, pos[1])) : c[1];
+      pos = [2 * c[0] - ex, 2 * c[1] - ey];
+    }
     for (const s of nodes[pick].succs) indeg[s]--;
   }
 

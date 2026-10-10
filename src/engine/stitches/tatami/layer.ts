@@ -25,6 +25,13 @@ export interface FillLayer {
   sections: Section[];
   /** Point-in-layer test (with a small tolerance) for checking row-to-row turns. */
   inside: (x: number, y: number) => boolean;
+  /** The layer's polygon (doc mm), for walking turns along its outline. */
+  poly?: PolyShape;
+  /**
+   * Looser point-in-layer test (0.15 mm) for row-to-row turns: a turn that brushes the outline is
+   * invisible, while detouring around it leaves a mark.
+   */
+  near?: (x: number, y: number) => boolean;
   toDoc: Matrix;
   angle: number;
   spacing: number;
@@ -99,6 +106,8 @@ export function buildLayer(
     stitchLength,
     offset,
     inside: createPointTester(clipOffset(ps, 0.05)),
+    near: createPointTester(clipOffset(ps, 0.15)),
+    poly: ps,
   };
 }
 
@@ -181,13 +190,15 @@ export function buildCustomLayer(
     stitchLength,
     offset,
     inside: createPointTester(clipOffset(ps, 0.05)),
+    near: createPointTester(clipOffset(ps, 0.15)),
+    poly: ps,
     map: wave ? (x, y) => apply(toDoc, [x, y + w(x)]) : undefined,
     phase: o.phase,
     maxStep: wave ? Math.max(0.5, wave.period / 8) : undefined,
   };
 }
 
-function toDocPoint(layer: FillLayer, x: number, y: number): Vec2 {
+export function toDocPoint(layer: FillLayer, x: number, y: number): Vec2 {
   return layer.map ? layer.map(x, y) : apply(layer.toDoc, [x, y]);
 }
 

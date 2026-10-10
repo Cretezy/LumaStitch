@@ -21,16 +21,24 @@ export class InsideRouter {
   private minY: number;
   private inside: (x: number, y: number) => boolean;
   private nodes: number[] = [];
+  /** Node-to-node visibility, filled lazily across queries: 0 unknown, 1 clear, 2 blocked. */
+  private vis: Uint8Array | null = null;
   readonly ok: boolean;
 
   constructor(area: PolyShape, simplifyTol = 0.3, maxNodes = 600) {
     const rings: Ring[] = [];
     const isHole: boolean[] = [];
-    for (const p of area) {
-      rings.push(simplifyRing(p.outer, simplifyTol));
+    // Everything (edges, nodes and the inside test) uses the same simplified rings. Testing against
+    // the exact polygon while nodes sit near the simplified one rejected most paths along curves.
+    const simple: PolyShape = area.map((p) => ({
+      outer: simplifyRing(p.outer, simplifyTol),
+      holes: p.holes.map((h) => simplifyRing(h, simplifyTol)),
+    }));
+    for (const p of simple) {
+      rings.push(p.outer);
       isHole.push(false);
       for (const h of p.holes) {
-        rings.push(simplifyRing(h, simplifyTol));
+        rings.push(h);
         isHole.push(true);
       }
     }
@@ -62,7 +70,7 @@ export class InsideRouter {
           l.push(k);
         }
     }
-    this.inside = createPointTester(area);
+    this.inside = createPointTester(simple);
     // Reflex vertices (relative to the interior), nudged slightly inward.
     rings.forEach((r, ri) => {
       const n = r.length / 2;
@@ -229,7 +237,12 @@ export class InsideRouter {
           vy = Y(v);
         const nd = g[u] + Math.hypot(vx - ux, vy - uy);
         if (nd >= g[v]) continue;
-        if (!this.clear(ux, uy, vx, vy)) continue;
+        if (u < N && v < N) {
+          const vis = (this.vis ??= new Uint8Array(N * N));
+          const k = u < v ? u * N + v : v * N + u;
+          if (!vis[k]) vis[k] = this.clear(ux, uy, vx, vy) ? 1 : 2;
+          if (vis[k] === 2) continue;
+        } else if (!this.clear(ux, uy, vx, vy)) continue;
         g[v] = nd;
         prev[v] = u;
         f[v] = nd + h(v);

@@ -2,7 +2,7 @@
 /** Tatami fill: rows of running stitches with underlay and inside travel between sections. */
 import { flattenGeom } from '@/geom/flatten';
 import { intersection, makeValid, offset, union } from '@/geom/clipper';
-import { polyShapeArea } from '@/geom/polygon';
+import { createPointTester, polyShapeArea, polyShapeBBox } from '@/geom/polygon';
 import { rotateClosedTo } from '@/geom/polyline';
 import type { PolyShape } from '@/geom/types';
 import { InsideRouter } from '@/geom/visibility';
@@ -12,7 +12,15 @@ import type { EngineCtx, Hints, StitchTypeDef } from '../../def';
 import { num, str, type ParamDef, type Params } from '../../params/types';
 import { F, type StitchRun } from '../../types';
 import { RunBuilder, runningPoints } from '../common';
-import { buildLayer, exitCorner, sectionCorner, sewSection, type FillLayer } from './layer';
+import {
+  buildLayer,
+  exitCorner,
+  sectionCorner,
+  sewSection,
+  toDocPoint,
+  type FillLayer,
+  type Section,
+} from './layer';
 
 export const FILL_UNDERLAY_OPTIONS = [
   { value: 'none', label: 'None' },
@@ -77,6 +85,217 @@ export function travelTo(b: RunBuilder, to: Vec2, t: TravelCtx, flag = 0): void 
   b.jumpTo(to[0], to[1], F.TRIM | flag);
 }
 
+/** Extra cost (mm of travel) of a trim + jump inside a fill: a cut by hand on many machines. */
+const JUMP_COST = 10;
+
+function polyLength(p: Float64Array): number {
+  let l = 0;
+  for (let i = 2; i < p.length; i += 2) l += Math.hypot(p[i] - p[i - 2], p[i + 1] - p[i - 1]);
+  return l;
+}
+
+/**
+ * `coveredBy` sampled about every millimetre along a polyline (leaving out its ends), as the
+ * distinct section masks seen and how many samples saw each.
+ */
+function coveredAlong(
+  path: Float64Array,
+  coveredBy: (x: number, y: number) => number,
+): { masks: number[]; counts: number[]; n: number } {
+  const seen = new Map<number, number>();
+  const total = polyLength(path);
+  const ns = Math.max(3, Math.ceil(total));
+  let seg = 2,
+    acc = 0;
+  for (let q = 1; q < ns; q++) {
+    const target = (total * q) / ns;
+    while (seg < path.length - 2) {
+      const l = Math.hypot(path[seg] - path[seg - 2], path[seg + 1] - path[seg - 1]);
+      if (acc + l >= target) break;
+      acc += l;
+      seg += 2;
+    }
+    const l = Math.hypot(path[seg] - path[seg - 2], path[seg + 1] - path[seg - 1]) || 1;
+    const u = Math.min(1, Math.max(0, (target - acc) / l));
+    const bits = coveredBy(
+      path[seg - 2] + (path[seg] - path[seg - 2]) * u,
+      path[seg - 1] + (path[seg + 1] - path[seg - 1]) * u,
+    );
+    if (bits) seen.set(bits, (seen.get(bits) ?? 0) + 1);
+  }
+  return { masks: [...seen.keys()], counts: [...seen.values()], n: ns - 1 };
+}
+
+/**
+ * Extra cost (mm) of travel that runs over rows already sewn: a line left on top of the fill is a
+ * visible defect, while hidden travel only costs a few stitches.
+ */
+const VISIBLE_COST = 8;
+/** Weight of the distance from the last section's exit to the requested exit point. */
+const EXIT_WEIGHT = 0.3;
+/** Each mm of visible travel also costs this many mm. */
+const VISIBLE_FACTOR = 4;
+
+/** Travel this close (mm) to sewn rows counts as running over them. */
+const VISIBLE_MARGIN = 0.6;
+
+/** Section counts up to this are ordered exactly (bitmask DP); larger layers greedily. */
+const EXACT_SECTIONS = 10;
+
+/**
+ * Order and start corner of each section minimising total travel: from `from` to the first
+ * section, between each section's exit corner and the next start corner, and from the last exit
+ * to `exit`. Travel whose straight line leaves the layer (it must detour or jump) costs triple.
+ */
+function exactSectionOrder(
+  layer: FillLayer,
+  idx: number[],
+  from: Vec2 | undefined,
+  exit: Vec2 | undefined,
+  t: TravelCtx,
+): [number, number][] {
+  const m = idx.length;
+  const corner = (k: number, c: number) => sectionCorner(layer, layer.sections[idx[k]], c);
+  const exitOf = (k: number, c: number) => exitCorner(layer.sections[idx[k]], c);
+  /**
+   * The travel `travelTo` will sew from a to b, as a polyline, or null for a trim + jump (no inside
+   * path, or a long detour). Straight when the hop stays inside the layer.
+   */
+  // Mirrors travelTo's decisions exactly, so the cost matches what will be sewn.
+  const travel = (a: Vec2, b: Vec2): Float64Array | null => {
+    const d = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    if (d < 1e-9) return Float64Array.of(a[0], a[1], b[0], b[1]);
+    const r = t.router;
+    if (!r) return d <= t.travelLen ? Float64Array.of(a[0], a[1], b[0], b[1]) : null;
+    const sa = r.snapInside(a[0], a[1]),
+      sb = r.snapInside(b[0], b[1]);
+    if (!sa || !sb) return null;
+    if (d <= t.travelLen && r.clear(sa[0], sa[1], sb[0], sb[1]))
+      return Float64Array.of(a[0], a[1], b[0], b[1]);
+    const path = r.path(sa[0], sa[1], sb[0], sb[1]);
+    if (!path) return null;
+    const full = Float64Array.from([a[0], a[1], ...path, b[0], b[1]]);
+    return polyLength(full) <= 3 * d + 1 ? full : null;
+  };
+  // State (mask, k, c): sections in mask sewn, the last being k started at corner c.
+  const S = 1 << m;
+  const W = m * 4;
+  // Bitmask of the sections whose rows cover (x, y), or come within VISIBLE_MARGIN of it (travel
+  // along the edge of sewn rows runs over their ends and shows just the same).
+  const toRot = invert(layer.toDoc);
+  const half = layer.spacing / 2 + VISIBLE_MARGIN;
+  const coveredBy = (x: number, y: number) => {
+    const [rx, ry] = apply(toRot, [x, y]);
+    let bits = 0;
+    for (let k = 0; k < m; k++) {
+      const rows = layer.sections[idx[k]].rows;
+      if (!rows.length || ry < rows[0].y - half || ry > rows[rows.length - 1].y + half) continue;
+      for (const r of rows)
+        if (Math.abs(r.y - ry) <= half && rx >= r.x0 - VISIBLE_MARGIN && rx <= r.x1 + VISIBLE_MARGIN) {
+          bits |= 1 << k;
+          break;
+        }
+    }
+    return bits;
+  };
+  // Travel cost from the exit of (k, c) to the start corner (j, cj), and the sections it crosses
+  // (travel over a section already sewn stays visible on top; over one sewn later it is hidden).
+  const H = new Float64Array(W * W);
+  // Per hop: OR of the masks it crosses (quick reject), and the masks with sample counts.
+  const X = new Int32Array(W * W);
+  const XC: ({ masks: number[]; counts: number[]; n: number } | undefined)[] = new Array(W * W);
+  for (let k = 0; k < m; k++)
+    for (let c = 0; c < 4; c++) {
+      const e = corner(k, exitOf(k, c));
+      for (let j = 0; j < m; j++)
+        for (let cj = 0; cj < 4; cj++) {
+          const p = corner(j, cj);
+          const at = (k * 4 + c) * W + j * 4 + cj;
+          // Follow the path travel will actually take; a trim + jump costs extra.
+          const d = Math.hypot(p[0] - e[0], p[1] - e[1]);
+          if (d < 1e-9) continue;
+          const path = travel(e, p);
+          if (!path) {
+            H[at] = d * 3 + JUMP_COST;
+            continue;
+          }
+          const len = polyLength(path);
+          H[at] = len;
+          if (len > layer.spacing * 2) {
+            const cv = coveredAlong(path, coveredBy);
+            for (const mk of cv.masks) X[at] |= mk;
+            if (X[at]) XC[at] = cv;
+          }
+        }
+    }
+  const cost = new Float64Array(S * W).fill(Infinity);
+  const prev = new Int32Array(S * W).fill(-1);
+  for (let k = 0; k < m; k++)
+    for (let c = 0; c < 4; c++) {
+      let v = 0;
+      if (from) {
+        const p = corner(k, c);
+        const path = travel(from, p);
+        v = path ? polyLength(path) : Math.hypot(p[0] - from[0], p[1] - from[1]) * 3 + JUMP_COST;
+      }
+      cost[(1 << k) * W + k * 4 + c] = v;
+    }
+  for (let mask = 1; mask < S; mask++)
+    for (let k = 0; k < m; k++) {
+      if (!(mask & (1 << k))) continue;
+      for (let c = 0; c < 4; c++) {
+        const cur = cost[mask * W + k * 4 + c];
+        if (cur === Infinity) continue;
+        const row = (k * 4 + c) * W;
+        for (let j = 0; j < m; j++) {
+          if (mask & (1 << j)) continue;
+          const nm = mask | (1 << j);
+          for (let cj = 0; cj < 4; cj++) {
+            const hi = row + j * 4 + cj;
+            const h = H[hi];
+            let v = cur + h;
+            if (X[hi] & mask) {
+              // Charge the part of the travel that runs over rows already sewn.
+              const cv = XC[hi]!;
+              let vis = 0;
+              for (let q = 0; q < cv.masks.length; q++) if (cv.masks[q] & mask) vis += cv.counts[q];
+              v += (h * vis * VISIBLE_FACTOR) / cv.n + VISIBLE_COST;
+            }
+            const at = nm * W + j * 4 + cj;
+            if (v < cost[at]) {
+              cost[at] = v;
+              prev[at] = mask * W + k * 4 + c;
+            }
+          }
+        }
+      }
+    }
+  const full = S - 1;
+  let best = -1,
+    bc = Infinity;
+  for (let k = 0; k < m; k++)
+    for (let c = 0; c < 4; c++) {
+      const at = full * W + k * 4 + c;
+      if (cost[at] === Infinity) continue;
+      // Finishing near the exit only shortens the next jump; it weighs less than travel.
+      const end = exit
+        ? EXIT_WEIGHT * Math.hypot(...(sub(corner(k, exitOf(k, c)), exit) as [number, number]))
+        : 0;
+      if (cost[at] + end < bc) {
+        bc = cost[at] + end;
+        best = at;
+      }
+    }
+  const out: [number, number][] = [];
+  for (let at = best; at >= 0; at = prev[at]) {
+    const r = at % W;
+    out.push([idx[Math.floor(r / 4)], r % 4]);
+  }
+  return out.reverse();
+}
+
+const sub = (a: Vec2, b: Vec2): Vec2 => [a[0] - b[0], a[1] - b[1]];
+
 /** Sews a fill layer: greedy nearest section corner, inside travel between sections. */
 export function sewLayer(
   b: RunBuilder,
@@ -86,16 +305,29 @@ export function sewLayer(
   flag: number,
   start?: Vec2,
   exit?: Vec2,
+  /** Only sew the sections for which this returns true (one part of a multi-part fill). */
+  only?: (i: number) => boolean,
 ): void {
   const n = layer.sections.length;
   if (!n) return;
   const done = new Uint8Array(n);
+  let todo = n;
+  if (only)
+    for (let i = 0; i < n; i++)
+      if (!only(i)) {
+        done[i] = 1;
+        todo--;
+      }
+  if (!todo) return;
+  const allowed: number[] = [];
+  for (let i = 0; i < n; i++) if (!done[i]) allowed.push(i);
   let last = -1;
   if (exit) {
     // Reserve the section nearest the exit for last.
     let bd = Infinity;
     for (let i = 0; i < n; i++)
       for (let c = 0; c < 4; c++) {
+        if (done[i]) break;
         const p = sectionCorner(layer, layer.sections[i], c);
         const d = Math.hypot(p[0] - exit[0], p[1] - exit[1]);
         if (d < bd) {
@@ -103,10 +335,10 @@ export function sewLayer(
           last = i;
         }
       }
-    if (n > 1) done[last] = 1;
+    if (todo > 1) done[last] = 1;
     else last = -1;
   }
-  let remaining = n - (last >= 0 ? 1 : 0);
+  let remaining = todo - (last >= 0 ? 1 : 0);
   const sew = (i: number, c: number) => {
     const s = layer.sections[i];
     const p = sectionCorner(layer, s, c);
@@ -116,11 +348,39 @@ export function sewLayer(
       if (ri > 0) {
         // The turn to the next row normally follows the outline; if it would cut across a hole or
         // notch (rows far apart at a corner), travel inside instead.
+        // If the straight turn would leave the layer (a concave edge, a notch), follow the
+        // outline between the two row ends instead; the router is the fallback for long detours.
         const cur = b.last()!;
+        const near = layer.near ?? layer.inside;
         let ok = true;
         for (const u of [0.25, 0.5, 0.75])
-          if (!layer.inside(cur[0] + (pts[0] - cur[0]) * u, cur[1] + (pts[1] - cur[1]) * u)) ok = false;
-        if (!ok) travelTo(b, [pts[0], pts[1]], t, flag);
+          if (!near(cur[0] + (pts[0] - cur[0]) * u, cur[1] + (pts[1] - cur[1]) * u)) ok = false;
+        if (!ok) {
+          const d = Math.hypot(pts[0] - cur[0], pts[1] - cur[1]);
+          let walk = layer.poly ? outlineWalk(layer.poly, cur, [pts[0], pts[1]], 2 * d + 1) : null;
+          // Drop points the minimum stitch length would merge anyway (post-processing would
+          // otherwise cut the corner they mark), then make sure every leg stays in the layer.
+          if (walk) {
+            const kept = [walk[0], walk[1]];
+            for (let k = 2; k < walk.length; k += 2) {
+              const last = k === walk.length - 2;
+              const far =
+                Math.hypot(walk[k] - kept[kept.length - 2], walk[k + 1] - kept[kept.length - 1]) >= minEnd;
+              if (far || last) kept.push(walk[k], walk[k + 1]);
+            }
+            walk = Float64Array.from(kept);
+          }
+          for (let k = 2; walk && k < walk.length; k += 2)
+            for (const u of [0.25, 0.5, 0.75]) {
+              const x = walk[k - 2] + (walk[k] - walk[k - 2]) * u,
+                y = walk[k - 1] + (walk[k + 1] - walk[k - 1]) * u;
+              if (!near(x, y)) walk = null;
+              if (!walk) break;
+            }
+          if (walk)
+            for (let k = 2; k < walk.length - 2; k += 2) b.push(walk[k], walk[k + 1], F.TRAVEL | flag);
+          else travelTo(b, [pts[0], pts[1]], t, flag);
+        }
       }
       const startIdx = b.length;
       b.pushPolyline(pts, flag);
@@ -141,7 +401,7 @@ export function sewLayer(
   const sewn: number[] = [];
   const overSewn = (x: number, y: number) => {
     const [rx, ry] = apply(toRot, [x, y]);
-    const half = layer.spacing / 2;
+    const half = layer.spacing / 2 + VISIBLE_MARGIN;
     for (const si of sewn) {
       const rows = layer.sections[si].rows;
       if (!rows.length || ry < rows[0].y - half || ry > rows[rows.length - 1].y + half) continue;
@@ -153,7 +413,7 @@ export function sewLayer(
         else hi = mid;
       }
       for (let k = lo; k < rows.length && rows[k].y <= ry + half; k++)
-        if (rx >= rows[k].x0 && rx <= rows[k].x1) return true;
+        if (rx >= rows[k].x0 - VISIBLE_MARGIN && rx <= rows[k].x1 + VISIBLE_MARGIN) return true;
     }
     return false;
   };
@@ -165,6 +425,12 @@ export function sewLayer(
     }
     return hits / 7;
   };
+  // Few sections (one letter, a simple shape): find the order and start corners with the least
+  // travel exactly, so the fill flows through the shape instead of hopping between its ends.
+  if (allowed.length <= EXACT_SECTIONS) {
+    for (const [i, c] of exactSectionOrder(layer, allowed, b.last() ?? start, exit, t)) sew(i, c);
+    return;
+  }
   while (remaining > 0) {
     const cur = b.last() ?? start;
     let bi = -1,
@@ -218,10 +484,26 @@ export function sewLayer(
   }
 }
 
+/** One connected part of a fill (e.g. one letter of a word set as a single shape). */
+export interface FillPart {
+  /** Outer ring of the part (doc mm), for choosing the order of parts. */
+  outer: Float64Array;
+  /** Point-in-part test. */
+  inside: (x: number, y: number) => boolean;
+  /** Inside router for this part only (travel never leaves a part; smaller graphs are faster). */
+  router: InsideRouter | null;
+}
+
 export interface TatamiPrep {
   top: FillLayer;
   underlayLayer: FillLayer | null;
   edgeRings: Float64Array[];
+  /** Connected parts; each is sewn completely (edge run, underlay, top) before the next. */
+  parts: FillPart[];
+  /** Part index of each top section, underlay section and edge ring. */
+  topPart: Int32Array;
+  underlayPart: Int32Array;
+  edgePart: Int32Array;
   travelArea: PolyShape;
   router: InsideRouter | null;
   travelLen: number;
@@ -436,12 +718,26 @@ export function prepareTatamiLike(
   }
   let travelArea = offset(base, -0.25);
   if (!travelArea.length) travelArea = base;
+  const partOf = partLocator(base);
+  const partTravel: PolyShape[] = base.map(() => []);
+  for (const p of travelArea) partTravel[partOf(p.outer[0], p.outer[1])].push(p);
+  const parts: FillPart[] = base.map((p, i) => ({
+    outer: p.outer,
+    inside: createPointTester([p]),
+    router: base.length > 1 ? makeRouter(partTravel[i]) : null,
+  }));
+  const topSplit = splitByPart(splitAtTurns(top), partOf);
+  const underlaySplit = underlayLayer ? splitByPart(splitAtTurns(underlayLayer), partOf) : null;
   const area = polyShapeArea(base);
   if (area > 0 && area < 1) ctx.diag('tiny-fill', `Very small fill (${area.toFixed(2)} mm²).`);
   return {
-    top,
-    underlayLayer,
+    top: topSplit.layer,
+    underlayLayer: underlaySplit?.layer ?? null,
     edgeRings,
+    parts,
+    topPart: topSplit.part,
+    underlayPart: underlaySplit ? underlaySplit.part : new Int32Array(0),
+    edgePart: Int32Array.from(edgeRings, (r) => partOf(r[0], r[1])),
     travelArea,
     router: makeRouter(travelArea),
     travelLen: Math.max(0.5, num(params, 'travelStitchLength', 2)),
@@ -451,29 +747,368 @@ export function prepareTatamiLike(
   };
 }
 
-/** Tatami routing: edge run, underlay layer, top layer, inside travel between sections. */
+/**
+ * Returns a function giving the index of the polygon of `ps` that contains (x, y), or the nearest
+ * one (points just outside, e.g. on pull-compensated rows, belong to the closest part).
+ */
+function partLocator(ps: PolyShape): (x: number, y: number) => number {
+  if (ps.length <= 1) return () => 0;
+  const testers = ps.map((p) => createPointTester([p]));
+  const boxes = ps.map((p) => polyShapeBBox([p]));
+  return (x, y) => {
+    for (let i = 0; i < ps.length; i++) {
+      const b = boxes[i];
+      if (x >= b.minX && x <= b.maxX && y >= b.minY && y <= b.maxY && testers[i](x, y)) return i;
+    }
+    let best = 0,
+      bd = Infinity;
+    for (let i = 0; i < ps.length; i++) {
+      const d = ringDistance(ps[i].outer, [x, y]);
+      if (d < bd) {
+        bd = d;
+        best = i;
+      }
+    }
+    return best;
+  };
+}
+
+/**
+ * The path from a to b along the nearest ring of `ps` (both ends within 0.3 mm of it), as a
+ * polyline from a to b, or null if there is no such ring or the walk is longer than maxLen.
+ */
+function outlineWalk(ps: PolyShape, a: Vec2, b: Vec2, maxLen: number): Float64Array | null {
+  const proj = (r: Float64Array, p: Vec2) => {
+    let best = { seg: 0, t: 0, d: Infinity, x: 0, y: 0 };
+    const n = r.length;
+    for (let i = 0; i < n; i += 2) {
+      const j = (i + 2) % n;
+      const ex = r[j] - r[i],
+        ey = r[j + 1] - r[i + 1];
+      const l2 = ex * ex + ey * ey;
+      const t = l2 > 0 ? Math.max(0, Math.min(1, ((p[0] - r[i]) * ex + (p[1] - r[i + 1]) * ey) / l2)) : 0;
+      const x = r[i] + ex * t,
+        y = r[i + 1] + ey * t;
+      const d = Math.hypot(x - p[0], y - p[1]);
+      if (d < best.d) best = { seg: i / 2, t, d, x, y };
+    }
+    return best;
+  };
+  let bestRing: Float64Array | null = null;
+  let pa = proj(new Float64Array(0), a),
+    pb = pa,
+    bd = Infinity;
+  for (const p of ps)
+    for (const r of [p.outer, ...p.holes]) {
+      if (r.length < 6) continue;
+      const qa = proj(r, a),
+        qb = proj(r, b);
+      if (qa.d > 0.3 || qb.d > 0.3 || qa.d + qb.d >= bd) continue;
+      bd = qa.d + qb.d;
+      bestRing = r;
+      pa = qa;
+      pb = qb;
+    }
+  if (!bestRing) return null;
+  const r = bestRing,
+    n = r.length / 2;
+  // Walk forward (increasing segment index) and backward; keep the shorter.
+  const walk = (dir: 1 | -1) => {
+    const out = [a[0], a[1], pa.x, pa.y];
+    let len = Math.hypot(pa.x - a[0], pa.y - a[1]);
+    let x = pa.x,
+      y = pa.y;
+    if (pa.seg === pb.seg && (dir > 0 ? pb.t >= pa.t : pb.t <= pa.t)) {
+      // Same segment, already in the right direction.
+    } else {
+      let v = dir > 0 ? (pa.seg + 1) % n : pa.seg;
+      for (let steps = 0; steps <= n; steps++) {
+        const vx = r[v * 2],
+          vy = r[v * 2 + 1];
+        len += Math.hypot(vx - x, vy - y);
+        out.push(vx, vy);
+        x = vx;
+        y = vy;
+        if (len > maxLen) return null;
+        // Stop at the vertex that starts (forward) or ends (backward) b's segment.
+        if (dir > 0 ? v === pb.seg : v === (pb.seg + 1) % n) break;
+        v = dir > 0 ? (v + 1) % n : (v - 1 + n) % n;
+      }
+    }
+    len += Math.hypot(pb.x - x, pb.y - y) + Math.hypot(b[0] - pb.x, b[1] - pb.y);
+    if (len > maxLen) return null;
+    out.push(pb.x, pb.y, b[0], b[1]);
+    return { pts: out, len };
+  };
+  const f = walk(1),
+    w = walk(-1);
+  const pick = f && w ? (f.len <= w.len ? f : w) : (f ?? w);
+  return pick ? Float64Array.from(pick.pts) : null;
+}
+
+/** Row-to-row turns up to this length (mm) are sewn directly, along the outline. */
+const shortTurn = (layer: FillLayer) => Math.max(1, 2.5 * layer.spacing);
+
+/**
+ * Splits sections where the turn from one row to the next can't follow the outline on one of the
+ * sides (a step in the outline, e.g. where a letter's bar meets a narrower ear above it). Sewn as
+ * one section, that turn becomes travel along the top of the row just sewn, a visible line; split,
+ * the section order can reach the narrower rows from the right corner instead.
+ */
+function splitAtTurns(layer: FillLayer): FillLayer {
+  const ok = (x0: number, y0: number, x1: number, y1: number) => {
+    // Short turns (slanted or curved edges) are fine whatever the inside test says.
+    if (Math.abs(x1 - x0) <= shortTurn(layer)) return true;
+    const a = toDocPoint(layer, x0, y0),
+      b = toDocPoint(layer, x1, y1);
+    for (const u of [0.25, 0.5, 0.75])
+      if (!layer.inside(a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u)) return false;
+    return true;
+  };
+  const sections: Section[] = [];
+  for (const s of layer.sections) {
+    let cur: Section = { rows: [s.rows[0]] };
+    sections.push(cur);
+    for (let i = 1; i < s.rows.length; i++) {
+      const p = s.rows[i - 1],
+        r = s.rows[i];
+      if (!ok(p.x0, p.y, r.x0, r.y) || !ok(p.x1, p.y, r.x1, r.y)) {
+        cur = { rows: [] };
+        sections.push(cur);
+      }
+      cur.rows.push(r);
+    }
+  }
+  return sections.length === layer.sections.length ? layer : { ...layer, sections };
+}
+
+/**
+ * Splits the sections of a layer where consecutive rows belong to different parts (rows of
+ * neighbouring letters can be linked into one section when the row spacing exceeds the gap
+ * between them), and returns the part index of each resulting section.
+ */
+function splitByPart(
+  layer: FillLayer,
+  partOf: (x: number, y: number) => number,
+): { layer: FillLayer; part: Int32Array } {
+  const sections: Section[] = [];
+  const part: number[] = [];
+  for (const s of layer.sections) {
+    let cur: Section | null = null;
+    let curPart = -1;
+    for (const r of s.rows) {
+      const [x, y] = toDocPoint(layer, (r.x0 + r.x1) / 2, r.y);
+      const p = partOf(x, y);
+      if (!cur || p !== curPart) {
+        cur = { rows: [] };
+        sections.push(cur);
+        part.push(p);
+        curPart = p;
+      }
+      cur.rows.push(r);
+    }
+  }
+  return { layer: { ...layer, sections }, part: Int32Array.from(part) };
+}
+
+/** Distance from p to a closed ring (its nearest edge). */
+function ringDistance(ring: Float64Array, p: Vec2): number {
+  return Math.hypot(...(sub(nearestOnRing(ring, p), p) as [number, number]));
+}
+
+/** The point of a closed ring nearest to p. */
+function nearestOnRing(ring: Float64Array, p: Vec2): Vec2 {
+  let d = Infinity,
+    bx = ring[0],
+    by = ring[1];
+  const n = ring.length;
+  for (let i = 0, j = n - 2; i < n; j = i, i += 2) {
+    const ax = ring[j],
+      ay = ring[j + 1],
+      ex = ring[i] - ax,
+      ey = ring[i + 1] - ay;
+    const l2 = ex * ex + ey * ey;
+    const t = l2 > 0 ? Math.max(0, Math.min(1, ((p[0] - ax) * ex + (p[1] - ay) * ey) / l2)) : 0;
+    const x = ax + ex * t,
+      y = ay + ey * t;
+    const dd = Math.hypot(x - p[0], y - p[1]);
+    if (dd < d) {
+      d = dd;
+      bx = x;
+      by = y;
+    }
+  }
+  return [bx, by];
+}
+
+/** The point of ring `to` closest to ring `from` (vertices of `to`, sampled for long rings). */
+function nearestPointTo(to: Float64Array, from: Float64Array): Vec2 {
+  const step = Math.max(1, Math.floor(to.length / 2 / 200)) * 2;
+  let best: Vec2 = [to[0], to[1]],
+    bd = Infinity;
+  for (let i = 0; i < to.length; i += step) {
+    const p: Vec2 = [to[i], to[i + 1]];
+    const d = ringDistance(from, p);
+    if (d < bd) {
+      bd = d;
+      best = p;
+    }
+  }
+  return best;
+}
+
+/** Smallest distance between two rings (vertices of each against the edges of the other). */
+function ringGap(a: Float64Array, b: Float64Array): number {
+  return Math.min(ringDistance(a, nearestPointTo(b, a)), ringDistance(b, nearestPointTo(a, b)));
+}
+
+/**
+ * Order in which to sew the parts of a fill: the shortest open path through the parts (gap between
+ * consecutive parts), starting near the entry and ending at the part nearest the exit, if any.
+ * Small part counts try every start and improve with 2-opt; large ones use bounding-box gaps.
+ */
+function partOrder(parts: FillPart[], from: Vec2 | undefined, exit: Vec2 | undefined): number[] {
+  const n = parts.length;
+  if (n <= 1) return n ? [0] : [];
+  const exact = n <= 24;
+  const boxes = parts.map((p) => polyShapeBBox([{ outer: p.outer, holes: [] }]));
+  const gap = (i: number, j: number) => {
+    if (exact) return ringGap(parts[i].outer, parts[j].outer);
+    const a = boxes[i],
+      b = boxes[j];
+    return Math.hypot(
+      Math.max(0, a.minX - b.maxX, b.minX - a.maxX),
+      Math.max(0, a.minY - b.maxY, b.minY - a.maxY),
+    );
+  };
+  const G = new Float64Array(n * n);
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) G[i * n + j] = G[j * n + i] = gap(i, j);
+  const d0 = parts.map((p) => (from ? ringDistance(p.outer, from) : 0));
+  let lastPart = -1;
+  if (exit) {
+    let bd = Infinity;
+    for (let i = 0; i < n; i++) {
+      const d = ringDistance(parts[i].outer, exit);
+      if (d < bd) {
+        bd = d;
+        lastPart = i;
+      }
+    }
+  }
+  const cost = (o: number[]) => {
+    let c = d0[o[0]];
+    for (let k = 1; k < o.length; k++) c += G[o[k - 1] * n + o[k]];
+    return c;
+  };
+  const greedy = (start: number) => {
+    const o = [start];
+    const used = new Uint8Array(n);
+    used[start] = 1;
+    if (lastPart >= 0) used[lastPart] = 1;
+    for (;;) {
+      const cur = o[o.length - 1];
+      let pick = -1,
+        bd = Infinity;
+      for (let j = 0; j < n; j++)
+        if (!used[j] && G[cur * n + j] < bd) {
+          bd = G[cur * n + j];
+          pick = j;
+        }
+      if (pick < 0) break;
+      used[pick] = 1;
+      o.push(pick);
+    }
+    if (lastPart >= 0 && lastPart !== start) o.push(lastPart);
+    return o;
+  };
+  const starts = exact ? parts.map((_, i) => i).filter((i) => i !== lastPart || n === 1) : [];
+  if (!exact) {
+    let s0 = 0;
+    for (let i = 1; i < n; i++) if (i !== lastPart && d0[i] < d0[s0]) s0 = i;
+    starts.push(s0);
+  }
+  let best: number[] = [],
+    bc = Infinity;
+  for (const st of starts) {
+    const o = greedy(st);
+    // 2-opt on the open path; the last part stays fixed when there is an exit.
+    const end = lastPart >= 0 ? o.length - 1 : o.length;
+    for (let improved = true, pass = 0; improved && pass < 8; pass++) {
+      improved = false;
+      for (let i = 0; i < end - 1; i++)
+        for (let j = i + 1; j < end; j++) {
+          const c0 = cost(o);
+          const r = o.slice(0, i).concat(o.slice(i, j + 1).reverse(), o.slice(j + 1));
+          if (cost(r) < c0 - 1e-9) {
+            o.splice(0, o.length, ...r);
+            improved = true;
+          }
+        }
+    }
+    const c = cost(o);
+    if (c < bc) {
+      bc = c;
+      best = o;
+    }
+  }
+  return best;
+}
+
+/**
+ * Tatami routing. Each connected part is finished (edge run, underlay, top layer) before moving to
+ * the next, nearest first; inside travel between sections, jumps only between parts.
+ */
 export function routeTatami(prep: TatamiPrep, hints: Hints): StitchRun {
   const b = new RunBuilder();
   if (prep.empty) return b.build();
-  const t: TravelCtx = { router: prep.router, travelLen: prep.travelLen };
   const entry = hints.entry;
-  for (const ring of prep.edgeRings) {
-    const closed = new Float64Array(ring.length + 2);
-    closed.set(ring);
-    closed[ring.length] = ring[0];
-    closed[ring.length + 1] = ring[1];
-    const cur = b.last() ?? entry;
-    const rot = cur ? rotateClosedTo(closed, cur[0], cur[1]) : closed;
-    const pts = runningPoints(rot, prep.underlayStitchLength);
-    travelTo(b, [pts[0], pts[1]], t, F.UNDERLAY);
-    b.pushPolyline(pts, F.UNDERLAY, true);
-  }
-  if (prep.underlayLayer) sewLayer(b, prep.underlayLayer, t, prep.minEnd, F.UNDERLAY, entry);
-  sewLayer(b, prep.top, t, prep.minEnd, 0, b.last() ?? entry, hints.userExit ? hints.exit : undefined);
-  if (hints.userExit && hints.exit) {
-    const ex = hints.exit;
+  const exit = hints.exit;
+  const order = partOrder(prep.parts, entry, exit);
+  order.forEach((part, k) => {
+    const isLast = k === order.length - 1;
+    const P = prep.parts[part];
+    const t: TravelCtx = { router: P.router ?? prep.router, travelLen: prep.travelLen };
+    // Arriving from outside the part: come in at its edge point nearest to where we are, so the
+    // jump is as short as possible, then travel inside (hidden under this part's rows) from there.
+    const from = b.last() ?? entry;
+    if (from && t.router && !P.inside(from[0], from[1])) {
+      const q = nearestOnRing(P.outer, from);
+      const z = t.router.snapInside(q[0], q[1]);
+      if (z && P.inside(z[0], z[1])) {
+        if (b.length) b.jumpTo(z[0], z[1], F.TRIM);
+        else b.push(z[0], z[1], 0);
+      }
+    }
+    // Finish each part next to the part that follows it, so the jump between them is short.
+    const partExit = isLast ? exit : nearestPointTo(prep.parts[order[k + 1]].outer, prep.parts[part].outer);
+    prep.edgeRings.forEach((ring, ri) => {
+      if (prep.edgePart[ri] !== part) return;
+      const closed = new Float64Array(ring.length + 2);
+      closed.set(ring);
+      closed[ring.length] = ring[0];
+      closed[ring.length + 1] = ring[1];
+      const cur = b.last() ?? entry;
+      const rot = cur ? rotateClosedTo(closed, cur[0], cur[1]) : closed;
+      const pts = runningPoints(rot, prep.underlayStitchLength);
+      travelTo(b, [pts[0], pts[1]], t, F.UNDERLAY);
+      b.pushPolyline(pts, F.UNDERLAY, true);
+    });
+    if (prep.underlayLayer)
+      sewLayer(
+        b,
+        prep.underlayLayer,
+        t,
+        prep.minEnd,
+        F.UNDERLAY,
+        b.last() ?? entry,
+        undefined,
+        (i) => prep.underlayPart[i] === part,
+      );
+    sewLayer(b, prep.top, t, prep.minEnd, 0, b.last() ?? entry, partExit, (i) => prep.topPart[i] === part);
+  });
+  if (hints.userExit && exit) {
     const r = prep.router;
-    if (r && r.isInside(ex[0], ex[1])) travelTo(b, ex, t);
+    if (r && r.isInside(exit[0], exit[1])) travelTo(b, exit, { router: r, travelLen: prep.travelLen });
   }
   return b.build();
 }

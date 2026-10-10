@@ -14,23 +14,23 @@ Status: **Draft v0.2** · 2026-10-10 · Companion doc: [SPEC.md](./SPEC.md) · L
 
 ## 2. Tech stack
 
-| Concern | Choice | Why |
-|---------|--------|-----|
-| Build | **Vite** + **TypeScript** (strict) | Simple and fast; native worker support (`new Worker(new URL(...), { type: 'module' })`). |
-| UI | **React** + **Tailwind CSS v4** + **shadcn/ui** (Radix) + lucide-react | Requested stack; accessible primitives. |
-| State | **Zustand** + **Immer** | Minimal boilerplate. Usable outside React (tools, worker bridge). Structural sharing makes undo snapshots cheap. |
-| Vector geometry (editing) | **Paper.js** (`paper-core`, no view) | Booleans that preserve curves, Bézier maths, path-data parsing including arcs, nearest-point helpers. |
-| Polygon ops (engine) | **Clipper2** TypeScript port (`clipper2-ts`; alternatives `clipper2-js` or `clipper2-wasm`) | Robust integer offset, union, difference and intersection on flattened polygons. Port to be chosen in the M0 spike. |
-| Medial axis | **d3-delaunay** | Voronoi-based skeleton for satin rails and width analysis. |
-| Image tracing | **potrace** as WASM (`esm-potrace-wasm`; the approach used by Google's SVGcode). Fallback: imagetracerjs. | Best-quality bitmap-to-Bézier tracing. GPL-2.0-or-later, which is compatible with our licence. Quantisation, filtering and morphology are our own TypeScript. |
-| Hosting | **Cloudflare Workers static assets** + Wrangler | Requested. Static assets only, no Worker script. |
-| Worker RPC | **Comlink** | Typed async calls; transfers typed arrays without copying. |
-| Sortable lists | **dnd-kit** | Sequence panel. |
-| SVG sanitising | **DOMPurify** (SVG profile) | SVG files are untrusted input. |
-| Storage | **idb-keyval** (IndexedDB) | Autosave and recent projects. |
-| Schema | **zod** | Validating project files and migrations. |
-| Tests | **Vitest** (Node, plus browser mode via Playwright for DOM/canvas code), **fast-check** (property tests), **Playwright** (e2e) | |
-| Lint/format | ESLint + Prettier | |
+| Concern                   | Choice                                                                                                                         | Why                                                                                                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build                     | **Vite** + **TypeScript** (strict)                                                                                             | Simple and fast; native worker support (`new Worker(new URL(...), { type: 'module' })`).                                                                      |
+| UI                        | **React** + **Tailwind CSS v4** + **shadcn/ui** (Radix) + lucide-react                                                         | Requested stack; accessible primitives.                                                                                                                       |
+| State                     | **Zustand** + **Immer**                                                                                                        | Minimal boilerplate. Usable outside React (tools, worker bridge). Structural sharing makes undo snapshots cheap.                                              |
+| Vector geometry (editing) | **Paper.js** (`paper-core`, no view)                                                                                           | Booleans that preserve curves, Bézier maths, path-data parsing including arcs, nearest-point helpers.                                                         |
+| Polygon ops (engine)      | **Clipper2** TypeScript port (`clipper2-ts`; alternatives `clipper2-js` or `clipper2-wasm`)                                    | Robust integer offset, union, difference and intersection on flattened polygons. Port to be chosen in the M0 spike.                                           |
+| Medial axis               | **d3-delaunay**                                                                                                                | Voronoi-based skeleton for satin rails and width analysis.                                                                                                    |
+| Image tracing             | **potrace** as WASM (`esm-potrace-wasm`; the approach used by Google's SVGcode). Fallback: imagetracerjs.                      | Best-quality bitmap-to-Bézier tracing. GPL-2.0-or-later, which is compatible with our licence. Quantisation, filtering and morphology are our own TypeScript. |
+| Hosting                   | **Cloudflare Workers static assets** + Wrangler                                                                                | Requested. Static assets only, no Worker script.                                                                                                              |
+| Worker RPC                | **Comlink**                                                                                                                    | Typed async calls; transfers typed arrays without copying.                                                                                                    |
+| Sortable lists            | **dnd-kit**                                                                                                                    | Sequence panel.                                                                                                                                               |
+| SVG sanitising            | **DOMPurify** (SVG profile)                                                                                                    | SVG files are untrusted input.                                                                                                                                |
+| Storage                   | **idb-keyval** (IndexedDB)                                                                                                     | Autosave and recent projects.                                                                                                                                 |
+| Schema                    | **zod**                                                                                                                        | Validating project files and migrations.                                                                                                                      |
+| Tests                     | **Vitest** (Node, plus browser mode via Playwright for DOM/canvas code), **fast-check** (property tests), **Playwright** (e2e) |                                                                                                                                                               |
+| Lint/format               | ESLint + Prettier                                                                                                              |                                                                                                                                                               |
 
 **Rejected alternatives**
 
@@ -38,6 +38,7 @@ Status: **Draft v0.2** · 2026-10-10 · Companion doc: [SPEC.md](./SPEC.md) · L
 - **Pyodide running Ink/Stitch in the browser.** Tens of MB to download (Shapely, NetworkX, lxml), slow start-up, and still tied to `inkex`.
 
 **Ink/Stitch as a reference.** LumaStitch is GPL-3.0-or-later, so Ink/Stitch's stitch algorithms (fill routing, satin, underlay, auto-satin and others) can be **ported to TypeScript** directly, not just studied. Ported files keep the original copyright notice, a link to the source file and commit, and an SPDX header. The same applies to pyembroidery (MIT) for PES, and to Ink/Stitch's thread palettes.
+
 - **Fabric.js or Konva for the canvas.** Their object models would duplicate ours, and their node editing is weak. We render ourselves: an SVG overlay for editing plus Canvas2D for stitches.
 - **WebGL renderer.** Not needed for the v1 targets. Revisit for Realistic mode above about 200k stitches.
 
@@ -126,34 +127,45 @@ lumastitch/
 
 ## 5. Units and coordinate systems
 
-| Space | Definition |
-|-------|------------|
-| **Document** | Millimetres, float64. +x right, **+y down** (same as SVG and PES). Imports are centred on the origin (0, 0), but the position has no meaning for export because machines centre the design. There is no hoop or artboard. |
-| **Angles** | Stored and shown in degrees, counter-clockwise from +x as seen on screen (Illustrator/Wilcom convention). Because y points down, the engine negates angles when building rotation matrices. This is done in one helper, `rotationFor(angleDeg)`. |
-| **Screen** | CSS px. Viewport `{ zoom: px per mm, pan: [x, y] }`, with `screen = doc · zoom + pan`. Canvas backing stores are scaled by `devicePixelRatio`. |
-| **PES** | Integer units of 0.1 mm. `u = Math.round(mm · 10)`. Deltas are computed from the rounded absolute positions, so rounding never accumulates. |
-| **SVG import** | User units are converted to mm using the root `width`/`height` and `viewBox`. Unitless or px values are taken at 96 dpi (`25.4 / 96` mm per px). |
-| **Tolerances** | Curve flattening uses 0.05 mm chord error. Clipper scale is ×1000 (1 µm integer units). Geometric epsilon is 1e-6 mm. |
+| Space          | Definition                                                                                                                                                                                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Document**   | Millimetres, float64. +x right, **+y down** (same as SVG and PES). Imports are centred on the origin (0, 0), but the position has no meaning for export because machines centre the design. There is no hoop or artboard.                        |
+| **Angles**     | Stored and shown in degrees, counter-clockwise from +x as seen on screen (Illustrator/Wilcom convention). Because y points down, the engine negates angles when building rotation matrices. This is done in one helper, `rotationFor(angleDeg)`. |
+| **Screen**     | CSS px. Viewport `{ zoom: px per mm, pan: [x, y] }`, with `screen = doc · zoom + pan`. Canvas backing stores are scaled by `devicePixelRatio`.                                                                                                   |
+| **PES**        | Integer units of 0.1 mm. `u = Math.round(mm · 10)`. Deltas are computed from the rounded absolute positions, so rounding never accumulates.                                                                                                      |
+| **SVG import** | User units are converted to mm using the root `width`/`height` and `viewBox`. Unitless or px values are taken at 96 dpi (`25.4 / 96` mm per px).                                                                                                 |
+| **Tolerances** | Curve flattening uses 0.05 mm chord error. Clipper scale is ×1000 (1 µm integer units). Geometric epsilon is 1e-6 mm.                                                                                                                            |
 
 ## 6. Document model (`src/model`)
 
 ```ts
-export type Id = string;                        // nanoid
-export type Vec2 = [x: number, y: number];      // mm
+export type Id = string; // nanoid
+export type Vec2 = [x: number, y: number]; // mm
 
 /** Bézier node in the style of Paper.js segments. Handles are relative to `p`. */
-export interface Node { p: Vec2; in?: Vec2; out?: Vec2; smooth?: boolean }
-export interface Subpath { closed: boolean; nodes: Node[] }
-export interface PathGeom { subpaths: Subpath[]; fillRule: 'nonzero' | 'evenodd' }
+export interface Node {
+  p: Vec2;
+  in?: Vec2;
+  out?: Vec2;
+  smooth?: boolean;
+}
+export interface Subpath {
+  closed: boolean;
+  nodes: Node[];
+}
+export interface PathGeom {
+  subpaths: Subpath[];
+  fillRule: 'nonzero' | 'evenodd';
+}
 
 export interface Shape {
   id: Id;
   name: string;
-  geom: PathGeom;                 // absolute mm, transforms baked in
+  geom: PathGeom; // absolute mm, transforms baked in
   hidden?: boolean;
   locked?: boolean;
   art: { fill?: string; stroke?: string; strokeWidth?: number }; // original paint (artwork view, auto-digitize)
-  fill: StitchElement | null;     // always null if the shape has no closed subpath
+  fill: StitchElement | null; // always null if the shape has no closed subpath
   outline: StitchElement | null;
 }
 
@@ -167,38 +179,42 @@ export interface StitchElement {
   role: 'fill' | 'outline';
   type: StitchType;
   threadId: Id;
-  params: Record<string, ParamValue>;  // overrides only (see §11.3)
-  entry?: Vec2;                        // user entry point; engine snaps it to the geometry
-  exit?: Vec2;                         // user exit point
-  guides?: [Vec2, Vec2][];             // satin direction lines (rungs); type-specific
-  railSplit?: [number, number];        // satinFill: outline params where rails split
+  params: Record<string, ParamValue>; // overrides only (see §11.3)
+  entry?: Vec2; // user entry point; engine snaps it to the geometry
+  exit?: Vec2; // user exit point
+  guides?: [Vec2, Vec2][]; // satin direction lines (rungs); type-specific
+  railSplit?: [number, number]; // satinFill: outline params where rails split
   tieIn: 'auto' | 'on' | 'off';
   tieOut: 'auto' | 'on' | 'off';
   trimAfter: 'auto' | 'always' | 'never';
-  userEdited?: boolean;                // set on manual change; auto-digitize can skip
+  userEdited?: boolean; // set on manual change; auto-digitize can skip
 }
 
-export interface Thread { id: Id; name: string; color: string; chart?: string; code?: string }
+export interface Thread {
+  id: Id;
+  name: string;
+  color: string;
+  chart?: string;
+  code?: string;
+}
 
-export type SequenceEntry =
-  | { kind: 'element'; elementId: Id }
-  | { kind: 'stop'; id: Id; note?: string };
+export type SequenceEntry = { kind: 'element'; elementId: Id } | { kind: 'stop'; id: Id; note?: string };
 
 export interface Design {
   schemaVersion: 1;
   name: string;
-  fabric: FabricId;              // no hoop: design size = bounds of its shapes
+  fabric: FabricId; // no hoop: design size = bounds of its shapes
   threadChart: string;
-  settings: DesignSettings;    // see SPEC §8.8
+  settings: DesignSettings; // see SPEC §8.8
   threads: Record<Id, Thread>;
   shapes: Record<Id, Shape>;
-  zOrder: Id[];                // artwork stacking, bottom → top
-  sequence: SequenceEntry[];   // sewing order
+  zOrder: Id[]; // artwork stacking, bottom → top
+  sequence: SequenceEntry[]; // sewing order
   artwork?: Artwork;
 }
 
 export type Artwork = { matrix: Matrix; visible: boolean; opacity: number } & (
-  | { kind: 'svg'; svg: string }                            // sanitised SVG text
+  | { kind: 'svg'; svg: string } // sanitised SVG text
   | { kind: 'image'; dataUrl: string; pxWidth: number; pxHeight: number; trace: TraceSettings }
 );
 // TraceSettings = { colors: number | 'auto'; palette: PaletteEdit[]; background: 'auto' | 'none' | string;
@@ -207,7 +223,7 @@ export type Artwork = { matrix: Matrix; visible: boolean; opacity: number } & (
 
 **Resizing the design** (`resizeDesign(width?, height?)`) applies `transformShapes(allShapeIds, scaleAboutCentre)` and scales the artwork matrix to match. Stitches are regenerated, so density is preserved.
 
-**Two orders.** `zOrder` is how the artwork *looks* when layered. It drives artwork-view rendering, overlap removal and the auto-digitizer's ordering constraints. `sequence` is how the design is *sewn*. Import initialises both from SVG paint order. "Bring to front" changes only `zOrder`; reordering the Sequence panel changes only `sequence`. In stitch views, what appears on top follows `sequence`, because that is physically true.
+**Two orders.** `zOrder` is how the artwork _looks_ when layered. It drives artwork-view rendering, overlap removal and the auto-digitizer's ordering constraints. `sequence` is how the design is _sewn_. Import initialises both from SVG paint order. "Bring to front" changes only `zOrder`; reordering the Sequence panel changes only `sequence`. In stitch views, what appears on top follows `sequence`, because that is physically true.
 
 **Fill and outline live on the shape.** One geometry drives both elements, so editing a path regenerates both. The sequence gives them independent order. This is Ink/Stitch's model (fill and stroke on one element) combined with Wilcom-style sequencing.
 
@@ -224,11 +240,11 @@ A memoised selector builds an `elementId → { shapeId, role }` index.
 
 ## 7. State management (`src/store`)
 
-| Store | Contents | Undoable | Persisted |
-|-------|----------|----------|-----------|
-| `documentStore` | `design`, `past[]`, `future[]`, `revision` | yes | IndexedDB autosave |
-| `uiStore` | selection (shapes, elements, nodes), active tool, viewport, view options, panel state, drag preview, simulator state | no | view prefs in localStorage |
-| `planStore` | latest `StitchPlan`, generation status, diagnostics | no | no |
+| Store           | Contents                                                                                                             | Undoable | Persisted                  |
+| --------------- | -------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------- |
+| `documentStore` | `design`, `past[]`, `future[]`, `revision`                                                                           | yes      | IndexedDB autosave         |
+| `uiStore`       | selection (shapes, elements, nodes), active tool, viewport, view options, panel state, drag preview, simulator state | no       | view prefs in localStorage |
+| `planStore`     | latest `StitchPlan`, generation status, diagnostics                                                                  | no       | no                         |
 
 **Commands.** `exec(label, recipe: (draft: Design) => void)` runs Immer `produce`, pushes the previous `design` onto `past` (structural sharing keeps this cheap), clears `future` and bumps `revision`. History is capped at 200 entries. Each history entry also stores the selection, so undo restores it.
 
@@ -301,22 +317,22 @@ interface Tool {
   onPointerUp?(e: CanvasPointerEvent, ctx: ToolContext): void;
   onDoubleClick?(e: CanvasPointerEvent, ctx: ToolContext): void;
   onKeyDown?(e: KeyboardEvent, ctx: ToolContext): void;
-  Overlay?: React.FC;                    // tool-specific overlay content
+  Overlay?: React.FC; // tool-specific overlay content
 }
 // CanvasPointerEvent: { doc: Vec2; screen: Vec2; mods; hit: HitTarget | null; nativeEvent }
 // ToolContext: { exec, ui, design, viewport, snap(pt) }
 ```
 
-| Tool | Key | Behaviour |
-|------|-----|-----------|
-| Select | V | Click or marquee select. Drag to move (Shift constrains the axis, Alt duplicates). Handles scale (Shift keeps proportions, Alt scales from the centre). Corner zones rotate (Shift snaps to 15°). |
-| Direct select | A | Node and handle editing. Double-click a segment to add a node. Delete removes nodes. Shift+C toggles smooth/corner. Alt-drag a handle breaks symmetry. |
-| Pen (P1) | P | Click for a corner, drag for a smooth node. Click the first node to close the path. |
-| Rectangle / Ellipse (P1) | M / L | Shift for square/circle, Alt to draw from the centre. |
-| Hand / Zoom | H, hold Space / Z | |
-| Stitch angle | — | Drag across a fill to set its `angle`. |
-| Entry / Exit | — | Click to place entry or exit points on the selected element. |
-| Satin direction | — | Draw guide lines and drag rail split points. |
+| Tool                     | Key               | Behaviour                                                                                                                                                                                         |
+| ------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Select                   | V                 | Click or marquee select. Drag to move (Shift constrains the axis, Alt duplicates). Handles scale (Shift keeps proportions, Alt scales from the centre). Corner zones rotate (Shift snaps to 15°). |
+| Direct select            | A                 | Node and handle editing. Double-click a segment to add a node. Delete removes nodes. Shift+C toggles smooth/corner. Alt-drag a handle breaks symmetry.                                            |
+| Pen (P1)                 | P                 | Click for a corner, drag for a smooth node. Click the first node to close the path.                                                                                                               |
+| Rectangle / Ellipse (P1) | M / L             | Shift for square/circle, Alt to draw from the centre.                                                                                                                                             |
+| Hand / Zoom              | H, hold Space / Z |                                                                                                                                                                                                   |
+| Stitch angle             | —                 | Drag across a fill to set its `angle`.                                                                                                                                                            |
+| Entry / Exit             | —                 | Click to place entry or exit points on the selected element.                                                                                                                                      |
+| Satin direction          | —                 | Draw guide lines and drag rail split points.                                                                                                                                                      |
 
 Keyboard shortcuts live in one place (`lib/keymap.ts`) and are ignored while focus is in an input.
 
@@ -328,28 +344,44 @@ Keyboard shortcuts live in one place (`lib/keymap.ts`) and are ignored while foc
 
 ```ts
 export const enum F {
-  STITCH = 0, JUMP = 1, TRIM = 2, COLOR_CHANGE = 4, STOP = 8, END = 16,
+  STITCH = 0,
+  JUMP = 1,
+  TRIM = 2,
+  COLOR_CHANGE = 4,
+  STOP = 8,
+  END = 16,
   // informational only (rendering/stats); export ignores them
-  TIE = 32, UNDERLAY = 64, TRAVEL = 128,
+  TIE = 32,
+  UNDERLAY = 64,
+  TRAVEL = 128,
 }
 
 /** Output of one element generator: needle points in sewing order. */
 export interface StitchRun {
-  xy: Float64Array;     // interleaved mm
-  flags: Uint8Array;    // per point: JUMP for internal jumps, UNDERLAY, TRAVEL, TIE
+  xy: Float64Array; // interleaved mm
+  flags: Uint8Array; // per point: JUMP for internal jumps, UNDERLAY, TRAVEL, TIE
 }
 
 export interface StitchPlan {
   revision: number;
-  x: Float32Array; y: Float32Array; flags: Uint8Array;   // one entry per command
-  element: Uint32Array;                                   // index into elementIds
+  x: Float32Array;
+  y: Float32Array;
+  flags: Uint8Array; // one entry per command
+  element: Uint32Array; // index into elementIds
   elementIds: Id[];
   elementRanges: { elementId: Id; start: number; end: number }[];
   colorBlocks: { threadId: Id; color: string; start: number; end: number }[];
   bounds: { minX: number; minY: number; maxX: number; maxY: number };
-  stats: { stitches: number; jumps: number; trims: number; colorChanges: number;
-           stops: number; threadLengthMm: number; estSeconds: number };
-  diagnostics: Diagnostic[];   // { severity, code, message, elementId?, at?: Vec2 }
+  stats: {
+    stitches: number;
+    jumps: number;
+    trims: number;
+    colorChanges: number;
+    stops: number;
+    threadLengthMm: number;
+    estSeconds: number;
+  };
+  diagnostics: Diagnostic[]; // { severity, code, message, elementId?, at?: Vec2 }
 }
 ```
 
@@ -382,19 +414,23 @@ interface StitchTypeDef<P = any, Prep = any> {
   id: StitchType;
   label: string;
   role: 'fill' | 'outline';
-  params: ParamDef[];                     // drives Inspector UI, defaults, validation
+  params: ParamDef[]; // drives Inspector UI, defaults, validation
   defaults: P;
-  aliasOf?: StitchType;                   // e.g. 'triple' reuses 'running' with bean = 1
-  appliesTo(shape: ShapeInfo): boolean;   // e.g. fills need a closed subpath
+  aliasOf?: StitchType; // e.g. 'triple' reuses 'running' with bean = 1
+  appliesTo(shape: ShapeInfo): boolean; // e.g. fills need a closed subpath
   prepare(geom: PathGeom, params: P, el: StitchElement, ctx: EngineCtx): Prep;
   route(prep: Prep, hints: { entry?: Vec2; exit?: Vec2 }, ctx: EngineCtx): StitchRun;
 }
 
 interface ParamDef {
-  key: string; label: string; help?: string;
+  key: string;
+  label: string;
+  help?: string;
   kind: 'length' | 'number' | 'angle' | 'fraction' | 'boolean' | 'enum';
   unit?: 'mm' | '°' | '%';
-  min?: number; max?: number; step?: number;
+  min?: number;
+  max?: number;
+  step?: number;
   options?: { value: string; label: string }[];
   group: 'basic' | 'underlay' | 'compensation' | 'advanced';
   visibleIf?: (p: Record<string, ParamValue>) => boolean;
@@ -435,9 +471,10 @@ interface ParamDef {
 2. **Rows.** `y_k = k·s` on a global grid, so shapes sharing an angle line up. Intersect with the polygon to get the x-intervals per row.
 3. **Sections.** Sweep the rows and link each interval to the one that overlaps it in the next row, but only while the link is 1:1. A split or merge starts a new section. Each section is a strip that can be sewn back and forth in one pass.
 4. **Penetrations.** In row `k`, the penetrations are `x = (j + frac(k·offset))·L` on a global grid (so the texture is uniform across sections), plus both interval endpoints. A penetration that would leave an end stitch shorter than `minStitch` is dropped.
-5. **Ordering and travel.** Each section can start at any of its four corners (top/bottom × left/right); the exit follows from the row-count parity. A greedy pass picks the nearest unsewn section entry from the current position. Travel between sections is a shortest path **inside** the inset polygon: a visibility graph over the Douglas–Peucker-simplified inset rings (0.3 mm), searched with A\*. It is sewn as a `TRAVEL` running stitch. If no inside path exists, or it is more than 3× the straight-line distance, the connector becomes tie-off + trim + jump instead. P2: bias the order so travel runs over sections that will be sewn later, keeping it hidden.
-6. **Underlay**, emitted before the top layer. Edge run: running stitch around `offset(poly, −inset)`. Tatami underlay: the same algorithm at θ+90°, with `underlaySpacing` and `underlayStitchLength`, on the inset polygon. The underlay exit connects to the top layer's entry by inside travel.
-7. **Entry and exit.** A user entry point puts the section containing its nearest boundary point first. A user exit point puts the section nearest the exit last and travels to the exit. Everything is then rotated back by +θ.
+5. **Parts.** The fill polygon's connected parts (e.g. the letters of a word set as one path) are sewn one at a time: edge run, underlay and top layer of a part, then the next. Each part has its own inside router (travel never leaves a part, and the smaller graphs are much faster). Sections are split wherever consecutive rows fall in different parts (wide underlay spacing can link rows of neighbouring letters), and wherever a long row-to-row turn (> max(1 mm, 2.5 × spacing)) can't follow the outline on one side — a step in the outline, e.g. a bar meeting a narrower ear above it — since sewing through such a step means travelling along the top of the row just sewn. Part order is the shortest open path through the parts (exact ring gaps, every start tried plus 2-opt, up to 24 parts; bounding-box gaps beyond), starting near the entry and ending at the part nearest the exit. Each part is entered at its edge point nearest the current position (a short edge-to-edge jump), then inside travel to the first section; each part except the last finishes at the section nearest the next part.
+6. **Ordering and travel.** Each section can start at any of its four corners (top/bottom × left/right); the exit follows from the row-count parity. Up to 10 sections in a part: an exact bitmask DP over (sections sewn, last section, start corner). Each hop's cost is the travel `travelTo` will actually sew (it mirrors its decisions: direct when short and clear, else the router's path, else trim + jump at 3× distance + 10 mm). Travel that runs over (or within 0.6 mm of) rows already sewn stays visible on top: those millimetres cost 4× extra plus 8 mm per hop; over rows sewn later it is hidden and costs only its length. The distance from the last exit to the exit hint weighs 0.3 (it only shortens the next jump). More sections: a greedy pass (nearest few corners, re-ranked by how much of the travel would be visible). Travel between sections is a shortest path **inside** the inset polygon: a visibility graph over the Douglas–Peucker-simplified inset rings (0.3 mm), searched with A\*. Nodes, edges and the point-in-polygon test all use the same simplified rings (mixing exact and simplified geometry rejected most paths along curves); node-to-node visibility is cached across queries. **Row-to-row turns** go straight when they stay within 0.15 mm of the layer; otherwise they walk along the layer's outline between the two row ends (with points the minimum stitch length would merge dropped first, so no corner gets cut), and only fall back to the router when the walk is long. It is sewn as a `TRAVEL` running stitch. If no inside path exists, or it is more than 3× the straight-line distance, the connector becomes tie-off + trim + jump instead; the sequencer sews hops of 1 mm or less as a single stitch.
+7. **Underlay**, emitted before the top layer (per part). Edge run: running stitch around `offset(poly, −inset)`. Tatami underlay: the same algorithm at θ+90°, with `underlaySpacing` and `underlayStitchLength`, on the inset polygon. The underlay exit connects to the top layer's entry by inside travel.
+8. **Entry and exit.** The entry hint is where the previous element finished (or a user entry point). The exit hint is a user exit point or, when the next element uses the same thread, the point of the next shape's outline closest to this shape (`exitToward` in `plan.ts`, alternating nearest-point steps, cached per shape pair); the last part finishes at the section nearest it. A user exit point also travels to the exit. Everything is then rotated back by +θ.
 
 **Contour fill (P1).** Repeatedly offset inward by `spacing` until empty. Resample each ring. Connect ring k to ring k+1 at their nearest points, going inner → outer.
 
@@ -445,13 +482,13 @@ interface ParamDef {
 
 For each transition from the previous element's exit E to the next element's entry S:
 
-| Situation | Emitted |
-|-----------|---------|
-| Same thread, `dist(E,S) ≤ trimThreshold`, `trimAfter ≠ always` | Direct stitch(es) E→S, no ties. |
-| Same thread, longer distance (or `trimAfter = always`) | Tie-off, TRIM, JUMP to S, tie-in. |
-| `trimAfter = never` | Stitched connector, split at the maximum stitch length. Warning if longer than 10 mm. |
-| Thread changes | Tie-off, TRIM, COLOR_CHANGE, JUMP to S, tie-in. |
-| Stop entry | Tie-off, TRIM, STOP. The next element starts with a jump and tie-in. |
+| Situation                                                      | Emitted                                                                               |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Same thread, `dist(E,S) ≤ trimThreshold`, `trimAfter ≠ always` | Direct stitch(es) E→S, no ties.                                                       |
+| Same thread, longer distance (or `trimAfter = always`)         | Tie-off, TRIM, JUMP to S, tie-in.                                                     |
+| `trimAfter = never`                                            | Stitched connector, split at the maximum stitch length. Warning if longer than 10 mm. |
+| Thread changes                                                 | Tie-off, TRIM, COLOR_CHANGE, JUMP to S, tie-in.                                       |
+| Stop entry                                                     | Tie-off, TRIM, STOP. The next element starts with a jump and tie-in.                  |
 
 - **Ties.** A tie-in is 3 tiny stitches of length `tieLength` along the first segment, back, then forward again. A tie-off does the same along the last segment, reversed. `auto` means on wherever there is a trim, colour change, stop, or the start/end of the design.
 - **Postprocess.** Split stitches longer than `maxStitchLength` (not jumps). Merge stitches shorter than `minStitchLength` (ties exempt). Remove zero-length duplicates. Append END.
@@ -461,7 +498,7 @@ For each transition from the previous element's exit E to the next element's ent
 ```ts
 interface EngineApi {
   buildPlan(design: Design, revision: number): Promise<StitchPlan | { stale: true }>;
-  analyze(input: AnalyzeInput): Promise<AnalyzeResult>;                 // auto-digitize analysis
+  analyze(input: AnalyzeInput): Promise<AnalyzeResult>; // auto-digitize analysis
   optimizeSequence(design: Design, opts: OptimizeOpts): Promise<SequenceEntry[]>;
 }
 ```
@@ -494,7 +531,7 @@ This implements SPEC FR-10 and §9.1. It has its own worker, so tracing never co
 ```ts
 interface RasterApi {
   load(bitmap: ImageBitmap, targetMm: { width?: number; height?: number }): Promise<ImageInfo>; // resample + filter, cached
-  quantize(opts: QuantizeOpts): Promise<QuantizeResult>;   // palette, suggested k, background guess, label-map preview
+  quantize(opts: QuantizeOpts): Promise<QuantizeResult>; // palette, suggested k, background guess, label-map preview
   trace(opts: TraceSettings, preview: boolean): Promise<TracedShapes>; // preview = ¼ resolution for the dialog
 }
 // TracedShapes = { shapes: { color: string; geom: PathGeom; lineArt?: boolean }[]; warnings: string[] }
@@ -515,8 +552,8 @@ interface RasterApi {
 
 **Sequence optimiser**
 
-1. **Precedence graph.** For each pair (a, b) with a below b in `zOrder`, add an edge a→b if they intersect: a bounding-box test first (via a grid index), then polygon intersection area > 0.5 mm². Each shape's fill gets an edge to its own outline.
-2. **Greedy topological order.** Keep the current thread `c` and position `p`. Among the elements whose predecessors are all done, pick the one with thread `c` nearest `p`. If none qualifies, switch to the thread with the most available stitches, with one step of lookahead to avoid an extra change later.
+1. **Precedence graph.** For each pair (a, b) of elements of different shapes with a's shape below b's in `zOrder`, add an edge a→b if their regions intersect (fill or outline, whatever the roles): a bounding-box test first, then polygon intersection area > 0.5 mm². Each shape's fill gets an edge to its own outline. So a lower shape can be finished, fill and outline, before the shape above it.
+2. **Greedy topological order.** Start at the design's top-left corner. Keep the current thread `c` and position `p` (distances are to element bounding boxes). Among the elements whose predecessors are all done, pick the one with thread `c` nearest `p`, preferring the outline of the shape just sewn. If none qualifies, switch thread: first choice is a thread whose remaining elements can all be sewn now (no later return to that colour), nearest first; otherwise the thread with the most stitches available now. After an element, `p` moves to the far side of its bounding box from where it was entered.
 3. **Improvement (P2).** Local 2-opt within colour blocks, constrained by the precedence graph.
 
 ## 13. Stitch rendering (`src/canvas/stitchRenderer.ts`)
@@ -609,9 +646,15 @@ PEC @pecOffset
 ### 15.7 Export registry
 
 ```ts
-interface ExportFormat { id: string; ext: string; label: string; mime: string; kind: 'machine' | 'document';
+interface ExportFormat {
+  id: string;
+  ext: string;
+  label: string;
+  mime: string;
+  kind: 'machine' | 'document';
   validate(plan: StitchPlan, design: Design): Diagnostic[];
-  write(plan: StitchPlan, design: Design, opts: unknown): Uint8Array | Promise<Blob> }
+  write(plan: StitchPlan, design: Design, opts: unknown): Uint8Array | Promise<Blob>;
+}
 ```
 
 Machine formats write synchronously; document formats (the PDF worksheet) are async. Registered in order: `pes` (the default), `dst`, `jef`, `exp`, `vp3`, `pdf`. Adding a format never touches the engine.
@@ -649,14 +692,14 @@ Machine formats write synchronously; document formats (the PDF worksheet) are as
 
 ## 19. Performance budget
 
-| Operation | Budget | Technique |
-|-----------|--------|-----------|
-| Single element regeneration | < 100 ms | `prepare`/`route` caches; worker |
-| Full plan, 50k stitches | < 2 s | worker; typed arrays; transfer |
-| Pan/zoom, 100k stitches | 60 fps | cached `Path2D` / bitmap transform during gestures |
-| Simulator | 60 fps | incremental drawing; rAF outside React |
-| SVG import, 2,000 paths | < 3 s | single DOM pass; memoised `d` strings |
-| Undo snapshot | O(changed) | Immer structural sharing |
+| Operation                   | Budget     | Technique                                          |
+| --------------------------- | ---------- | -------------------------------------------------- |
+| Single element regeneration | < 100 ms   | `prepare`/`route` caches; worker                   |
+| Full plan, 50k stitches     | < 2 s      | worker; typed arrays; transfer                     |
+| Pan/zoom, 100k stitches     | 60 fps     | cached `Path2D` / bitmap transform during gestures |
+| Simulator                   | 60 fps     | incremental drawing; rAF outside React             |
+| SVG import, 2,000 paths     | < 3 s      | single DOM pass; memoised `d` strings              |
+| Undo snapshot               | O(changed) | Immer structural sharing                           |
 
 ## 20. Testing
 
@@ -674,32 +717,32 @@ Machine formats write synchronously; document formats (the PDF worksheet) are as
 
 ## 21. Risks and spikes
 
-| Risk | Mitigation |
-|------|------------|
-| Machine rejects or misreads the PES | Port pyembroidery exactly; golden tests; **sew test at the end of M1**; offer the v6 option. |
-| Fill quality (gaps, visible travel, too many trims) | Port Ink/Stitch's fill routing where it beats ours; inside-only travel; diagnostics; iterate with sew tests. |
-| Image tracing quality (noisy regions, slivers, gaps between colours) | Edge-preserving pre-filter; absorb anti-aliasing blends; morphological cleanup; cutouts plus overlap growth; editable swatches; a fixture set of real logos and clip art with expected colour counts. |
-| SE600 has no automatic trimming (unverified) | Confirm in sew test #1. If so, minimising jumps matters more: favour inside travel over trims, and keep the trim threshold configurable. |
-| Paper.js booleans fail on messy imports; Paper.js updates slowly | It sits behind `paperAdapter`. Fallback: Clipper on flattened geometry, then `simplify` to refit curves. |
-| Paper.js can't run in a worker (unverified) | **M0 spike.** If it can't, run booleans on the main thread in chunks with progress. The engine never depends on Paper. |
-| Clipper2 JS port maturity | **M0 spike**: compare `clipper2-ts`, `clipper2-js` and `clipper2-wasm` on correctness tests and speed. |
-| Auto-satin rail detection on complex shapes | Conservative classification with a tatami fallback; manual rail-split and guide handles. |
-| Huge SVGs (10k+ paths) | Warning on import; optional simplify; canvas shape layer as a P2 fallback. |
-| Scope creep toward full Illustrator parity | Hold to P0/P1/P2; vector tools limited to the SPEC list. |
+| Risk                                                                 | Mitigation                                                                                                                                                                                                                                      |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Machine rejects or misreads the PES                                  | Port pyembroidery exactly; golden tests; **sew test at the end of M1**; offer the v6 option.                                                                                                                                                    |
+| Fill quality (gaps, visible travel, too many trims)                  | Port Ink/Stitch's fill routing where it beats ours; inside-only travel; diagnostics; iterate with sew tests.                                                                                                                                    |
+| Image tracing quality (noisy regions, slivers, gaps between colours) | Edge-preserving pre-filter; absorb anti-aliasing blends; morphological cleanup; cutouts plus overlap growth; editable swatches; a fixture set of real logos and clip art with expected colour counts.                                           |
+| SE600 has no automatic trimming (confirmed by a user)                | Every jump is a hand cut, and a jump that later stitching covers is locked in. Multi-part fills are sewn part by part with edge-to-edge jumps; inside travel is preferred over trims; hops ≤ 1 mm are sewn; the trim threshold is configurable. |
+| Paper.js booleans fail on messy imports; Paper.js updates slowly     | It sits behind `paperAdapter`. Fallback: Clipper on flattened geometry, then `simplify` to refit curves.                                                                                                                                        |
+| Paper.js can't run in a worker (unverified)                          | **M0 spike.** If it can't, run booleans on the main thread in chunks with progress. The engine never depends on Paper.                                                                                                                          |
+| Clipper2 JS port maturity                                            | **M0 spike**: compare `clipper2-ts`, `clipper2-js` and `clipper2-wasm` on correctness tests and speed.                                                                                                                                          |
+| Auto-satin rail detection on complex shapes                          | Conservative classification with a tatami fallback; manual rail-split and guide handles.                                                                                                                                                        |
+| Huge SVGs (10k+ paths)                                               | Warning on import; optional simplify; canvas shape layer as a P2 fallback.                                                                                                                                                                      |
+| Scope creep toward full Illustrator parity                           | Hold to P0/P1/P2; vector tools limited to the SPEC list.                                                                                                                                                                                        |
 
 ## 22. Build order
 
-| Milestone | Scope | Exit criteria |
-|-----------|-------|---------------|
-| **M0 Foundations** | Scaffold (Vite, React, TS, Tailwind, shadcn); GPL `LICENSE`; Cloudflare Workers deploy from the repo (§23); AppShell layout; viewport (pan, zoom, grid, dimensions); model, stores, undo; local library + autosave; SVG import → shapes rendered; select and move; design size field. Spikes: Paper.js in a worker, Clipper2 port choice, `esm-potrace-wasm` in a worker. | Fixture SVGs import at the correct size; main branch auto-deploys. |
-| **M1 Vertical slice to the machine** | Engine worker; running, satin column and tatami (jumps between sections, no underlay); basic sequencer (trims, colour changes, ties); flat preview; PES v1 writer + reader; export dialog. | Round-trip tests pass; **sew test #1**. |
-| **M2 Configure and sequence** | ParamDef-driven Inspector; fabric presets and inheritance; threads panel and Brother chart; Sequence panel with drag and drop; stops; trim and tie options; stats; design settings; autosave and project files. | Full manual workflow works without auto-digitize. |
-| **M3 Simulator** | Playback, speeds, timeline, stepping, element highlight. | Matches read-back PES exactly. |
-| **M4 Stitch quality** | Tatami inside travel; fill and satin underlays; pull compensation; satin fill (auto rails, guides); zigzag; contour fill; angle and entry/exit tools. | **Sew test #2** on woven and knit fabric. |
-| **M5 Vector editing** | Transform handles; node editing; pen, rectangle and ellipse; booleans; path operations; align; snapping. | Boolean fixtures pass; undo for all. |
-| **M6 Auto-digitizer** | Colour mapping; overlap removal; classification; satin rails; sequence optimiser; dialog and summary. | Acceptance criterion 2 on the logo fixtures. |
-| **M7 Image digitizer** | Raster worker; resample, filter, quantise, auto-k, background; masks and cleanup; potrace; cutout growth; `ImageImportDialog` with live preview; hand-off to auto-digitize. Line-art mode is P1. | Acceptance criterion 3; **sew test #3** with a traced logo. |
-| **M8 Polish** | Realistic rendering; Issues panel; My threads; PES v6; PNG/SVG export; open `.pes`; library backup; shortcuts dialog; performance pass. | All SPEC §12 criteria. |
+| Milestone                            | Scope                                                                                                                                                                                                                                                                                                                                                                     | Exit criteria                                                      |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| **M0 Foundations**                   | Scaffold (Vite, React, TS, Tailwind, shadcn); GPL `LICENSE`; Cloudflare Workers deploy from the repo (§23); AppShell layout; viewport (pan, zoom, grid, dimensions); model, stores, undo; local library + autosave; SVG import → shapes rendered; select and move; design size field. Spikes: Paper.js in a worker, Clipper2 port choice, `esm-potrace-wasm` in a worker. | Fixture SVGs import at the correct size; main branch auto-deploys. |
+| **M1 Vertical slice to the machine** | Engine worker; running, satin column and tatami (jumps between sections, no underlay); basic sequencer (trims, colour changes, ties); flat preview; PES v1 writer + reader; export dialog.                                                                                                                                                                                | Round-trip tests pass; **sew test #1**.                            |
+| **M2 Configure and sequence**        | ParamDef-driven Inspector; fabric presets and inheritance; threads panel and Brother chart; Sequence panel with drag and drop; stops; trim and tie options; stats; design settings; autosave and project files.                                                                                                                                                           | Full manual workflow works without auto-digitize.                  |
+| **M3 Simulator**                     | Playback, speeds, timeline, stepping, element highlight.                                                                                                                                                                                                                                                                                                                  | Matches read-back PES exactly.                                     |
+| **M4 Stitch quality**                | Tatami inside travel; fill and satin underlays; pull compensation; satin fill (auto rails, guides); zigzag; contour fill; angle and entry/exit tools.                                                                                                                                                                                                                     | **Sew test #2** on woven and knit fabric.                          |
+| **M5 Vector editing**                | Transform handles; node editing; pen, rectangle and ellipse; booleans; path operations; align; snapping.                                                                                                                                                                                                                                                                  | Boolean fixtures pass; undo for all.                               |
+| **M6 Auto-digitizer**                | Colour mapping; overlap removal; classification; satin rails; sequence optimiser; dialog and summary.                                                                                                                                                                                                                                                                     | Acceptance criterion 2 on the logo fixtures.                       |
+| **M7 Image digitizer**               | Raster worker; resample, filter, quantise, auto-k, background; masks and cleanup; potrace; cutout growth; `ImageImportDialog` with live preview; hand-off to auto-digitize. Line-art mode is P1.                                                                                                                                                                          | Acceptance criterion 3; **sew test #3** with a traced logo.        |
+| **M8 Polish**                        | Realistic rendering; Issues panel; My threads; PES v6; PNG/SVG export; open `.pes`; library backup; shortcuts dialog; performance pass.                                                                                                                                                                                                                                   | All SPEC §12 criteria.                                             |
 
 ## 23. Deployment (Cloudflare Workers static assets)
 
@@ -713,8 +756,8 @@ The app is a static Vite build served by Workers static assets. There is no Work
   "compatibility_date": "2026-10-01",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
-  }
+    "not_found_handling": "single-page-application",
+  },
 }
 ```
 
