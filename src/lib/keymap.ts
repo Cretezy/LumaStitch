@@ -42,6 +42,8 @@ export const SHORTCUTS: Shortcut[] = [
   { keys: `${MOD}1`, label: '100% (actual size)', group: 'View' },
   { keys: `${MOD}2`, label: 'Fit selection', group: 'View' },
   { keys: `${MOD}+ / ${MOD}−`, label: 'Zoom in / out', group: 'View' },
+  { keys: 'Drag empty canvas', label: 'Pan (Select and Direct tools)', group: 'View' },
+  { keys: '⇧ + drag empty canvas', label: 'Box-select shapes or nodes', group: 'View' },
   { keys: 'Space + drag', label: 'Pan (also middle- or right-drag)', group: 'View' },
   { keys: 'Two-finger scroll', label: 'Pan (trackpad); pinch to zoom', group: 'View' },
   { keys: 'Mouse wheel', label: 'Zoom at the cursor (⇧ + wheel pans sideways)', group: 'View' },

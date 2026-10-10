@@ -59,7 +59,11 @@ export function StitchLayer() {
         hover: hover?.elementId ?? null,
         dpr,
       });
-      // Keep a snapshot for gesture-time transforms.
+      // Keep a snapshot for gesture-time transforms (none while the canvas has no size, e.g. hidden).
+      if (!c.width || !c.height) {
+        snap.current = null;
+        return;
+      }
       let sc = snap.current?.canvas;
       if (!sc || sc.width !== c.width || sc.height !== c.height) {
         sc = document.createElement('canvas');

@@ -30,6 +30,9 @@ export const spaceHeld = {
   },
 };
 
+/** Tools where a drag on empty background pans the view (Shift + drag draws a selection box). */
+const BACKGROUND_PAN_TOOLS = new Set(['select', 'direct']);
+
 /** Pans the view by a screen-space offset (CSS px). */
 export function panBy(dx: number, dy: number): void {
   const ui = useUi.getState();
@@ -78,7 +81,10 @@ export function CanvasView() {
   const tool = useUi((s) => s.tool);
   const simActive = useUi((s) => s.sim.active);
   const design = useDoc((s) => s.design);
-  const panning = useRef<{ start: Vec2; pan: Vec2 } | null>(null);
+  /** `click`: a background press that becomes a tool click (deselect) if released without moving. */
+  const panning = useRef<{ start: Vec2; pan: Vec2; click?: CanvasPointerEvent; moved?: boolean } | null>(
+    null,
+  );
   const activeTool = useRef<ReturnType<typeof getTool> | null>(null);
 
   // Track canvas size.
@@ -211,6 +217,12 @@ export function CanvasView() {
       return;
     }
     if (e.button !== 0) return;
+    // Selection tools: dragging empty background pans; Shift + drag draws a selection box.
+    if (!ev.hit && !ev.mods.shift && BACKGROUND_PAN_TOOLS.has(ui.tool)) {
+      panning.current = { start: ev.screen, pan: ui.viewport.pan, click: ev };
+      ref.current!.setPointerCapture(e.pointerId);
+      return;
+    }
     const ctx = makeCtx();
     if (!ctx) return;
     ref.current!.setPointerCapture(e.pointerId);
@@ -229,6 +241,11 @@ export function CanvasView() {
       const r = ref.current!.getBoundingClientRect();
       const p: Vec2 = [e.clientX - r.left, e.clientY - r.top];
       const st = panning.current;
+      if (st.click && !st.moved) {
+        if (Math.hypot(p[0] - st.start[0], p[1] - st.start[1]) < 3) return;
+        st.moved = true;
+        usePanState.setState({ dragging: true });
+      }
       useUi.getState().setViewport({ pan: [st.pan[0] + p[0] - st.start[0], st.pan[1] + p[1] - st.start[1]] });
       return;
     }
@@ -249,13 +266,25 @@ export function CanvasView() {
             : null;
       if (cur?.elementId !== next?.elementId || cur?.shapeId !== next?.shapeId)
         useUi.getState().set({ hover: next });
+      const background = !h && BACKGROUND_PAN_TOOLS.has(useUi.getState().tool);
+      if (usePanState.getState().background !== background) usePanState.setState({ background });
     }
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
     if (panning.current) {
+      const st = panning.current;
       panning.current = null;
       usePanState.setState({ dragging: false });
+      // A background click without a drag: let the tool handle it (clears the selection).
+      if (st.click && !st.moved) {
+        const ctx = makeCtx();
+        const t = getTool(useUi.getState().tool);
+        if (ctx) {
+          t.onPointerDown?.(st.click, ctx);
+          t.onPointerUp?.(st.click, ctx);
+        }
+      }
       return;
     }
     const t = activeTool.current;
@@ -316,7 +345,11 @@ export function CanvasView() {
   }, [design, designId, size]);
 
   const pan = usePanState();
-  const cursor = pan.dragging ? 'grabbing' : simActive || pan.space ? 'grab' : getTool(tool).cursor;
+  const cursor = pan.dragging
+    ? 'grabbing'
+    : simActive || pan.space || (pan.background && BACKGROUND_PAN_TOOLS.has(tool))
+      ? 'grab'
+      : getTool(tool).cursor;
 
   return (
     <div
@@ -329,7 +362,10 @@ export function CanvasView() {
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
-      onPointerLeave={() => useUi.getState().hover && useUi.getState().set({ hover: null })}
+      onPointerLeave={() => {
+        if (useUi.getState().hover) useUi.getState().set({ hover: null });
+        if (usePanState.getState().background) usePanState.setState({ background: false });
+      }}
       onDoubleClick={onDoubleClick}
       onContextMenu={(e) => e.preventDefault()}
     >

@@ -66,7 +66,7 @@ test('select tool: click selects, drag moves (one undo step), handles scale', as
   expect(box3.minX).toBeCloseTo(box2.minX, 3);
 });
 
-test('marquee selects several shapes; Delete removes them; undo restores', async ({ page }) => {
+test('Shift + drag selects several shapes; Delete removes them; undo restores', async ({ page }) => {
   await setup(page);
   const n0 = await page.evaluate(
     () => Object.keys((window as any).__lumastitch.useDoc.getState().design.shapes).length,
@@ -74,9 +74,11 @@ test('marquee selects several shapes; Delete removes them; undo restores', async
   const a = await toPage(page, [-48, -24]);
   const b = await toPage(page, [1, -4]);
   await page.mouse.move(a.x, a.y);
+  await page.keyboard.down('Shift');
   await page.mouse.down();
   await page.mouse.move(b.x, b.y, { steps: 8 });
   await page.mouse.up();
+  await page.keyboard.up('Shift');
   const sel = await page.evaluate(
     () => (window as any).__lumastitch.useUi.getState().selection.shapeIds.length,
   );
@@ -195,7 +197,9 @@ test('start marker can be dragged on the canvas (one undo step)', async ({ page 
   expect(r.past).toBe(past0 + 1);
 });
 
-test('navigation: wheel zooms, trackpad scroll and right-drag pan, keys pan and zoom', async ({ page }) => {
+test('navigation: wheel zooms; trackpad scroll, right-drag and background drag pan; keys pan and zoom', async ({
+  page,
+}) => {
   await setup(page);
   const vp = () => page.evaluate(() => (window as any).__lumastitch.useUi.getState().viewport);
   const box = (await page.getByTestId('canvas').boundingBox())!;
@@ -231,4 +235,29 @@ test('navigation: wheel zooms, trackpad scroll and right-drag pan, keys pan and 
   const v5 = await vp();
   await page.getByRole('button', { name: 'Zoom in' }).click();
   expect((await vp()).zoom).toBeGreaterThan(v5.zoom);
+  // Left-drag on empty background pans (no undo step); a click there clears the selection.
+  await page.keyboard.press('0');
+  const v6 = await vp();
+  const past0 = await page.evaluate(() => (window as any).__lumastitch.useDoc.getState().past.length);
+  const ex = box.x + 30,
+    ey = box.y + box.height - 30;
+  await page.mouse.move(ex, ey);
+  await page.mouse.down();
+  await page.mouse.move(ex + 50, ey - 30, { steps: 5 });
+  await page.mouse.up();
+  const v7 = await vp();
+  expect(v7.pan[0] - v6.pan[0]).toBeCloseTo(50, 0);
+  expect(v7.pan[1] - v6.pan[1]).toBeCloseTo(-30, 0);
+  expect(await page.evaluate(() => (window as any).__lumastitch.useDoc.getState().past.length)).toBe(past0);
+  await page.evaluate(() => {
+    const L = (window as any).__lumastitch;
+    const shapeIds = Object.keys(L.useDoc.getState().design.shapes);
+    L.useUi.getState().setSelection({ shapeIds, elementIds: [], nodes: [] });
+  });
+  await page.mouse.click(ex, ey);
+  const selected = await page.evaluate(
+    () => (window as any).__lumastitch.useUi.getState().selection.shapeIds.length,
+  );
+  expect(selected).toBe(0);
+  expect((await vp()).pan).toEqual(v7.pan);
 });
