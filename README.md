@@ -96,10 +96,7 @@ The screenshots above are generated from a production build with `node scripts/r
 
 ## Deployment
 
-The app is static files served by Cloudflare Workers static assets (see `wrangler.jsonc`; there is no Worker script). `npm run deploy` builds and deploys by hand. To deploy on every push to `main`, either:
-
-- **GitHub Actions** (`.github/workflows/ci.yml`): add the repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. After the tests pass, the `deploy` job runs `npx wrangler deploy`.
-- **Workers Builds**: connect the GitHub repository in the Cloudflare dashboard with build command `npm ci && npm test && npm run build` and deploy command `npx wrangler deploy` (`npx wrangler versions upload` for preview branches).
+The app is static files served by Cloudflare Workers static assets (see `wrangler.jsonc`; there is no Worker script). Cloudflare Workers Builds deploys every push to `main`; `npm run deploy` builds and deploys by hand.
 
 `public/_headers` sets long-lived caching for hashed assets and a strict Content-Security-Policy. `npx wrangler dev` serves `dist/` the way production does.
 

@@ -8,3 +8,7 @@ playwright-report
 .DS_Store
 .vite
 __screenshots__
+
+# Agent worktrees and local Claude Code state
+.claude/worktrees/
+.claude/scheduled_tasks.lock
