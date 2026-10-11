@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { shapeElements } from '@/model/factories';
 import { letteringBaseline } from '@/lettering/baseline';
 import { layoutLettering } from '@/lettering/layout';
 import { IDENTITY } from '@/geom/matrix';
@@ -74,9 +75,7 @@ export function setLettering(
       d.sequence.splice(
         seqIndex,
         0,
-        ...shapes
-          .filter((s) => s.outline)
-          .map((s) => ({ kind: 'element' as const, elementId: s.outline!.id })),
+        ...shapes.flatMap(shapeElements).map((el) => ({ kind: 'element' as const, elementId: el.id })),
       );
       d.lettering ??= {};
       d.lettering[id] = {

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /** Layout of the separately licensed, digitized Geneva Simple Sans font. */
+import { layoutOpenType } from './opentype';
 import glyphData from './fonts/geneva-simple/glyphs.json';
 import metadata from './fonts/geneva-simple/metadata.json';
 import { flattenSubpath } from '@/geom/flatten';
@@ -117,10 +118,12 @@ function glyph(char: string) {
 }
 
 export function validateLettering(o: LetteringOptions): void {
-  if (o.font !== 'geneva-simple') throw new Error('Unknown embroidery font.');
+  if (o.font !== 'geneva-simple' && o.font !== 'opentype') throw new Error('Unknown embroidery font.');
+  if (o.font === 'opentype' && o.monogram)
+    throw new Error('Use the digitized font for three-initial monograms.');
   if (!o.text.trim() || o.text.length > 1000) throw new Error('Enter between 1 and 1,000 characters.');
   for (const [key, min, max] of [
-    ['height', 10, 20],
+    ['height', o.font === 'opentype' ? 5 : 10, o.font === 'opentype' ? 100 : 20],
     ['letterSpacing', -5, 20],
     ['wordSpacing', 0, 30],
     ['lineSpacing', 1, 4],
@@ -131,7 +134,8 @@ export function validateLettering(o: LetteringOptions): void {
   const missing = [
     ...new Set([...o.text.normalize('NFC')].filter((c) => c !== ' ' && c !== '\n' && !glyphs[c])),
   ];
-  if (missing.length) throw new Error(`This font has no glyph for: ${missing.join(' ')}.`);
+  if (o.font === 'geneva-simple' && missing.length)
+    throw new Error(`This font has no glyph for: ${missing.join(' ')}.`);
   if (o.monogram && (!/^[^\s]{3}$/u.test(o.text) || [...o.text].length !== 3))
     throw new Error('A monogram needs exactly three characters, entered in sewing order.');
   if (o.monogram && o.height < 10 / 0.75)
@@ -162,6 +166,7 @@ export function layoutLettering(
   matrix: Matrix = IDENTITY,
 ): Shape[] {
   validateLettering(options);
+  if (options.font === 'opentype') return layoutOpenType(options, threadId, color, matrix);
   const o = { ...options, text: options.text.normalize('NFC') };
   const unit = o.height / CAP_HEIGHT;
   let baseline = o.baseline ? flattenSubpath(o.baseline.subpaths[0], 0.03) : undefined;

@@ -146,10 +146,32 @@ export type Artwork = { matrix: Matrix; visible: boolean; opacity: number } & (
   | { kind: 'image'; dataUrl: string; pxWidth: number; pxHeight: number; trace: TraceSettings }
 );
 
+/** Embedded original font and reusable shaped outlines; no installed font dependency. */
+export interface OpenTypeLettering {
+  axes?: { tag: string; min: number; max: number; default: number }[];
+  license?: string;
+  name: string;
+  data: string;
+  direction: 'auto' | 'ltr' | 'rtl';
+  language: string;
+  variations: Record<string, number>;
+  stitch: 'tatami' | 'satinFill';
+  prepared?: {
+    key: string;
+    upem: number;
+    leading: number;
+    lines: {
+      advance: number;
+      glyphs: { id: number; cluster: number; x: number; y: number; path: string }[];
+    }[];
+  };
+}
+
 export interface LetteringOptions {
-  font: 'geneva-simple';
+  font: 'geneva-simple' | 'opentype';
+  openType?: OpenTypeLettering;
   text: string;
-  /** Capital height in mm; supported range 10–20 mm. */
+  /** Digitized cap height (10–20 mm) or OpenType em size (5–100 mm). */
   height: number;
   letterSpacing: number;
   wordSpacing: number;

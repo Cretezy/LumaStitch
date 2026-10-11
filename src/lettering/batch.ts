@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { createDesign } from '@/model/factories';
+import { createDesign, shapeElements } from '@/model/factories';
 import type { Design, LetteringOptions } from '@/model/types';
 import { letteringBaseline } from './baseline';
 import { IDENTITY } from '@/geom/matrix';
@@ -18,7 +18,7 @@ export function letteringBatch(names: string[], options: LetteringOptions, color
     for (const s of shapes) {
       d.shapes[s.id] = s;
       d.zOrder.push(s.id);
-      if (s.outline) d.sequence.push({ kind: 'element', elementId: s.outline.id });
+      for (const el of shapeElements(s)) d.sequence.push({ kind: 'element', elementId: el.id });
     }
     d.lettering = {
       text: {

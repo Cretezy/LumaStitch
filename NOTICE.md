@@ -62,3 +62,13 @@ It includes, ports or is derived from the following works. Their copyright notic
 ### Machine-file readers
 
 `src/io/machine/read.ts` ports record layouts from pyembroidery's `DstReader.py`, `JefReader.py`, `ExpReader.py` and `Vp3Reader.py` (https://github.com/EmbroidePy/pyembroidery), MIT License, Copyright (c) 2018 Tatarize. The MIT license text already reproduced above applies. Independent reference command streams were generated with pyembroidery 1.5.1; `tests/tools/make_reader_goldens.py` reproduces them. Bounds checks, command limits and explicit rejection of unsupported controls are LumaStitch additions.
+
+### OpenType fonts — SIL Open Font License 1.1
+
+- Unmodified Noto Sans, Noto Serif and Noto Sans Arabic variable TTF files from [Google Fonts commit bd8f81ddb5c74d5c8897b36ad88b440266245103](https://github.com/google/fonts/tree/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl), directories `notosans`, `notoserif`, `notosansarabic`.
+- Copyright 2022 The Noto Project Authors. Individual copyright statements and full license texts are retained in `src/lettering/fonts/opentype/NotoSans-OFL.txt`, `NotoSerif-OFL.txt` and `NotoSansArabic-OFL.txt`. These font files are separately licensed under SIL OFL 1.1, not the application's GPL.
+- Bundled-font projects retain the complete license text with the original font bytes. Shaped geometry and variable instances are generated at runtime; the bundled font binaries are not modified.
+
+### HarfBuzz / harfbuzzjs
+
+- [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs), version 1.6.3, MIT; its unmodified WebAssembly build provides OpenType shaping and glyph outlines in a worker. [HarfBuzz](https://github.com/harfbuzz/harfbuzz) uses its permissive Old MIT license. The dependency package's LICENSE is retained under `node_modules/harfbuzzjs/LICENSE` on installation; original notices are reproduced in [src/lettering/fonts/opentype/HARFBUZZ-LICENSE.txt](src/lettering/fonts/opentype/HARFBUZZ-LICENSE.txt).

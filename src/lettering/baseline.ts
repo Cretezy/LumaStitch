@@ -51,11 +51,12 @@ export function reflowLetteringBaselines(draft: Draft<Design>, before: Design) {
       };
       const ids = group.shapeIds.filter((s) => s !== sid),
         first = draft.shapes[ids[0]];
-      if (!first?.outline) continue;
+      const element = first?.fill ?? first?.outline;
+      if (!element) continue;
       const shapes = layoutLettering(
         options,
-        first.outline.threadId,
-        draft.threads[first.outline.threadId]?.color ?? '#234a73',
+        element.threadId,
+        draft.threads[element.threadId]?.color ?? '#234a73',
         group.matrix as Matrix,
       );
       if (shapes.length !== ids.length) throw new Error('The lettering geometry no longer matches its text.');
@@ -63,7 +64,7 @@ export function reflowLetteringBaselines(draft: Draft<Design>, before: Design) {
       shapes.forEach((s, i) => {
         if (!draft.shapes[ids[i]]) throw new Error('The lettering block is incomplete.');
         draft.shapes[ids[i]].geom = s.geom;
-        const el = draft.shapes[ids[i]].outline;
+        const el = draft.shapes[ids[i]].fill ?? draft.shapes[ids[i]].outline;
         if (el) {
           delete el.entry;
           delete el.exit;

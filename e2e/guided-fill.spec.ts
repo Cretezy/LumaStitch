@@ -51,7 +51,31 @@ test('make a guided fill from editable geometry, change strategy, undo and reloa
   await page.keyboard.press('ControlOrMeta+Shift+z');
   await waitIdle(page);
   await expect(page.getByText('Guide strategy', { exact: true })).toBeVisible();
-  await page.waitForTimeout(1600);
+  await expect
+    .poll(
+      () =>
+        page.evaluate(async () => {
+          const id = (window as any).__lumastitch.useDoc.getState().designId;
+          return await new Promise<string | undefined>((resolve, reject) => {
+            const r = indexedDB.open('lumastitch-designs');
+            r.onerror = () => reject(r.error);
+            r.onsuccess = () => {
+              const db = r.result,
+                q = db.transaction('designs').objectStore('designs').get(id);
+              q.onsuccess = () => {
+                resolve(q.result?.shapes?.[q.result?.zOrder?.[0]]?.fill?.type);
+                db.close();
+              };
+              q.onerror = () => {
+                reject(q.error);
+                db.close();
+              };
+            };
+          });
+        }),
+      { timeout: 10000 },
+    )
+    .toBe('guidedFill');
   await page.reload();
   await page.waitForFunction(() => (window as any).__lumastitch?.useDoc.getState().design);
   expect(await snapshot()).toEqual([{ type: 'guidedFill', paths: 3, mode: 'parallel' }]);

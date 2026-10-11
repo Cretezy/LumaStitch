@@ -190,9 +190,56 @@ export const designSchema = z.object({
       z.string(),
       z.object({
         options: z.object({
-          font: z.literal('geneva-simple'),
+          font: z.enum(['geneva-simple', 'opentype']),
+          openType: z
+            .object({
+              license: z.string().max(100000).optional(),
+              axes: z
+                .array(
+                  z.object({
+                    tag: z.string().length(4),
+                    min: z.number().finite(),
+                    max: z.number().finite(),
+                    default: z.number().finite(),
+                  }),
+                )
+                .max(64)
+                .optional(),
+              name: z.string().max(200),
+              data: z.string().max(14_000_000),
+              direction: z.enum(['auto', 'ltr', 'rtl']),
+              language: z.string().max(50),
+              variations: z.record(z.string().length(4), z.number().finite()),
+              stitch: z.enum(['tatami', 'satinFill']),
+              prepared: z
+                .object({
+                  key: z.string().max(10000),
+                  upem: z.number().positive(),
+                  leading: z.number().positive(),
+                  lines: z
+                    .array(
+                      z.object({
+                        advance: z.number().finite(),
+                        glyphs: z
+                          .array(
+                            z.object({
+                              id: z.number().int().nonnegative(),
+                              cluster: z.number().int().nonnegative(),
+                              x: z.number().finite(),
+                              y: z.number().finite(),
+                              path: z.string().max(1_000_000),
+                            }),
+                          )
+                          .max(4000),
+                      }),
+                    )
+                    .max(1000),
+                })
+                .optional(),
+            })
+            .optional(),
           text: z.string().max(1000),
-          height: z.number().min(10).max(20),
+          height: z.number().min(5).max(100),
           letterSpacing: z.number().min(-5).max(20),
           wordSpacing: z.number().min(0).max(30),
           lineSpacing: z.number().min(1).max(4),

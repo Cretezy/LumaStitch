@@ -33,6 +33,7 @@
     "d3-delaunay": "^6.0.4",
     "dompurify": "^3.4.16",
     "esm-potrace-wasm": "^0.5.1",
+    "harfbuzzjs": "^1.6.3",
     "idb-keyval": "^6.3.0",
     "immer": "^11.1.21",
     "lucide-react": "^1.55.0",
