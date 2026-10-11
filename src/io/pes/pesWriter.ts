@@ -52,6 +52,7 @@ export interface PesWriteOptions {
 
 /** A fully normalised pattern ready for the PES encoders. */
 export interface PesPattern {
+  preserveNeedles?: boolean;
   /** Normalised commands (`normalizeForPes`). */
   commands: MachineCommand[];
   /** One thread per PEC colour slot. */
@@ -63,7 +64,7 @@ export interface PesPattern {
 /** Writes a StitchPlan as a PES file. */
 export function writePes(
   plan: StitchPlan,
-  design: Pick<Design, 'name' | 'threads'>,
+  design: Pick<Design, 'name' | 'threads'> & Partial<Pick<Design, 'shapes'>>,
   opts: PesWriteOptions = {},
 ): Uint8Array {
   return writePesPattern(buildPesPattern(plan, design, opts), opts);
@@ -72,12 +73,20 @@ export function writePes(
 /** StitchPlan → normalised PES pattern (commands + per-colour-slot threads). */
 export function buildPesPattern(
   plan: StitchPlan,
-  design: Pick<Design, 'name' | 'threads'>,
+  design: Pick<Design, 'name' | 'threads'> & Partial<Pick<Design, 'shapes'>>,
   opts: Pick<PesWriteOptions, 'resolveChart'> = {},
 ): PesPattern {
   const norm: NormalizedPes = normalizeForPes(toMachineCommands(plan));
   const threads = norm.colorSlots.map((b) => threadInfoForBlock(plan, design, b, opts.resolveChart));
-  return { commands: norm.commands, threads, name: design.name };
+  const preserveNeedles = Object.values(design.shapes ?? {}).some(
+    (s) => s.outline?.type === 'manual' && s.outline.params.preserveCommands === true,
+  );
+  return {
+    commands: norm.commands,
+    threads,
+    name: design.name,
+    ...(preserveNeedles ? { preserveNeedles: true } : {}),
+  };
 }
 
 function threadInfoForBlock(
@@ -140,6 +149,7 @@ function pec(ctx: WriteContext): PecColorInfo {
     threads: ctx.pattern.threads.map((t) => ({ color: t.color, key: threadKey(t) })),
     label: ctx.label,
     colorMatch: ctx.colorMatch,
+    preserveNeedles: ctx.pattern.preserveNeedles,
   });
 }
 

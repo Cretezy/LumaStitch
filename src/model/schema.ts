@@ -6,7 +6,13 @@ import { repairDesign } from './invariants';
 import { CURRENT_SCHEMA_VERSION, type Design } from './types';
 
 const vec2 = z.tuple([z.number(), z.number()]);
-const node = z.object({ p: vec2, in: vec2.optional(), out: vec2.optional(), smooth: z.boolean().optional() });
+const node = z.object({
+  p: vec2,
+  command: z.enum(['jump', 'trim', 'stop']).optional(),
+  in: vec2.optional(),
+  out: vec2.optional(),
+  smooth: z.boolean().optional(),
+});
 const subpath = z.object({ closed: z.boolean(), nodes: z.array(node) });
 const pathGeom = z.object({ subpaths: z.array(subpath), fillRule: z.enum(['nonzero', 'evenodd']) });
 const tie = z.enum(['auto', 'on', 'off']);

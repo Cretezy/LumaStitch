@@ -13,6 +13,8 @@ export type Matrix = [a: number, b: number, c: number, d: number, e: number, f: 
 /** Bézier node in the style of Paper.js segments. Handles are relative to `p`. */
 export interface Node {
   p: Vec2;
+  /** Machine command at this point in an imported manual stitch stream; omitted = needle down. */
+  command?: 'jump' | 'trim' | 'stop';
   in?: Vec2;
   out?: Vec2;
   smooth?: boolean;

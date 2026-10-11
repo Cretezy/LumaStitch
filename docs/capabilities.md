@@ -8,7 +8,7 @@ This is the acceptance ledger for the expanded LumaStitch scope. A feature is co
 | Lettering | [118-glyph digitized font, kerning, editable text, multiline/circular layout, monograms, batch names, project round-trip and GIF examples](lettering/README.md) | Arbitrary-path baselines, additional licensed fonts, font import, script shaping |
 | Density inspection | Exact worker-computed circular penetration map, fixed quantitative legend, four radii; [UI screenshots and calibration fixture](inspection/README.md) | Fabric-specific thresholds backed by physical samples |
 | Fabric calibration | Four starter presets and [reproducible calibration project, machine files and GIF](inspection/README.md) | Recorded physical results, custom reusable profiles |
-| Machine-file editing | PES viewing; manual needle editing | PES/DST/JEF/EXP/VP3 readers, command-preserving import, documented reconstruction limits |
+| Machine-file editing | [PES/DST/JEF/EXP/VP3 editable import](machine-import/README.md), command editing, 48 independent decoder references, project/PES needle round trips | Original-object recognition; format-specific machine sew-outs |
 | Guided fills | Wave, ripple, contour and gradient fills | Arbitrary guide geometry, consistent spacing, holes and travel validation |
 | Hooping | Optional rectangle/ellipse sewing fields, margin, canvas boundary and warnings for all five export formats | Multiple hoopings, registration and export manifest |
 | Appliqué | Placement/tackdown/cover passes and stops | Partial edge coverage, cut-file workflow, production examples |

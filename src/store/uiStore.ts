@@ -27,6 +27,7 @@ export type DialogId =
   | 'newDesign'
   | 'about'
   | 'lettering'
+  | 'machineImport'
   | null;
 
 export interface NodeRef {

@@ -257,7 +257,7 @@ Numbering extends the original requirements (FR-1 to FR-6). FR-7 onward are new.
 The canvas is unbounded by default. Design settings can enable a rectangular or elliptical usable sewing field (width, height and inset margin), centered on the generated stitch bounds. This is a fit check, not a machine hoop selection command.
 
 - The canvas is unbounded. The design's size is its bounding box, always visible in the Design size field and as a dimension label.
-- Sizes are set on import (FR-1.1a, FR-10.1) and can be changed at any time (FR-1.8). Stitches are regenerated rather than scaled, so density stays constant.
+- Sizes are set on import (FR-1.1a, FR-10.1) and can be changed at any time (FR-1.8). Generated stitches are regenerated rather than scaled, so density stays constant. Imported command-preserving manual stitches scale their existing needle positions.
 - All five machine export formats warn when a needle or jump position falls outside the selected field. Warnings do not block export or change coordinates. Format limits are checked independently.
 - Machines centre the design in whichever hoop is attached, so the design's position on the canvas doesn't matter.
 
@@ -426,7 +426,7 @@ Implemented beyond the initial scope: editable digitized lettering (Geneva Simpl
 Still outside the completed implementation:
 
 - Photo-realistic image digitizing ("photo stitch"). Photos are posterised into flat colour regions instead.
-- Advanced satin branching, arbitrary guided fills, editable machine imports, optional hoop checks and multiple hoopings (now planned).
+- Advanced satin branching, arbitrary guided fills and multiple hoopings (now planned).
 - 3D puff, sequins, beads and cording with validated hardware workflows.
 - Sending directly to a machine (USB or Wi-Fi), cloud storage, accounts, collaboration.
 - Mobile and touch layouts.
@@ -468,3 +468,9 @@ Still outside the completed implementation:
 ## Stitch density inspection
 
 View → Needle density map shows the exact number of needle penetrations in a selectable circular radius (0.5, 1, 2 or 3 mm), normalized by circle area. Counts include the central penetration, ties, underlay and travel stitches; jumps and machine controls are excluded. Fixed bands are below 5, 5–10 and at least 10 penetrations/mm². These are concentration bins, not fabric-specific safety limits. The legend reports the peak count and density. A dedicated worker performs counting; the overlay is hidden during simulation.
+
+## Editable machine-file import
+
+PES/DST/JEF/EXP/VP3 import runs in a worker and creates a manual element per explicit color block. Needle coordinates, duplicate penetrations and explicit jump/trim/stop commands survive project saving and plan regeneration. The node inspector edits command kinds with undo. Moving/scaling changes existing stitch coordinates; density is not regenerated. Path reconstruction operations require disabling Preserve commands first; automatic sequence optimization retains imported block order.
+
+Machine files do not retain original vector boundaries, satin rails, fill parameters or editable text. DST/EXP without embedded thread data require assigning placeholder colors. DST/JEF trim-like jump sequences remain jumps; machine interpretation varies and no heuristic trim inference is applied. PES imported needles re-export without added jump-ending penetrations; coordinates quantize to 0.1 mm. Other output formats apply their documented command/length limitations. Import limits are 50 MB and one million commands; unsupported accessory commands produce errors.

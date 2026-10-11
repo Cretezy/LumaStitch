@@ -233,6 +233,46 @@ export function* planGenerator(design: Design, opts: BuildOptions = {}): Generat
       continue;
     }
     const { el, shape } = item;
+    if (el.type === 'manual' && el.params.preserveCommands === true) {
+      // Machine files are already digitized. Preserve their command stream, including duplicate
+      // penetrations and short jumps; regeneration heuristics would silently alter the design.
+      const owner = elementIds.length;
+      elementIds.push(el.id);
+      const start = em.length;
+      if (em.pos && (pendingStop || (thread !== null && thread !== el.threadId))) {
+        em.push(...em.pos, thread !== el.threadId ? F.COLOR_CHANGE : F.STOP, NO_ELEMENT);
+        closeBlock(em.length);
+      } else if (em.pos && prevEl?.params.preserveCommands !== true) {
+        em.push(...em.pos, F.TRIM, NO_ELEMENT);
+        const first = shape.geom.subpaths[0]?.nodes[0]?.p;
+        if (first) em.push(...first, F.JUMP, owner);
+      }
+      thread = el.threadId;
+      pendingStop = false;
+      const xy: number[] = [],
+        flags: number[] = [];
+      for (const sp of shape.geom.subpaths)
+        for (const node of sp.nodes) {
+          const flag =
+            node.command === 'jump'
+              ? F.JUMP
+              : node.command === 'trim'
+                ? F.TRIM
+                : node.command === 'stop'
+                  ? F.STOP
+                  : F.STITCH;
+          em.push(...node.p, flag, owner);
+          xy.push(...node.p);
+          flags.push(flag);
+          if (flag === F.STOP) closeBlock(em.length);
+        }
+      elementRanges.push({ elementId: el.id, start, end: em.length });
+      prevEl = el;
+      prevRun = { xy: Float64Array.from(xy), flags: Uint8Array.from(flags) };
+      prevOwner = owner;
+      yield;
+      continue;
+    }
     const def = getStitchType(el.type);
     const params = resolveParams(el, design.fabric);
     const elDiags: Diagnostic[] = [];

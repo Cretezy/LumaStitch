@@ -133,9 +133,9 @@ export async function handleFile(file: File, opts: { intoCurrent?: boolean } = {
     await openProjectText(await file.text());
     return;
   }
-  if (kind === 'pes') {
+  if (kind === 'machine') {
     ui.set({ pendingFile: file });
-    ui.openDialog('export', { viewPes: true, file });
+    ui.openDialog('machineImport', { file, intoCurrent: !!opts.intoCurrent });
     return;
   }
   if (kind === 'svg' || kind === 'image') {
@@ -404,6 +404,7 @@ function replaceShapes(label: string, inputIds: Id[], results: Shape[], zSlotOf:
 }
 
 export function booleanOp(op: BooleanOp): void {
+  if (hasSelectedMachineProgram()) return;
   const d = useDoc.getState().design;
   if (!d) return;
   const sel = editableSelection();
@@ -446,6 +447,7 @@ export function booleanOp(op: BooleanOp): void {
 }
 
 export function combineSelection(): void {
+  if (hasSelectedMachineProgram()) return;
   const d = useDoc.getState().design;
   if (!d) return;
   const sel = editableSelection();
@@ -465,6 +467,7 @@ export function combineSelection(): void {
 }
 
 export function breakApart(): void {
+  if (hasSelectedMachineProgram()) return;
   const d = useDoc.getState().design;
   if (!d) return;
   const groups: ReplaceGroup[] = [];
@@ -489,7 +492,18 @@ export function breakApart(): void {
 }
 
 /** Applies a geometry transform to every editable selected shape as one undo step. */
+function hasSelectedMachineProgram(): boolean {
+  const d = useDoc.getState().design;
+  if (!d || !editableSelection().some((id) => d.shapes[id].outline?.params.preserveCommands === true))
+    return false;
+  toast(
+    'This operation changes machine command order. Disable Preserve commands in Advanced settings first, or edit individual needle nodes.',
+  );
+  return true;
+}
+
 function mapSelectedGeoms(label: string, fn: (s: Shape) => PathGeom | null): void {
+  if (hasSelectedMachineProgram()) return;
   const d = useDoc.getState().design;
   if (!d) return;
   const changes: [Id, PathGeom][] = [];
@@ -526,6 +540,7 @@ export function offsetPaths(delta: number): void {
 
 /** Converts each selected stroke into a filled shape (stroke → shape). */
 export function outlineStroke(): void {
+  if (hasSelectedMachineProgram()) return;
   const d = useDoc.getState().design;
   if (!d) return;
   const groups: ReplaceGroup[] = [];
@@ -586,6 +601,7 @@ export function closeOrOpenPath(close: boolean): void {
 }
 
 export function joinSelectedEndpoints(): void {
+  if (hasSelectedMachineProgram()) return;
   const d = useDoc.getState().design;
   if (!d) return;
   const nodes = useUi.getState().selection.nodes;

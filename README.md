@@ -110,3 +110,7 @@ Non-production branches use `npx wrangler preview`; the empty `previews` block i
 ## Licence
 
 LumaStitch is free software under the [GNU General Public License v3.0 or later](./LICENSE). It builds on pyembroidery, Ink/Stitch's thread palettes, Potrace, Paper.js, Clipper2 and others; see [NOTICE.md](./NOTICE.md).
+
+### Editable machine files
+
+Open or import PES, DST, JEF, EXP and VP3 as editable stitch nodes. Select a node to change needle/jump/trim/stop commands, move needles, or resize the existing stitch program. Imported programs preserve duplicate penetrations and short jumps; they do not regenerate density or recover original lettering/vector objects. [Complete import example and GIF](docs/machine-import/README.md).

@@ -48,6 +48,7 @@ import { cn, fmtInt } from '@/lib/utils';
 import { ThreadPicker } from '@/components/threads/ThreadPicker';
 import { FabricColorInput } from './FabricColorInput';
 import { NumberField } from './NumberField';
+import { ManualCommandSettings } from './ManualCommandSettings';
 import { LiveSlider, ParamRow, type ParamState } from './ParamControls';
 
 const GROUP_LABEL: Record<ParamGroup, string> = {
@@ -566,6 +567,7 @@ export function Inspector() {
   if (!shapes.length) return <DesignPanel design={design} />;
   return (
     <div>
+      <ManualCommandSettings />
       <ShapeSection design={design} shapes={shapes} />
       <ElementSection design={design} role="fill" shapes={shapes} />
       <ElementSection design={design} role="outline" shapes={shapes} />

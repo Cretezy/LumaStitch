@@ -10,6 +10,7 @@ export interface DialogProps {
 }
 
 const DIALOGS: Record<Exclude<DialogId, null>, LazyExoticComponent<ComponentType<DialogProps>>> = {
+  machineImport: lazy(() => import('./dialogs/MachineImportDialog')),
   lettering: lazy(() => import('./dialogs/LetteringDialog')),
   import: lazy(() => import('./dialogs/ImportDialog')),
   imageImport: lazy(() => import('./dialogs/ImageImportDialog')),

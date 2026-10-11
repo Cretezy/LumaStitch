@@ -58,3 +58,7 @@ It includes, ports or is derived from the following works. Their copyright notic
 - License and original Hershey acknowledgements: [src/lettering/fonts/geneva-simple/LICENSE](src/lettering/fonts/geneva-simple/LICENSE). Font data is separately licensed under [CC BY-SA 2.5](https://creativecommons.org/licenses/by-sa/2.5/), not the application's GPL.
 - The Hershey Fonts were originally created by Dr. A. V. Hershey at the U.S. National Bureau of Standards. Their distribution format was created by James Hurt, Cognition, Inc., 900 Technology Park Drive, Billerica, MA 01821 (mit-eddie!ci-dandelion!hurt).
 - Retained: original `source.svg`, metadata and license. Adaptation: `scripts/extract-lettering-font.py` extracts geometry into JSON; LumaStitch reorders rail/rung subpaths and lays out/rigidly transforms glyphs at runtime. The derived font data remains CC BY-SA 2.5. No proprietary commercial fonts are included.
+
+### Machine-file readers
+
+`src/io/machine/read.ts` ports record layouts from pyembroidery's `DstReader.py`, `JefReader.py`, `ExpReader.py` and `Vp3Reader.py` (https://github.com/EmbroidePy/pyembroidery), MIT License, Copyright (c) 2018 Tatarize. The MIT license text already reproduced above applies. Independent reference command streams were generated with pyembroidery 1.5.1; `tests/tools/make_reader_goldens.py` reproduces them. Bounds checks, command limits and explicit rejection of unsupported controls are LumaStitch additions.

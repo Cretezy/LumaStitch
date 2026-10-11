@@ -28,6 +28,8 @@ export interface PecInput {
   /** Label as given; truncated to 8 characters like pyembroidery. */
   label: string;
   colorMatch: ColorMatch;
+  /** Imported needle programs must not acquire the legacy jump-ending needle. */
+  preserveNeedles?: boolean;
 }
 
 /**
@@ -48,7 +50,7 @@ export function pecLabel(name: string): string {
 export function writePec(w: ByteWriter, input: PecInput): PecColorInfo {
   const extents = commandBounds(input.commands);
   const info = writePecHeader(w, input);
-  writePecBlock(w, input.commands, extents);
+  writePecBlock(w, input.commands, extents, input.preserveNeedles);
   writePecGraphics(w, input.commands, extents);
   return info;
 }
@@ -78,7 +80,12 @@ function writePecHeader(w: ByteWriter, input: PecInput): PecColorInfo {
   return { colorIndexList, rgbList };
 }
 
-function writePecBlock(w: ByteWriter, commands: readonly MachineCommand[], extents: Bounds): void {
+function writePecBlock(
+  w: ByteWriter,
+  commands: readonly MachineCommand[],
+  extents: Bounds,
+  preserveNeedles = false,
+): void {
   const width = extents.maxX - extents.minX;
   const height = extents.maxY - extents.minY;
   const start = w.position;
@@ -89,7 +96,7 @@ function writePecBlock(w: ByteWriter, commands: readonly MachineCommand[], exten
   w.int16le(pyRound(height));
   w.int16le(0x1e0);
   w.int16le(0x1b0);
-  pecEncode(w, commands);
+  pecEncode(w, commands, preserveNeedles);
   w.patchInt24le(start + 2, w.position - start);
 }
 
@@ -146,7 +153,7 @@ function writeStitch(w: ByteWriter, dx: number, dy: number): void {
 }
 
 /** pyembroidery `pec_encode`. */
-export function pecEncode(w: ByteWriter, commands: readonly MachineCommand[]): void {
+export function pecEncode(w: ByteWriter, commands: readonly MachineCommand[], preserveNeedles = false): void {
   let colorTwo = true;
   let jumping = true;
   let init = true;
@@ -160,7 +167,7 @@ export function pecEncode(w: ByteWriter, commands: readonly MachineCommand[]): v
     switch (c.cmd) {
       case MC.STITCH:
         if (jumping) {
-          if (dx !== 0 && dy !== 0) writeStitch(w, 0, 0);
+          if (!preserveNeedles && dx !== 0 && dy !== 0) writeStitch(w, 0, 0);
           jumping = false;
         }
         writeStitch(w, dx, dy);
@@ -172,7 +179,7 @@ export function pecEncode(w: ByteWriter, commands: readonly MachineCommand[]): v
         break;
       case MC.COLOR_CHANGE:
         if (jumping) {
-          writeStitch(w, 0, 0);
+          if (!preserveNeedles) writeStitch(w, 0, 0);
           jumping = false;
         }
         w.bytes([0xfe, 0xb0, colorTwo ? 0x02 : 0x01]);

@@ -141,6 +141,12 @@ function optimizeSegment(design: Design, opts: OptimizeOpts): SequenceEntry[] {
     const ordered = nodes.map((n, i) => (members.has(n.shapeId) ? i : -1)).filter((i) => i >= 0);
     for (let i = 1; i < ordered.length; i++) edge(ordered[i - 1], ordered[i]);
   }
+  // Imported programs have authored command order, including trims and stops. Keep those
+  // blocks in their original order even when their bounding boxes do not overlap.
+  const imported = nodes
+    .map((n, i) => (design.shapes[n.shapeId].outline?.params.preserveCommands === true ? i : -1))
+    .filter((i) => i >= 0);
+  for (let i = 1; i < imported.length; i++) edge(imported[i - 1], imported[i]);
 
   // Distance from a point to an element's bounding box (0 inside).
   const distTo = (p: [number, number], i: number) => {

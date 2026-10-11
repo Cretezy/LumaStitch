@@ -46,6 +46,13 @@ export const manualDef: StitchTypeDef<ManualPrep> = {
   role: 'outline',
   params: [
     {
+      key: 'preserveCommands',
+      label: 'Preserve imported commands',
+      kind: 'boolean',
+      group: 'advanced',
+      help: 'Keep every needle point, jump, trim and stop in the imported stream. Disable to regenerate ordinary manual stitches using the design length limits.',
+    },
+    {
       key: 'splitLong',
       label: 'Split long stitches',
       help: 'Add evenly spaced penetrations to stitches longer than the maximum length.',
@@ -65,7 +72,7 @@ export const manualDef: StitchTypeDef<ManualPrep> = {
       visibleIf: (p) => p.splitLong === true,
     },
   ],
-  defaults: { splitLong: false, maxLength: 7 },
+  defaults: { splitLong: false, maxLength: 7, preserveCommands: false },
   appliesTo: (s) => s.hasClosed || s.hasOpen,
   prepare(geom, params) {
     const maxLength = bool(params, 'splitLong', false) ? Math.max(0.5, num(params, 'maxLength', 7)) : 0;

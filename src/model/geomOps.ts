@@ -8,6 +8,7 @@ import type { Matrix, Node, PathGeom, Shape, StitchElement, Vec2 } from './types
 
 export function transformNode(n: Node, m: Matrix): Node {
   const out: Node = { p: apply(m, n.p) };
+  if (n.command) out.command = n.command;
   if (n.in) out.in = applyLinear(m, n.in);
   if (n.out) out.out = applyLinear(m, n.out);
   if (n.smooth) out.smooth = true;

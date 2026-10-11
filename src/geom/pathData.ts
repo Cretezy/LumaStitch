@@ -405,6 +405,7 @@ export function transformGeom(geom: PathGeom, m: Matrix): PathGeom {
       closed: sp.closed,
       nodes: sp.nodes.map((n) => {
         const out: Node = { p: apply(m, n.p) };
+        if (n.command) out.command = n.command;
         if (n.in) out.in = applyLinear(m, n.in);
         if (n.out) out.out = applyLinear(m, n.out);
         if (n.smooth !== undefined) out.smooth = n.smooth;

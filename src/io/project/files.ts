@@ -87,16 +87,16 @@ export const ACCEPT_IMPORT: Accept = {
 export const ACCEPT_ANY: Accept = {
   ...ACCEPT_IMPORT,
   ...ACCEPT_PROJECT,
-  'application/octet-stream': ['.pes'],
+  'application/octet-stream': ['.pes', '.dst', '.jef', '.exp', '.vp3'],
 };
 
-export type FileKind = 'svg' | 'image' | 'project' | 'pes' | 'unknown';
+export type FileKind = 'svg' | 'image' | 'project' | 'machine' | 'unknown';
 
 export function fileKind(f: File): FileKind {
   const n = f.name.toLowerCase();
   if (n.endsWith('.svg') || f.type === 'image/svg+xml') return 'svg';
   if (/\.(png|jpe?g|webp)$/.test(n) || /^image\/(png|jpeg|webp)$/.test(f.type)) return 'image';
   if (n.endsWith('.lumastitch')) return 'project';
-  if (n.endsWith('.pes')) return 'pes';
+  if (/\.(pes|dst|jef|exp|vp3)$/.test(n)) return 'machine';
   return 'unknown';
 }
