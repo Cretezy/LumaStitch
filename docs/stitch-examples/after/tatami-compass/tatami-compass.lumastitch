@@ -1,0 +1,900 @@
+{
+  "format": "lumastitch-project",
+  "schemaVersion": 1,
+  "app": "LumaStitch",
+  "savedAt": "2026-10-11T00:00:00.000Z",
+  "design": {
+    "schemaVersion": 1,
+    "name": "Tatami compass",
+    "fabric": "woven",
+    "threadChart": "exact",
+    "settings": {
+      "trimThreshold": 3,
+      "minStitchLength": 0.3,
+      "maxStitchLength": 12,
+      "tieLength": 0.8,
+      "machineSpm": 600,
+      "trimSeconds": 6,
+      "colorChangeSeconds": 30,
+      "defaultTie": "auto",
+      "scaleStrokeWidths": true
+    },
+    "threads": {
+      "285d78": {
+        "id": "285d78",
+        "name": "#285D78",
+        "color": "#285d78"
+      },
+      "d59b34": {
+        "id": "d59b34",
+        "name": "#D59B34",
+        "color": "#d59b34"
+      },
+      "a65b37": {
+        "id": "a65b37",
+        "name": "#A65B37",
+        "color": "#a65b37"
+      }
+    },
+    "shapes": {
+      "outer-ring": {
+        "id": "outer-ring",
+        "name": "Outer ring",
+        "geom": {
+          "fillRule": "evenodd",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    84,
+                    45
+                  ],
+                  "in": [
+                    0,
+                    -21.53910524340095
+                  ],
+                  "out": [
+                    0,
+                    21.53910524340095
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    45,
+                    84
+                  ],
+                  "in": [
+                    21.53910524340095,
+                    0
+                  ],
+                  "out": [
+                    -21.53910524340095,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    6,
+                    45
+                  ],
+                  "in": [
+                    0,
+                    21.53910524340095
+                  ],
+                  "out": [
+                    0,
+                    -21.53910524340095
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    45,
+                    6
+                  ],
+                  "in": [
+                    -21.53910524340095,
+                    0
+                  ],
+                  "out": [
+                    21.53910524340095,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            },
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    79,
+                    45
+                  ],
+                  "in": [
+                    0,
+                    -18.77768149424698
+                  ],
+                  "out": [
+                    0,
+                    18.77768149424698
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    45,
+                    79
+                  ],
+                  "in": [
+                    18.77768149424698,
+                    0
+                  ],
+                  "out": [
+                    -18.77768149424698,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    11,
+                    45
+                  ],
+                  "in": [
+                    0,
+                    18.77768149424698
+                  ],
+                  "out": [
+                    0,
+                    -18.77768149424698
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    45,
+                    11
+                  ],
+                  "in": [
+                    -18.77768149424698,
+                    0
+                  ],
+                  "out": [
+                    18.77768149424698,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": {
+          "id": "outer-ring-fill",
+          "role": "fill",
+          "type": "tatami",
+          "threadId": "285d78",
+          "params": {
+            "angle": 30,
+            "density": 0.4,
+            "underlay": "edgeTatami"
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      },
+      "cardinal-points": {
+        "id": "cardinal-points",
+        "name": "Cardinal points",
+        "geom": {
+          "fillRule": "evenodd",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    45,
+                    12
+                  ]
+                },
+                {
+                  "p": [
+                    37,
+                    37
+                  ]
+                },
+                {
+                  "p": [
+                    45,
+                    32
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    78,
+                    45
+                  ]
+                },
+                {
+                  "p": [
+                    53,
+                    37
+                  ]
+                },
+                {
+                  "p": [
+                    58,
+                    45
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    45,
+                    78
+                  ]
+                },
+                {
+                  "p": [
+                    53,
+                    53
+                  ]
+                },
+                {
+                  "p": [
+                    45,
+                    58
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    12,
+                    45
+                  ]
+                },
+                {
+                  "p": [
+                    37,
+                    53
+                  ]
+                },
+                {
+                  "p": [
+                    32,
+                    45
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": {
+          "id": "cardinal-points-fill",
+          "role": "fill",
+          "type": "tatami",
+          "threadId": "d59b34",
+          "params": {
+            "angle": 0,
+            "density": 0.4,
+            "underlay": "tatami"
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      },
+      "cardinal-shadows": {
+        "id": "cardinal-shadows",
+        "name": "Cardinal shadows",
+        "geom": {
+          "fillRule": "evenodd",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    45,
+                    12
+                  ]
+                },
+                {
+                  "p": [
+                    45,
+                    32
+                  ]
+                },
+                {
+                  "p": [
+                    53,
+                    37
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    78,
+                    45
+                  ]
+                },
+                {
+                  "p": [
+                    58,
+                    45
+                  ]
+                },
+                {
+                  "p": [
+                    53,
+                    53
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    45,
+                    78
+                  ]
+                },
+                {
+                  "p": [
+                    45,
+                    58
+                  ]
+                },
+                {
+                  "p": [
+                    37,
+                    53
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    12,
+                    45
+                  ]
+                },
+                {
+                  "p": [
+                    32,
+                    45
+                  ]
+                },
+                {
+                  "p": [
+                    37,
+                    37
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": {
+          "id": "cardinal-shadows-fill",
+          "role": "fill",
+          "type": "tatami",
+          "threadId": "a65b37",
+          "params": {
+            "angle": 90,
+            "density": 0.4,
+            "underlay": "tatami"
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      },
+      "compass-hub": {
+        "id": "compass-hub",
+        "name": "Compass hub",
+        "geom": {
+          "fillRule": "evenodd",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    55,
+                    45
+                  ],
+                  "in": [
+                    0,
+                    -5.522847498307936
+                  ],
+                  "out": [
+                    0,
+                    5.522847498307936
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    45,
+                    55
+                  ],
+                  "in": [
+                    5.522847498307936,
+                    0
+                  ],
+                  "out": [
+                    -5.522847498307936,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    35,
+                    45
+                  ],
+                  "in": [
+                    0,
+                    5.522847498307936
+                  ],
+                  "out": [
+                    0,
+                    -5.522847498307936
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    45,
+                    35
+                  ],
+                  "in": [
+                    -5.522847498307936,
+                    0
+                  ],
+                  "out": [
+                    5.522847498307936,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            },
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    49,
+                    45
+                  ],
+                  "in": [
+                    0,
+                    -2.2091389993231743
+                  ],
+                  "out": [
+                    0,
+                    2.2091389993231743
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    45,
+                    49
+                  ],
+                  "in": [
+                    2.2091389993231743,
+                    0
+                  ],
+                  "out": [
+                    -2.2091389993231743,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    41,
+                    45
+                  ],
+                  "in": [
+                    0,
+                    2.2091389993231743
+                  ],
+                  "out": [
+                    0,
+                    -2.2091389993231743
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    45,
+                    41
+                  ],
+                  "in": [
+                    -2.2091389993231743,
+                    0
+                  ],
+                  "out": [
+                    2.2091389993231743,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": {
+          "id": "compass-hub-fill",
+          "role": "fill",
+          "type": "tatami",
+          "threadId": "285d78",
+          "params": {
+            "angle": 45,
+            "density": 0.4,
+            "underlay": "edgeTatami"
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      },
+      "diagonal-markers": {
+        "id": "diagonal-markers",
+        "name": "Diagonal markers",
+        "geom": {
+          "fillRule": "evenodd",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    27.5,
+                    25
+                  ],
+                  "in": [
+                    0,
+                    -1.380711874576984
+                  ],
+                  "out": [
+                    0,
+                    1.380711874576984
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    25,
+                    27.5
+                  ],
+                  "in": [
+                    1.380711874576984,
+                    0
+                  ],
+                  "out": [
+                    -1.380711874576984,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    22.5,
+                    25
+                  ],
+                  "in": [
+                    0,
+                    1.380711874576984
+                  ],
+                  "out": [
+                    0,
+                    -1.380711874576984
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    25,
+                    22.5
+                  ],
+                  "in": [
+                    -1.380711874576984,
+                    0
+                  ],
+                  "out": [
+                    1.380711874576984,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            },
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    67.5,
+                    25
+                  ],
+                  "in": [
+                    0,
+                    -1.380711874576984
+                  ],
+                  "out": [
+                    0,
+                    1.380711874576984
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    65,
+                    27.5
+                  ],
+                  "in": [
+                    1.380711874576984,
+                    0
+                  ],
+                  "out": [
+                    -1.380711874576984,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    62.5,
+                    25
+                  ],
+                  "in": [
+                    0,
+                    1.380711874576984
+                  ],
+                  "out": [
+                    0,
+                    -1.380711874576984
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    65,
+                    22.5
+                  ],
+                  "in": [
+                    -1.380711874576984,
+                    0
+                  ],
+                  "out": [
+                    1.380711874576984,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            },
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    67.5,
+                    65
+                  ],
+                  "in": [
+                    0,
+                    -1.380711874576984
+                  ],
+                  "out": [
+                    0,
+                    1.380711874576984
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    65,
+                    67.5
+                  ],
+                  "in": [
+                    1.380711874576984,
+                    0
+                  ],
+                  "out": [
+                    -1.380711874576984,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    62.5,
+                    65
+                  ],
+                  "in": [
+                    0,
+                    1.380711874576984
+                  ],
+                  "out": [
+                    0,
+                    -1.380711874576984
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    65,
+                    62.5
+                  ],
+                  "in": [
+                    -1.380711874576984,
+                    0
+                  ],
+                  "out": [
+                    1.380711874576984,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            },
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    27.5,
+                    65
+                  ],
+                  "in": [
+                    0,
+                    -1.380711874576984
+                  ],
+                  "out": [
+                    0,
+                    1.380711874576984
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    25,
+                    67.5
+                  ],
+                  "in": [
+                    1.380711874576984,
+                    0
+                  ],
+                  "out": [
+                    -1.380711874576984,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    22.5,
+                    65
+                  ],
+                  "in": [
+                    0,
+                    1.380711874576984
+                  ],
+                  "out": [
+                    0,
+                    -1.380711874576984
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    25,
+                    62.5
+                  ],
+                  "in": [
+                    -1.380711874576984,
+                    0
+                  ],
+                  "out": [
+                    1.380711874576984,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": {
+          "id": "diagonal-markers-fill",
+          "role": "fill",
+          "type": "tatami",
+          "threadId": "d59b34",
+          "params": {
+            "angle": 0,
+            "density": 0.4,
+            "underlay": "tatami"
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      }
+    },
+    "zOrder": [
+      "outer-ring",
+      "cardinal-points",
+      "cardinal-shadows",
+      "compass-hub",
+      "diagonal-markers"
+    ],
+    "sequence": [
+      {
+        "kind": "element",
+        "elementId": "outer-ring-fill"
+      },
+      {
+        "kind": "element",
+        "elementId": "compass-hub-fill"
+      },
+      {
+        "kind": "element",
+        "elementId": "cardinal-shadows-fill"
+      },
+      {
+        "kind": "element",
+        "elementId": "cardinal-points-fill"
+      },
+      {
+        "kind": "element",
+        "elementId": "diagonal-markers-fill"
+      }
+    ]
+  }
+}

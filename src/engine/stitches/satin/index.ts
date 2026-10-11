@@ -6,10 +6,12 @@ import { bool, num, str, type ParamDef } from '../../params/types';
 import { F } from '../../types';
 import { RunBuilder } from '../common';
 import { orderPaths, type PathItem } from '../running';
+import { exactRouteStates } from '../running/exactOrder';
 import {
   columnFromCenterline,
   resolveSatinUnderlay,
   satinPass,
+  satinPassCount,
   sewColumn,
   type UnderlayKind,
 } from './column';
@@ -146,7 +148,41 @@ export interface SatinColumnPrep {
 
 function routeColumns(prep: SatinColumnPrep, entry?: [number, number], exit?: [number, number]) {
   const b = new RunBuilder();
-  const ordered = orderPaths(prep.paths, entry, 1, exit);
+  // Price the actual entry/exit needle points, including the underlay passes and rail offsets.
+  // Keep both directions intact: choosing a nearest entry again would undo the joint solution.
+  if (prep.paths.length <= 12 && prep.paths.every((p) => !p.closed && p.pts.length >= 4)) {
+    const runs = prep.paths.flatMap(({ pts }) => {
+      const col = columnFromCenterline(pts, false, prep.halfWidth);
+      return [true, false].map((forward) => {
+        const run = new RunBuilder();
+        if (col.length <= 0) return run.build();
+        if (prep.zigzag) satinPass(run, col, forward, { density: prep.density });
+        else sewColumn(run, col, prep, undefined, undefined, forward);
+        return run.build();
+      });
+    });
+    if (runs.every((r) => r.xy.length >= 4)) {
+      const order = exactRouteStates(
+        runs.map((r) => [r.xy[0], r.xy[1]]),
+        runs.map((r) => [r.xy[r.xy.length - 2], r.xy[r.xy.length - 1]]),
+        entry,
+        exit,
+      );
+      if (order) {
+        for (const state of order) {
+          const run = runs[state];
+          for (let i = 0; i < run.flags.length; i++)
+            b.push(
+              run.xy[i * 2],
+              run.xy[i * 2 + 1],
+              run.flags[i] | (i === 0 && b.length ? F.JUMP | F.TRIM : 0),
+            );
+        }
+        return b.build();
+      }
+    }
+  }
+  const ordered = orderPaths(prep.paths, entry, prep.zigzag ? 1 : satinPassCount(prep.underlay), exit);
   ordered.forEach(({ pts, closed }, i) => {
     // orderPaths already chose where closed paths start (between the previous and next path).
     const center = pts;
@@ -179,6 +215,7 @@ function routeColumns(prep: SatinColumnPrep, entry?: [number, number], exit?: [n
         },
         cur ?? undefined,
         i === ordered.length - 1 ? exit : undefined,
+        closed ? undefined : true,
       );
     }
     // Internal jump to the next column; nothing to travel through between separate paths.

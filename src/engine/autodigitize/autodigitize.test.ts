@@ -73,7 +73,10 @@ describe('optimizeSequence', () => {
     const c = add(rectGeom(50, 0, 10, 10), red.id);
     const seq = optimizeSequence(d);
     const ids = seq.map((e) => (e.kind === 'element' ? e.elementId : 'stop'));
-    expect(ids).toEqual([a.fill!.id, c.fill!.id, b.fill!.id]);
+    // Either red can lead; actual stitch exits decide their order. Both must precede blue,
+    // which keeps A below B and uses exactly one colour change.
+    expect(new Set(ids.slice(0, 2))).toEqual(new Set([a.fill!.id, c.fill!.id]));
+    expect(ids.slice(2)).toEqual([b.fill!.id]);
   });
 });
 

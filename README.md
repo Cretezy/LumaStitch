@@ -27,6 +27,7 @@ No account · No upload · Works offline · Free and open source (GPL-3.0)
 - **Optimize stitch routes.** Exact small-route ordering, precedence-aware colour sequencing and an optional intersection router for running/bean networks. [Measured before/after and Ink/Stitch comparison](docs/routing/README.md).
 - **Edit like a vector app.** Select, move, scale, rotate and edit nodes; draw shapes; combine them with booleans; set stitch angle, density, underlay, compensation and start/end points per shape.
 - **Many stitch types.** Tatami, satin, contour, meander, ripple, gradient and pattern fills, cross-stitch, appliqué, triple run, bean, motif and blanket stitches.
+- **Complete stitch examples.** [Satin and tatami designs](docs/stitch-examples/README.md) with animated GIF stitch-outs, before/after comparisons, editable projects, SVG artwork and PES/DST downloads.
 - **What you see is what gets sewn.** The canvas, the simulator and every export come from the same stitch plan, with realistic thread rendering.
 - **Simulator.** Play the stitch-out at machine speed or faster, step stitch by stitch, and jump between colours.
 - **Export.** Brother PES (v1 and v6), DST, JEF, EXP and VP3, plus a PNG preview, SVG geometry, a printable PDF worksheet and an MP4/WebM stitch-out video.

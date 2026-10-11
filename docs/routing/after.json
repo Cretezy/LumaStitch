@@ -4,8 +4,8 @@
     "sequence": [
       "element-0",
       "element-1",
-      "element-5",
       "element-2",
+      "element-5",
       "element-3",
       "element-4",
       "element-8",
@@ -13,16 +13,16 @@
       "element-6",
       "element-7"
     ],
-    "stitches": 1983,
-    "jumps": 8,
-    "trims": 7,
+    "stitches": 1981,
+    "jumps": 7,
+    "trims": 6,
     "colorChanges": 3,
     "stops": 0,
-    "threadLengthMm": 4776.545928907247,
-    "estSeconds": 330.3,
-    "jumpMm": 57.77951263737982,
-    "travelMm": 36.21355176519205,
-    "medianMs": 16.060615999999982,
+    "threadLengthMm": 4771.643317287391,
+    "estSeconds": 324.1,
+    "jumpMm": 49.21775646752594,
+    "travelMm": 29.01093995460148,
+    "medianMs": 21.205983999999944,
     "bounds": {
       "minX": 3,
       "minY": 0.20000000298023224,
@@ -38,8 +38,8 @@
       "element-3",
       "element-7",
       "element-10",
-      "element-1",
       "element-11",
+      "element-1",
       "element-5",
       "element-9",
       "element-4",
@@ -47,15 +47,15 @@
       "element-8"
     ],
     "stitches": 155,
-    "jumps": 12,
-    "trims": 11,
+    "jumps": 11,
+    "trims": 10,
     "colorChanges": 0,
     "stops": 0,
-    "threadLengthMm": 147.26800145962866,
-    "estSeconds": 81.5,
-    "jumpMm": 187.27685994499478,
-    "travelMm": 8.068001173526397,
-    "medianMs": 7.449823000000038,
+    "threadLengthMm": 148.7718857002323,
+    "estSeconds": 75.5,
+    "jumpMm": 187.4562059520944,
+    "travelMm": 7.761761526191804,
+    "medianMs": 8.80029300000001,
     "bounds": {
       "minX": 12.619000434875488,
       "minY": 2.5999999046325684,
@@ -124,7 +124,7 @@
     "estSeconds": 296.8,
     "jumpMm": 394.58739353112156,
     "travelMm": 37.023954891311774,
-    "medianMs": 38.71448099999998,
+    "medianMs": 31.911223000000064,
     "bounds": {
       "minX": 1.718000054359436,
       "minY": 1.399999976158142,
@@ -181,7 +181,7 @@
     "estSeconds": 304.7,
     "jumpMm": 735.3833202146072,
     "travelMm": 23.75204270388792,
-    "medianMs": 15.206246999999962,
+    "medianMs": 12.32921500000009,
     "bounds": {
       "minX": 3.0840001106262207,
       "minY": 2.200000047683716,
@@ -214,7 +214,7 @@
     "estSeconds": 461.8,
     "jumpMm": 151.39361017250383,
     "travelMm": 18.96539203657763,
-    "medianMs": 9.115098000000216,
+    "medianMs": 7.085986999999932,
     "bounds": {
       "minX": 0,
       "minY": 0.20000000298023224,
@@ -236,7 +236,7 @@
     "estSeconds": 82,
     "jumpMm": 175.2542529676801,
     "travelMm": 8.402618166099371,
-    "medianMs": 3.50569100000007,
+    "medianMs": 3.14817099999982,
     "bounds": {
       "minX": 9.293000221252441,
       "minY": 21.399999618530273,
@@ -258,7 +258,7 @@
     "estSeconds": 319.9,
     "jumpMm": 345.98431510772434,
     "travelMm": 41.63271739015383,
-    "medianMs": 15.337324999999964,
+    "medianMs": 18.284081000000015,
     "bounds": {
       "minX": 8.22700023651123,
       "minY": 1,
@@ -283,7 +283,7 @@
     "estSeconds": 59.8,
     "jumpMm": 54.65649572327658,
     "travelMm": 3.220061568260445,
-    "medianMs": 1.585933999999952,
+    "medianMs": 2.648345000000063,
     "bounds": {
       "minX": 0,
       "minY": 0.20000000298023224,
@@ -305,7 +305,7 @@
     "estSeconds": 72,
     "jumpMm": 260.8599243706652,
     "travelMm": 0,
-    "medianMs": 0.990978000000041,
+    "medianMs": 1.1319229999999152,
     "bounds": {
       "minX": 5.571550369262695,
       "minY": 6.9785027503967285,
@@ -332,7 +332,7 @@
     "estSeconds": 245.4,
     "jumpMm": 76.21374054210844,
     "travelMm": 86.5463128250854,
-    "medianMs": 69.24568899999986,
+    "medianMs": 145.84746999999993,
     "bounds": {
       "minX": -12,
       "minY": -9.800000190734863,
@@ -354,7 +354,7 @@
     "estSeconds": 11.7,
     "jumpMm": 0,
     "travelMm": 50,
-    "medianMs": 0.3538410000001022,
+    "medianMs": 0.3474180000000615,
     "bounds": {
       "minX": 0,
       "minY": 0,
@@ -503,7 +503,7 @@
     "estSeconds": 628,
     "jumpMm": 512.649326520835,
     "travelMm": 97.09871336002662,
-    "medianMs": 75.15848099999994,
+    "medianMs": 76.05455800000027,
     "bounds": {
       "minX": 3.628999948501587,
       "minY": 1,
@@ -525,12 +525,63 @@
     "estSeconds": 82.7,
     "jumpMm": 108.44570796454063,
     "travelMm": 0,
-    "medianMs": 3.805609000000004,
+    "medianMs": 3.339132999999947,
     "bounds": {
       "minX": 5.3033061027526855,
       "minY": 2.6266376972198486,
       "maxX": 87.23506927490234,
       "maxY": 80.1383056640625
+    }
+  },
+  {
+    "name": "satin-botanical",
+    "sequence": [
+      "stems-outline",
+      "leaves-outline",
+      "petals-outline",
+      "flower-centre-fill"
+    ],
+    "stitches": 1759,
+    "jumps": 7,
+    "trims": 6,
+    "colorChanges": 3,
+    "stops": 0,
+    "threadLengthMm": 7435.527075324875,
+    "estSeconds": 301.9,
+    "jumpMm": 79.58168734071702,
+    "travelMm": 11.562082114330416,
+    "medianMs": 6.084119999999984,
+    "bounds": {
+      "minX": 17.301115036010742,
+      "minY": 8,
+      "maxX": 64.69943237304688,
+      "maxY": 76
+    }
+  },
+  {
+    "name": "tatami-compass",
+    "sequence": [
+      "outer-ring-fill",
+      "compass-hub-fill",
+      "cardinal-shadows-fill",
+      "cardinal-points-fill",
+      "diagonal-markers-fill"
+    ],
+    "stitches": 3931,
+    "jumps": 14,
+    "trims": 13,
+    "colorChanges": 2,
+    "stops": 0,
+    "threadLengthMm": 7951.801384629009,
+    "estSeconds": 531.1,
+    "jumpMm": 288.44124602659525,
+    "travelMm": 215.8396368166442,
+    "medianMs": 203.55730300000005,
+    "bounds": {
+      "minX": 5.801989555358887,
+      "minY": 5.806403160095215,
+      "maxX": 84.19806671142578,
+      "maxY": 84.19918060302734
     }
   }
 ]

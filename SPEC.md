@@ -294,6 +294,8 @@ Fill rows line up to a global grid, so adjacent shapes with the same angle and d
 
 ### 8.3 Satin: outline (column) and fill (shape)
 
+Satin outline routing accounts for underlay passes when choosing the order and direction of columns. Up to 12 open columns use the actual first and last needle points of both directions; larger or closed/mixed sets use bounded centreline routing. Complete editable satin and tatami examples, machine exports and animated before/after stitch-outs are provided in [the examples gallery](docs/stitch-examples/README.md).
+
 | Parameter                      | Default       | Range                                                  | Notes                                                                                                                                                 |
 | ------------------------------ | ------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Width (outline only)           | stroke width  | 0.8–12                                                 | Warning above 8 mm (snag risk).                                                                                                                       |

@@ -3,6 +3,7 @@
 import { createDesign, createElement, createShape, createThread } from '@/model/factories';
 import { compound, rectGeom, ellipseGeom } from '@/geom/shapes';
 import type { Design, PathGeom } from '@/model/types';
+import { stitchExamples } from './stitch-examples';
 
 export function routingFixtures(): { name: string; design: Design }[] {
   const make = (
@@ -129,5 +130,5 @@ export function routingFixtures(): { name: string; design: Design }[] {
       true,
     ),
   ];
-  return result;
+  return [...result, ...stitchExamples()];
 }

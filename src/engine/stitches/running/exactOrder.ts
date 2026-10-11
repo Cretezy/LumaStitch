@@ -16,10 +16,6 @@ export function exactOpenOrder(
 ): PathItem[] | null {
   const n = paths.length;
   if (!n || n > 12 || paths.some((p) => p.closed || p.pts.length < 4)) return null;
-  const width = n * 2;
-  const full = (1 << n) - 1;
-  const cost = new Float64Array((full + 1) * width).fill(Infinity);
-  const prev = new Int8Array(cost.length).fill(-1);
   const entries: Vec2[] = [],
     ends: Vec2[] = [];
   for (const { pts } of paths) {
@@ -28,6 +24,20 @@ export function exactOpenOrder(
     entries.push(a, b);
     ends.push(...(passes % 2 ? [b, a] : [a, b]));
   }
+  return exactRouteStates(entries, ends, start, exit)!.map((s) => ({
+    closed: false,
+    pts: s % 2 ? reversePolyline(paths[s >> 1].pts) : paths[s >> 1].pts,
+  }));
+}
+
+/** Exact open route through two alternative states per item (up to 12 items). */
+export function exactRouteStates(entries: Vec2[], ends: Vec2[], start?: Vec2, exit?: Vec2): number[] | null {
+  const n = entries.length / 2;
+  if (!n || n > 12 || !Number.isInteger(n) || ends.length !== entries.length) return null;
+  const width = n * 2;
+  const full = (1 << n) - 1;
+  const cost = new Float64Array((full + 1) * width).fill(Infinity);
+  const prev = new Int8Array(cost.length).fill(-1);
   const dist = (a: Vec2, b: Vec2) => Math.hypot(a[0] - b[0], a[1] - b[1]);
   const gaps = Float64Array.from({ length: width * width }, (_, i) =>
     dist(ends[Math.floor(i / width)], entries[i % width]),
@@ -59,11 +69,10 @@ export function exactOpenOrder(
       best = s;
     }
   }
-  const order: PathItem[] = [];
+  const order: number[] = [];
   let mask = full;
   for (let s = best; s >= 0;) {
-    const p = paths[s >> 1];
-    order.push({ closed: false, pts: s % 2 ? reversePolyline(p.pts) : p.pts });
+    order.push(s);
     const previous = prev[mask * width + s];
     mask ^= 1 << (s >> 1);
     s = previous;

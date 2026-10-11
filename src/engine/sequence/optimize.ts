@@ -259,9 +259,10 @@ function optimizeSegment(design: Design, opts: OptimizeOpts): SequenceEntry[] {
     const seen = new Set<string>();
     let bestChanges = Infinity,
       bestCost = Infinity;
-    for (const candidate of candidates) {
+    let commands = 0;
+    const evaluate = (candidate: number[]) => {
       const key = candidate.join(',');
-      if (seen.has(key)) continue;
+      if (seen.has(key) || !valid(candidate)) return;
       seen.add(key);
       const plan = buildPlan(
         {
@@ -270,6 +271,7 @@ function optimizeSegment(design: Design, opts: OptimizeOpts): SequenceEntry[] {
         },
         { cache },
       );
+      commands = Math.max(commands, plan.flags.length);
       let cost = 10 * plan.stats.trims;
       for (let k = 1; k < plan.flags.length; k++) {
         const flag = plan.flags[k];
@@ -286,7 +288,43 @@ function optimizeSegment(design: Design, opts: OptimizeOpts): SequenceEntry[] {
         bestCost = cost;
         improved = candidate;
       }
-      if (plan.flags.length > 100_000) break;
+    };
+    for (const candidate of candidates) {
+      evaluate(candidate);
+      if (commands > 100_000) break;
+    }
+    // Small full designs benefit from moving whole colour blocks: centre-distance ordering
+    // cannot see their actual underlay/section exits. Keep every proposal precedence-safe,
+    // and cap this refinement at two rounds of eight actual-plan evaluations.
+    if (nodes.length <= 16 && commands <= 20_000) {
+      for (let round = 0; round < 2; round++) {
+        const incumbent = improved;
+        const blocks: number[][] = [];
+        for (const i of incumbent) {
+          const last = blocks[blocks.length - 1];
+          if (last && nodes[last[0]].thread === nodes[i].thread) last.push(i);
+          else blocks.push([i]);
+        }
+        const proposals: number[][] = [];
+        for (let i = 0; i + 1 < blocks.length; i++) {
+          const swapped = blocks.slice();
+          [swapped[i], swapped[i + 1]] = [swapped[i + 1], swapped[i]];
+          proposals.push(swapped.flat());
+        }
+        for (let i = 0; i + 1 < incumbent.length; i++) {
+          if (nodes[incumbent[i]].thread !== nodes[incumbent[i + 1]].thread) continue;
+          const swapped = incumbent.slice();
+          [swapped[i], swapped[i + 1]] = [swapped[i + 1], swapped[i]];
+          proposals.push(swapped);
+        }
+        let evaluated = 0;
+        for (const proposal of proposals) {
+          if (seen.has(proposal.join(',')) || !valid(proposal)) continue;
+          evaluate(proposal);
+          if (++evaluated >= 8 || commands > 20_000) break;
+        }
+        if (improved === incumbent || commands > 20_000) break;
+      }
     }
   }
 

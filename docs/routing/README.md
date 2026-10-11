@@ -12,14 +12,22 @@ Highlights from generated stitch plans:
 
 - 128 islands: jump length **678.15 → 512.65 mm** (24.4% less), trims **85 → 77**.
 - 12 open strokes: jump length **146.04 → 108.45 mm** (25.7% less), with the same 11 trims.
-- Overlapping colour-unlocking fixture: colour changes **4 → 3**, trims **8 → 7**.
+- Overlapping colour-unlocking fixture: colour changes **4 → 3**, trims **8 → 6**.
 - Connected grid: internal jumps **40 → 0 mm**, trims **4 → 0**, with **50 mm** of added running underpaths when **Connect intersecting paths** is enabled.
 
-[All 13 cases, including timings and tradeoffs](table.md). Machine-readable results: [before](before.json), [after](after.json). The diagram is rendered from actual `buildPlan` command segments, not a sketch of the optimization objective. Stats include the initial positioning jump; measured jump distance excludes it because there is no previous command position.
+[All 15 cases, including timings and tradeoffs](table.md). Machine-readable results: [before](before.json), [after](after.json). The diagram is rendered from actual `buildPlan` command segments, not a sketch of the optimization objective. Stats include the initial positioning jump; measured jump distance excludes it because there is no previous command position.
 
-Tradeoffs remain explicit. On the long-edge fixture, jump length rises from **42.46 to 54.66 mm**, while internal travel falls from **70.31 to 3.22 mm**, with the same three trims. More search also costs CPU: the 128-island case takes about **75 ms** versus **12 ms**. The selection objective is actual colour changes first, then `3 × jump mm + travel mm + 10 × trims`, not a guarantee that every metric improves. The coefficients reflect the existing fill router's preference for sewn travel over jumps; they are not calibrated machine times.
+Tradeoffs remain explicit. On the long-edge fixture, jump length rises from **42.46 to 54.66 mm**, while internal travel falls from **70.31 to 3.22 mm**, with the same three trims. More search also costs CPU: the 128-island case takes about **76 ms** versus **13 ms**. The selection objective is actual colour changes first, then `3 × jump mm + travel mm + 10 × trims`, not a guarantee that every metric improves. The coefficients reflect the existing fill router's preference for sewn travel over jumps; they are not calibrated machine times.
 
 Each timing is the median of three warm-up-following runs of `optimizeSequence` plus a fresh `buildPlan`. The optimizer shares prepared geometry internally while comparing candidate plans; benchmark runs do not share a cache. Timings are local observations, not CI performance assertions. The normal correctness suite also checks the existing 50k-stitch generation budget.
+
+## Complete satin and tatami examples
+
+[The example gallery](../stitch-examples/README.md) includes animated before/after GIFs, PNGs, editable projects, source SVG artwork and PES/DST files. Satin routing uses actual needle endpoints, accounting for all underlay passes. For small designs the sequence optimizer additionally evaluates adjacent colour-block and same-colour neighbour swaps against full stitch plans (two rounds, at most eight extra evaluations each).
+
+- Satin botanical: **116.32 → 79.58 mm** jump length and **13 → 6** trims.
+- Tatami compass: **304.20 → 288.44 mm** jumps and **227.72 → 215.84 mm** internal travel, with the same 13 trims.
+- The complete tatami example takes about **204 ms** versus **39 ms** on this host; this is a deliberate quality/latency tradeoff.
 
 ## Ink/Stitch reference
 
@@ -68,8 +76,9 @@ The script verifies the upstream file's SHA-256 before extracting only the two r
 
 ## Validation
 
-- Exhaustive permutation oracles for small precedence/colour routes and joint open-stroke order/direction, including even-pass endpoints.
+- Exhaustive permutation oracles for small precedence/colour routes and joint open-stroke order/direction, including even-pass endpoints. Satin additionally checks actual needle endpoints for all seven underlay combinations.
 - Independent shortest-walk oracle for small connected networks; crossings, T junctions, collinear overlap, parallel edges, disconnected components, bean underpaths, geometry limits and large matching fallback.
 - Stop boundaries, contradictory fixed order, unselected-element order, closest edge-interior joins, multipart exit constraints, and actual-plan scoring for wide fills.
-- Full checks passed: TypeScript, ESLint, Prettier, **554 unit/browser tests** (four existing optional tests skipped), production build and **17 Playwright tests**, including inspector toggle → worker regeneration → undo.
+- Full checks passed: TypeScript, ESLint, Prettier, **563 unit/browser tests** (four existing optional tests skipped), production build and **17 Playwright tests**, including inspector toggle → worker regeneration → undo.
+- Complete satin/tatami example projects round-trip through PES v6 with every needle penetration preserved. Before/after GIFs each contain 121 frames over 10.08 seconds, generated by the app renderer and inspected at intermediate and final frames.
 - README screenshots and stitch-out animation regenerated from the production build.

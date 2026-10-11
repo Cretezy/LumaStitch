@@ -1,0 +1,40 @@
+[
+  {
+    "name": "satin-botanical",
+    "stitches": 1759,
+    "jumps": 7,
+    "trims": 6,
+    "colorChanges": 3,
+    "stops": 0,
+    "threadLengthMm": 7435.527075324875,
+    "estSeconds": 301.9,
+    "jumpMm": 79.58168734071702,
+    "travelMm": 11.562082114330416,
+    "bounds": {
+      "minX": 17.301115036010742,
+      "minY": 8,
+      "maxX": 64.69943237304688,
+      "maxY": 76
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "tatami-compass",
+    "stitches": 3931,
+    "jumps": 14,
+    "trims": 13,
+    "colorChanges": 2,
+    "stops": 0,
+    "threadLengthMm": 7951.801384629009,
+    "estSeconds": 531.1,
+    "jumpMm": 288.44124602659525,
+    "travelMm": 215.8396368166442,
+    "bounds": {
+      "minX": 5.801989555358887,
+      "minY": 5.806403160095215,
+      "maxX": 84.19806671142578,
+      "maxY": 84.19918060302734
+    },
+    "diagnostics": []
+  }
+]

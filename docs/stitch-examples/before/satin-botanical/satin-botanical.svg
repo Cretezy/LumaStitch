@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="51mm" height="76.5mm" viewBox="15.5 3 51 76.5">
+  <title>Satin botanical</title>
+  <path id="Stems" data-name="Stems" d="M40 76C40 58 40 48 40 34M39 61C27 61 24 54 24 47M41 66C54 66 57 57 57 49" fill="none" fill-rule="evenodd" stroke="#28745b" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <path id="Leaves" data-name="Leaves" d="M28 54C20 54 20 48 20 40M52 59C61 58 62 51 62 43" fill="none" fill-rule="evenodd" stroke="#5d9662" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path id="Petals" data-name="Petals" d="M46 25L57 25M44.243 29.243L52.021 37.021M40 31L40 42M35.757 29.243L27.979 37.021M34 25L23 25M35.757 20.757L27.979 12.979M40 19L40 8M44.243 20.757L52.021 12.979" fill="none" fill-rule="evenodd" stroke="#bd4b69" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path id="Flower_centre" data-name="Flower centre" d="M45 25C45 27.209 42.761 29 40 29C37.239 29 35 27.209 35 25C35 22.791 37.239 21 40 21C42.761 21 45 22.791 45 25Z" fill="#d6a23b" fill-rule="nonzero" stroke="none"/>
+</svg>
