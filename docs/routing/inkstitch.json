@@ -1,0 +1,30 @@
+{
+  "inkstitchCommit": "d59c9ab1e390285a6c67822436ffd9ba9843d8b4",
+  "networkx": "3.5",
+  "cases": [
+    {
+      "name": "T-junction",
+      "requiredMm": 30,
+      "lumaTravelMm": 10,
+      "lumaJumps": 0,
+      "inkstitchTravelMm": 10,
+      "inkstitchJumps": 0
+    },
+    {
+      "name": "square-cycle",
+      "requiredMm": 120,
+      "lumaTravelMm": 0,
+      "lumaJumps": 0,
+      "inkstitchTravelMm": 120,
+      "inkstitchJumps": 0
+    },
+    {
+      "name": "grid-4x4",
+      "requiredMm": 240,
+      "lumaTravelMm": 60,
+      "lumaJumps": 0,
+      "inkstitchTravelMm": 180,
+      "inkstitchJumps": 0
+    }
+  ]
+}

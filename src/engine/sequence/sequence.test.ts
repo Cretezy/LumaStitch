@@ -121,3 +121,71 @@ describe('sequence optimiser', () => {
     expect(xs).toEqual([0, 20, 40]);
   });
 });
+
+it('keeps manual stops and all elements on their original side of each stop', () => {
+  const d = design([
+    { geom: rectGeom(40, 0, 8, 8), color: '#ff0000' },
+    { geom: rectGeom(0, 0, 8, 8), color: '#0000ff' },
+    { geom: rectGeom(20, 0, 8, 8), color: '#ff0000' },
+  ]);
+  d.sequence.splice(1, 0, { kind: 'stop', id: 'fabric', note: 'Place fabric' });
+  d.sequence.unshift({ kind: 'stop', id: 'start' });
+  d.sequence.push({ kind: 'stop', id: 'end' });
+  const result = optimizeSequence(d);
+  expect(result.slice(0, 3)).toEqual(d.sequence.slice(0, 3));
+  expect(result.at(-1)).toEqual(d.sequence.at(-1));
+  expect(
+    result
+      .slice(3, -1)
+      .map((e) => JSON.stringify(e))
+      .sort(),
+  ).toEqual(
+    d.sequence
+      .slice(3, -1)
+      .map((e) => JSON.stringify(e))
+      .sort(),
+  );
+});
+
+it('preserves the original order when fixed elements contradict stacking', () => {
+  const d = design([{ geom: rectGeom(0, 0, 20, 20) }, { geom: rectGeom(10, 10, 20, 20) }]);
+  d.sequence.reverse();
+  expect(optimizeSequence(d, { elementIds: [] })).toEqual(d.sequence);
+});
+
+it('keeps unselected elements in relative order while optimizing selected ones', () => {
+  const d = design(Array.from({ length: 8 }, (_, i) => ({ geom: rectGeom((7 - i) * 12, 0, 8, 8) })));
+  const ids = d.sequence.flatMap((e) => (e.kind === 'element' ? [e.elementId] : []));
+  const selected = ids.filter((_, i) => i % 2 === 0);
+  const result = optimizeSequence(d, { elementIds: selected }).flatMap((e) =>
+    e.kind === 'element' ? [e.elementId] : [],
+  );
+  expect(result.filter((id) => !selected.includes(id))).toEqual(ids.filter((id) => !selected.includes(id)));
+  expect(new Set(result)).toEqual(new Set(ids));
+});
+
+it('scores wide-fill candidates using real jumps and travel, not only centres', () => {
+  const d = design([
+    { geom: rectGeom(0, 0, 80, 3) },
+    { geom: rectGeom(35, 6, 10, 3) },
+    { geom: rectGeom(0, 12, 80, 3) },
+    { geom: rectGeom(35, 18, 10, 3) },
+  ]);
+  d.settings.defaultTie = 'never';
+  for (const s of Object.values(d.shapes))
+    Object.assign(s.fill!.params, { angle: 0, density: 0.4, underlay: 'none', pullComp: 0 });
+  const score = (plan: StitchPlan) => {
+    let cost = 10 * plan.stats.trims;
+    for (let i = 1; i < plan.flags.length; i++) {
+      const f = plan.flags[i];
+      if (f & (F.TRIM | F.STOP | F.END | F.COLOR_CHANGE)) continue;
+      const d = Math.hypot(plan.x[i] - plan.x[i - 1], plan.y[i] - plan.y[i - 1]);
+      cost += d * (f & F.JUMP ? 3 : f & F.TRAVEL ? 1 : 0);
+    }
+    return cost;
+  };
+  const before = buildPlan(d);
+  const after = buildPlan({ ...d, sequence: optimizeSequence(d) });
+  expect(score(after)).toBeLessThan(score(before) - 40);
+  expect(after.stats.colorChanges).toBe(before.stats.colorChanges);
+});

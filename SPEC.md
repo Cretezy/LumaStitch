@@ -314,6 +314,7 @@ Fill rows line up to a global grid, so adjacent shapes with the same angle and d
 | Stitch length | 2.5 / 3.0                  | 0.5–6.0 | Stitches are spaced evenly between corners. Sharp corners always get a penetration. |
 | Bean repeats  | 0 / 1                      | 0–3     | 1 = triple, 2 = quintuple.                                                          |
 | Passes        | 1                          | 1–5     | Sews the path there and back multiple times.                                        |
+| Connect intersecting paths | off | on/off | One-pass running/bean only. Routes through crossings and shared endpoints within an element, adding single underpaths where needed. Keeps separate components separated by jumps; oversized networks fall back with a warning. |
 
 ### 8.5 Zigzag
 
@@ -375,9 +376,10 @@ The aim is a sensible, sewable first pass that matches what an experienced digit
 6. **Settings.** Density, pull compensation and underlay come from the fabric preset. Satin underlay follows the width rule in §8.3. Fills narrower than 3 mm get no underlay.
 7. **Sequence.**
    - Constraints: if element A is below B in stacking order and they overlap, A is sewn before B, whatever their roles. A shape's outline comes after its own fill. So a shape is finished, fill and outline, before the shape stacked above it.
-   - Objective: fewest colour changes first, then shortest travel and fewest trims. Sewing starts at the top-left of the design, and the next colour is the nearest one whose remaining elements can all be sewn now.
+   - Objective: fewest colour changes first, then shortest travel and fewest trims. A seed starts near the top-left; refinement can choose another start when it reduces actual machine travel. Colour changes have priority over a weighted combination of jump length, internal travel and trims. Manual stops are hard boundaries; unselected elements keep their relative order. Contradictory fixed-order/stacking constraints leave that segment unchanged.
    - Each element's entry and exit points are chosen from its neighbours: it starts at its edge point nearest to where the previous element finished, and it finishes next to the following element when that one uses the same thread.
-   - **A fill with several separate parts** (for example a word set as one SVG path) is sewn one part at a time, each part completely (underlay and top layer), in the shortest order. The jump between parts goes edge to edge, so it is as short as possible and isn't sewn over by the part it lands in.
+   - **A fill with several separate parts** (for example a word set as one SVG path) is sewn one part at a time, each part completely (underlay and top layer), in an optimized order (exact for the geometric gap model up to 14 parts, bounded search above it). The jump between parts goes edge to edge, so it is as short as possible and isn't sewn over by the part it lands in.
+   - Small groups of up to 12 open running paths jointly optimize path order and direction, accounting for pass parity. Closed loops retain seam refinement.
    - Within a part, the order of row sections minimises travel, and travel runs under areas still to be sewn rather than on top of finished rows.
    - **An outline with several separate loops** (a word's letters, a letter's counters) is sewn loop by loop in the order with the shortest jumps, each loop starting where the move in and the move out to the next loop are shortest. Moves between loops are jumps, never stitches across the gap (hops of 1 mm or less excepted).
 8. **Connections.** Trims and ties follow the design settings.

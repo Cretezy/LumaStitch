@@ -4,6 +4,7 @@
  * and export. Pure and deterministic; runs in the engine worker and in Node tests.
  */
 import { flattenGeom, flattenToPaths } from '@/geom/flatten';
+import { closestBoundaryPoints } from '@/geom/closest';
 import { makeValid, unionAll } from '@/geom/clipper';
 import { bboxIntersects, createPointTester, emptyBBox, extendBBox } from '@/geom/polygon';
 import type { BBox, PolyShape } from '@/geom/types';
@@ -88,52 +89,14 @@ function geomCenter(cache: PlanCache, shape: Shape): Vec2 {
   return [(v.bbox.minX + v.bbox.maxX) / 2, (v.bbox.minY + v.bbox.maxY) / 2];
 }
 
-/** Outline vertices of a shape (all subpaths, open or closed), sampled to at most ~400 points. */
-function outlinePoints(shape: Shape): Float64Array {
-  const all: number[] = [];
-  for (const p of flattenToPaths(shape.geom, TOL * 4)) for (const v of p.pts) all.push(v);
-  const n = all.length / 2;
-  const step = Math.max(1, Math.ceil(n / 400));
-  const out: number[] = [];
-  for (let i = 0; i < n; i += step) out.push(all[i * 2], all[i * 2 + 1]);
-  return Float64Array.from(out);
-}
-
-function nearestVertex(pts: Float64Array, p: Vec2): Vec2 {
-  let bx = pts[0],
-    by = pts[1],
-    bd = Infinity;
-  for (let i = 0; i < pts.length; i += 2) {
-    const d = (pts[i] - p[0]) ** 2 + (pts[i + 1] - p[1]) ** 2;
-    if (d < bd) {
-      bd = d;
-      bx = pts[i];
-      by = pts[i + 1];
-    }
-  }
-  return [bx, by];
-}
-
-/**
- * Where an element of `cur` should finish so the move to `next` is short: the point of `next`'s
- * outline closest to `cur` (found by alternating nearest-point steps between the two outlines).
- */
+/** Closest join between the flattened outlines, including segment interiors. */
 function exitToward(cache: PlanCache, cur: Shape, next: Shape): Vec2 {
   const key = geomKey(cache, cur.geom) + '>' + geomKey(cache, next.geom);
   let v = cache.exits.get(key);
   if (!v) {
-    const a = outlinePoints(cur),
-      b = outlinePoints(next);
-    if (!a.length || !b.length) v = geomCenter(cache, next);
-    else {
-      let p = geomCenter(cache, cur);
-      let q = nearestVertex(b, p);
-      for (let k = 0; k < 3; k++) {
-        p = nearestVertex(a, q);
-        q = nearestVertex(b, p);
-      }
-      v = q;
-    }
+    v =
+      closestBoundaryPoints(flattenToPaths(cur.geom, TOL), flattenToPaths(next.geom, TOL))?.b ??
+      geomCenter(cache, next);
     cache.exits.set(key, v);
   }
   return v;

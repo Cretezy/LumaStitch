@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /**
- * Sequence optimiser (ARCHITECTURE §12): precedence graph from stacking + overlap, then a greedy
- * topological order that minimises colour changes first, then travel.
+ * Sequence optimiser (ARCHITECTURE §12): precedence-safe exact/local search, then bounded
+ * comparison of actual stitch plans. Stops partition the optimization into independent jobs.
  */
 import { intersection, makeValid, offsetPolylines } from '@/geom/clipper';
 import { flattenGeom, flattenToPaths } from '@/geom/flatten';
@@ -10,6 +10,9 @@ import type { BBox, PolyShape } from '@/geom/types';
 import { buildElementIndex } from '@/model/factories';
 import type { Design, Id, SequenceEntry, Shape } from '@/model/types';
 import { AUTO } from '../autodigitize/config';
+import { routeOrder } from './routeOrder';
+import { buildPlan, createPlanCache } from '../plan';
+import { F } from '../types';
 
 interface Node {
   elementId: Id;
@@ -46,21 +49,32 @@ export interface OptimizeOpts {
 }
 
 export function optimizeSequence(design: Design, opts: OptimizeOpts = {}): SequenceEntry[] {
+  // Manual stops are operation boundaries (e.g. placing appliqué fabric). Never move work across
+  // one, even when regrouping the same thread would save a colour change.
+  const out: SequenceEntry[] = [];
+  let segment: SequenceEntry[] = [];
+  const flush = () => {
+    if (segment.length) out.push(...optimizeSegment({ ...design, sequence: segment }, opts));
+    segment = [];
+  };
+  for (const entry of design.sequence) {
+    if (entry.kind === 'stop') {
+      flush();
+      out.push(entry);
+    } else segment.push(entry);
+  }
+  flush();
+  return out;
+}
+
+function optimizeSegment(design: Design, opts: OptimizeOpts): SequenceEntry[] {
   const index = buildElementIndex(design);
   const zIndex = new Map(design.zOrder.map((id, i) => [id, i]));
   const restrict = opts.elementIds ? new Set(opts.elementIds) : null;
   const nodes: Node[] = [];
   const fixedIdx: number[] = [];
-  const stopsAfter = new Map<Id | null, SequenceEntry[]>();
-  let lastEl: Id | null = null;
   for (const e of design.sequence) {
-    if (e.kind === 'stop') {
-      const l = stopsAfter.get(lastEl) ?? [];
-      l.push(e);
-      stopsAfter.set(lastEl, l);
-      continue;
-    }
-    lastEl = e.elementId;
+    if (e.kind !== 'element') continue;
     const ref = index.get(e.elementId);
     if (!ref) continue;
     if (restrict && !restrict.has(e.elementId)) fixedIdx.push(nodes.length);
@@ -68,6 +82,17 @@ export function optimizeSequence(design: Design, opts: OptimizeOpts = {}): Seque
     const el = ref.role === 'fill' ? shape.fill! : shape.outline!;
     const poly = regionOf(shape, ref.role);
     const bbox = polyShapeBBox(poly);
+    if (!Number.isFinite(bbox.minX)) {
+      const points = flattenToPaths(shape.geom).flatMap((p) => Array.from(p.pts));
+      bbox.minX = bbox.maxX = points[0] ?? 0;
+      bbox.minY = bbox.maxY = points[1] ?? 0;
+      for (let k = 0; k < points.length; k += 2) {
+        bbox.minX = Math.min(bbox.minX, points[k]);
+        bbox.maxX = Math.max(bbox.maxX, points[k]);
+        bbox.minY = Math.min(bbox.minY, points[k + 1]);
+        bbox.maxY = Math.max(bbox.maxY, points[k + 1]);
+      }
+    }
     const area = polyShapeArea(poly);
     nodes.push({
       elementId: e.elementId,
@@ -149,12 +174,9 @@ export function optimizeSequence(design: Design, opts: OptimizeOpts = {}): Seque
   while (order.length < nodes.length) {
     const av = available();
     if (!av.length) {
-      // Cycle safety: release the lowest-z remaining node.
-      let best = -1;
-      for (let i = 0; i < nodes.length; i++)
-        if (!done[i] && (best < 0 || nodes[i].z < nodes[best].z)) best = i;
-      indeg[best] = 0;
-      continue;
+      // A fixed user order may contradict stacking. Leave this segment unchanged rather than
+      // silently breaking a precedence edge or moving an unselected element.
+      return design.sequence.slice();
     }
     let cand = av.filter((i) => nodes[i].thread === thread);
     if (!cand.length) {
@@ -208,71 +230,65 @@ export function optimizeSequence(design: Design, opts: OptimizeOpts = {}): Seque
     for (const s of nodes[pick].succs) indeg[s]--;
   }
 
-  twoOpt(order, nodes);
+  let improved =
+    routeOrder(
+      {
+        size: nodes.length,
+        start: (i) => Math.hypot(nodes[i].center[0] - start[0], nodes[i].center[1] - start[1]),
+        distance: (i, j) =>
+          Math.hypot(nodes[i].center[0] - nodes[j].center[0], nodes[i].center[1] - nodes[j].center[1]),
+        thread: (i) => nodes[i].thread,
+        predecessors: nodes.map((n) => n.preds),
+      },
+      order,
+    ) ?? order;
 
-  const out: SequenceEntry[] = [...(stopsAfter.get(null) ?? [])];
-  for (const i of order) {
-    out.push({ kind: 'element', elementId: nodes[i].elementId });
-    out.push(...(stopsAfter.get(nodes[i].elementId) ?? []));
-  }
-  return dedupeStops(out);
-}
-
-function dedupeStops(seq: SequenceEntry[]): SequenceEntry[] {
-  const out: SequenceEntry[] = [];
-  const seen = new Set<Id>();
-  for (const e of seq) {
-    if (e.kind === 'stop') {
-      if (seen.has(e.id)) continue;
-      seen.add(e.id);
-    }
-    out.push(e);
-  }
-  return out;
-}
-
-/**
- * Improvement pass: 2-opt within each same-thread run of the order, shortening travel between
- * element centres. A segment is only reversed when no precedence edge links two of its elements.
- */
-function twoOpt(order: number[], nodes: Node[]): void {
-  const d = (a: number, b: number) =>
-    Math.hypot(nodes[a].center[0] - nodes[b].center[0], nodes[a].center[1] - nodes[b].center[1]);
-  let start = 0;
-  while (start < order.length) {
-    let end = start;
-    while (end + 1 < order.length && nodes[order[end + 1]].thread === nodes[order[start]].thread) end++;
-    const len = end - start + 1;
-    if (len >= 3 && len <= 300) {
-      for (let pass = 0; pass < 8; pass++) {
-        let improved = false;
-        for (let i = start; i < end; i++) {
-          for (let j = i + 1; j <= end; j++) {
-            const prev = i > 0 ? order[i - 1] : -1;
-            const next = j + 1 < order.length ? order[j + 1] : -1;
-            const before = (prev >= 0 ? d(prev, order[i]) : 0) + (next >= 0 ? d(order[j], next) : 0);
-            const after = (prev >= 0 ? d(prev, order[j]) : 0) + (next >= 0 ? d(order[i], next) : 0);
-            if (after + 1e-6 >= before) continue;
-            // Reversal must not invert any precedence edge inside the segment.
-            const seg = new Set(order.slice(i, j + 1));
-            let ok = true;
-            for (const a of seg) {
-              for (const b of nodes[a].succs)
-                if (seg.has(b)) {
-                  ok = false;
-                  break;
-                }
-              if (!ok) break;
-            }
-            if (!ok) continue;
-            const rev = order.slice(i, j + 1).reverse();
-            for (let k = 0; k < rev.length; k++) order[i + k] = rev[k];
-            improved = true;
-          }
-        }
-        if (!improved) break;
+  // Centre distances cannot predict where a wide fill actually finishes. Compare a small set
+  // of valid orders using real machine commands, sharing prepared geometry between candidates.
+  // This also considers the equally short reverse of a symmetric route when precedence permits.
+  if (nodes.length > 1 && nodes.length <= 128) {
+    const cache = createPlanCache();
+    const valid = (candidate: number[]) => {
+      const position = new Int32Array(nodes.length);
+      candidate.forEach((v, k) => {
+        position[v] = k;
+      });
+      return nodes.every((node, i) => [...node.preds].every((p) => position[p] < position[i]));
+    };
+    const candidates = [improved, improved.slice().reverse(), order, nodes.map((_, i) => i)].filter(valid);
+    const seen = new Set<string>();
+    let bestChanges = Infinity,
+      bestCost = Infinity;
+    for (const candidate of candidates) {
+      const key = candidate.join(',');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const plan = buildPlan(
+        {
+          ...design,
+          sequence: candidate.map((i) => ({ kind: 'element' as const, elementId: nodes[i].elementId })),
+        },
+        { cache },
+      );
+      let cost = 10 * plan.stats.trims;
+      for (let k = 1; k < plan.flags.length; k++) {
+        const flag = plan.flags[k];
+        if (flag & (F.TRIM | F.STOP | F.COLOR_CHANGE | F.END)) continue;
+        const distance = Math.hypot(plan.x[k] - plan.x[k - 1], plan.y[k] - plan.y[k - 1]);
+        if (flag & F.JUMP) cost += 3 * distance;
+        else if (flag & F.TRAVEL) cost += distance;
       }
+      if (
+        plan.stats.colorChanges < bestChanges ||
+        (plan.stats.colorChanges === bestChanges && cost < bestCost - 1e-6)
+      ) {
+        bestChanges = plan.stats.colorChanges;
+        bestCost = cost;
+        improved = candidate;
+      }
+      if (plan.flags.length > 100_000) break;
     }
-    start = end + 1;
   }
+
+  return improved.map((i) => ({ kind: 'element', elementId: nodes[i].elementId }));
 }

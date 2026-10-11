@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /** Tatami fill: rows of running stitches with underlay and inside travel between sections. */
 import { flattenGeom } from '@/geom/flatten';
+import { closestRings } from '@/geom/closest';
+import { routeOrder } from '../../sequence/routeOrder';
 import { intersection, makeValid, offset, union } from '@/geom/clipper';
 import { createPointTester, polyShapeArea, polyShapeBBox } from '@/geom/polygon';
 import { rotateClosedTo } from '@/geom/polyline';
@@ -138,8 +140,8 @@ function coveredAlong(
  * visible defect, while hidden travel only costs a few stitches.
  */
 const VISIBLE_COST = 8;
-/** Weight of the distance from the last section's exit to the requested exit point. */
-const EXIT_WEIGHT = 0.3;
+/** Price the outgoing connector in full: discounting it makes short fills end on the far side. */
+const EXIT_WEIGHT = 1;
 /** Each mm of visible travel also costs this many mm. */
 const VISIBLE_FACTOR = 4;
 
@@ -276,7 +278,7 @@ function sectionCostModel(layer: FillLayer, idx: number[], t: TravelCtx) {
       const path = travel(from, p);
       return path ? polyLength(path) : Math.hypot(p[0] - from[0], p[1] - from[1]) * 3 + JUMP_COST;
     },
-    /** Finishing near the exit only shortens the next jump; it weighs less than travel. */
+    /** The outgoing connector costs its full length, just like hidden internal travel. */
     end(exit: Vec2 | undefined, k: number, c: number): number {
       if (!exit) return 0;
       const e = corner(k, exitOf(k, c));
@@ -1099,31 +1101,14 @@ function nearestOnRing(ring: Float64Array, p: Vec2): Vec2 {
   return [bx, by];
 }
 
-/** The point of ring `to` closest to ring `from` (vertices of `to`, sampled for long rings). */
+/** The closest point on `to`, including the interior of an edge. */
 export function nearestPointTo(to: Float64Array, from: Float64Array): Vec2 {
-  const step = Math.max(1, Math.floor(to.length / 2 / 200)) * 2;
-  let best: Vec2 = [to[0], to[1]],
-    bd = Infinity;
-  for (let i = 0; i < to.length; i += step) {
-    const p: Vec2 = [to[i], to[i + 1]];
-    const d = ringDistance(from, p);
-    if (d < bd) {
-      bd = d;
-      best = p;
-    }
-  }
-  return best;
-}
-
-/** Smallest distance between two rings (vertices of each against the edges of the other). */
-function ringGap(a: Float64Array, b: Float64Array): number {
-  return Math.min(ringDistance(a, nearestPointTo(b, a)), ringDistance(b, nearestPointTo(a, b)));
+  return closestRings(from, to)?.b ?? [to[0] ?? 0, to[1] ?? 0];
 }
 
 /**
- * Order in which to sew the parts of a fill: the shortest open path through the parts (gap between
- * consecutive parts), starting near the entry and ending at the part nearest the exit, if any.
- * Small part counts try every start and improve with 2-opt; large ones use bounding-box gaps.
+ * Shortest gap-based open route up to 14 parts (Held–Karp), bounded multi-start local search
+ * beyond. Always uses actual ring gaps. A requested exit reserves its closest part for last.
  */
 export function partOrder(
   parts: { outer: Float64Array }[],
@@ -1132,88 +1117,30 @@ export function partOrder(
 ): number[] {
   const n = parts.length;
   if (n <= 1) return n ? [0] : [];
-  const exact = n <= 24;
-  const boxes = parts.map((p) => polyShapeBBox([{ outer: p.outer, holes: [] }]));
-  const gap = (i: number, j: number) => {
-    if (exact) return ringGap(parts[i].outer, parts[j].outer);
-    const a = boxes[i],
-      b = boxes[j];
-    return Math.hypot(
-      Math.max(0, a.minX - b.maxX, b.minX - a.maxX),
-      Math.max(0, a.minY - b.maxY, b.minY - a.maxY),
-    );
+  const gaps = new Map<number, number>();
+  const distance = (i: number, j: number) => {
+    if (i === j) return 0;
+    const key = Math.min(i, j) * n + Math.max(i, j);
+    let d = gaps.get(key);
+    if (d === undefined) {
+      d = closestRings(parts[i].outer, parts[j].outer)?.distance ?? 0;
+      gaps.set(key, d);
+    }
+    return d;
   };
-  const G = new Float64Array(n * n);
-  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) G[i * n + j] = G[j * n + i] = gap(i, j);
   const d0 = parts.map((p) => (from ? ringDistance(p.outer, from) : 0));
-  let lastPart = -1;
+  let last: number | undefined;
   if (exit) {
-    let bd = Infinity;
+    let best = Infinity;
     for (let i = 0; i < n; i++) {
       const d = ringDistance(parts[i].outer, exit);
-      if (d < bd) {
-        bd = d;
-        lastPart = i;
+      if (d < best) {
+        best = d;
+        last = i;
       }
     }
   }
-  const cost = (o: number[]) => {
-    let c = d0[o[0]];
-    for (let k = 1; k < o.length; k++) c += G[o[k - 1] * n + o[k]];
-    return c;
-  };
-  const greedy = (start: number) => {
-    const o = [start];
-    const used = new Uint8Array(n);
-    used[start] = 1;
-    if (lastPart >= 0) used[lastPart] = 1;
-    for (;;) {
-      const cur = o[o.length - 1];
-      let pick = -1,
-        bd = Infinity;
-      for (let j = 0; j < n; j++)
-        if (!used[j] && G[cur * n + j] < bd) {
-          bd = G[cur * n + j];
-          pick = j;
-        }
-      if (pick < 0) break;
-      used[pick] = 1;
-      o.push(pick);
-    }
-    if (lastPart >= 0 && lastPart !== start) o.push(lastPart);
-    return o;
-  };
-  const starts = exact ? parts.map((_, i) => i).filter((i) => i !== lastPart || n === 1) : [];
-  if (!exact) {
-    let s0 = lastPart === 0 ? 1 : 0;
-    for (let i = 1; i < n; i++) if (i !== lastPart && d0[i] < d0[s0]) s0 = i;
-    starts.push(s0);
-  }
-  let best: number[] = [],
-    bc = Infinity;
-  for (const st of starts) {
-    const o = greedy(st);
-    // 2-opt on the open path; the last part stays fixed when there is an exit.
-    const end = lastPart >= 0 ? o.length - 1 : o.length;
-    for (let improved = true, pass = 0; improved && pass < 8; pass++) {
-      improved = false;
-      for (let i = 0; i < end - 1; i++)
-        for (let j = i + 1; j < end; j++) {
-          const c0 = cost(o);
-          const r = o.slice(0, i).concat(o.slice(i, j + 1).reverse(), o.slice(j + 1));
-          if (cost(r) < c0 - 1e-9) {
-            o.splice(0, o.length, ...r);
-            improved = true;
-          }
-        }
-    }
-    const c = cost(o);
-    if (c < bc) {
-      bc = c;
-      best = o;
-    }
-  }
-  return best;
+  return routeOrder({ size: n, start: (i) => d0[i], distance, last })!;
 }
 
 /**

@@ -257,3 +257,38 @@ test('exports a stitch-out video at a chosen speed', async ({ page }) => {
   expect(bytes.length).toBeGreaterThan(5000);
   await expect(dialog).toBeHidden({ timeout: 10000 });
 });
+
+test('intersection routing removes network trims through the inspector and undo restores them', async ({
+  page,
+}) => {
+  await openApp(page);
+  await page.evaluate(async () => {
+    const paths = [
+      ...Array.from({ length: 4 }, (_, i) => `M0 ${i * 10} H30`),
+      ...Array.from({ length: 4 }, (_, i) => `M${i * 10} 0 V30`),
+    ].join(' ');
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="30mm" height="30mm" viewBox="0 0 30 30"><path fill="none" stroke="#334455" stroke-width="0.3" d="${paths}"/></svg>`;
+    await (window as any).__lumastitch.actions.handleFile(
+      new File([svg], 'Network.svg', { type: 'image/svg+xml' }),
+      { intoCurrent: false },
+    );
+  });
+  await page.getByRole('dialog').getByRole('button', { name: 'Import', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeHidden({ timeout: 20000 });
+  await waitIdle(page);
+  await page.evaluate(() => {
+    const L = (window as any).__lumastitch;
+    const d = L.useDoc.getState().design;
+    const s = Object.values(d.shapes).find((s: any) => s.outline) as any;
+    L.useUi.getState().setSelection({ shapeIds: [s.id], elementIds: [s.outline.id], nodes: [] });
+  });
+  const before = await planStats(page);
+  expect(before.trims).toBeGreaterThan(0);
+  await page.getByRole('button', { name: 'Advanced', exact: true }).click();
+  await page.getByRole('switch', { name: 'Connect intersecting paths' }).click();
+  await waitIdle(page);
+  expect((await planStats(page)).trims).toBe(0);
+  await page.keyboard.press('ControlOrMeta+z');
+  await waitIdle(page);
+  expect((await planStats(page)).trims).toBe(before.trims);
+});
