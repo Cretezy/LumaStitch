@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { FabricColorInput } from '@/components/inspector/FabricColorInput';
+import { FabricProfiles } from '@/components/inspector/FabricProfiles';
 import { HoopSettings } from '@/components/inspector/HoopSettings';
 import { NumberField } from '@/components/inspector/NumberField';
 import { FABRIC_IDS, FABRIC_PRESETS } from '@/engine/params/fabric';
@@ -156,6 +157,7 @@ export default function DesignSettingsDialog({ open, onClose }: DialogProps) {
           <DialogTitle>Design settings</DialogTitle>
           <DialogDescription>Changes apply immediately and can be undone.</DialogDescription>
         </DialogHeader>
+        <FabricProfiles />
         <Section title="Design">
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="grid min-w-0 content-start gap-1">

@@ -118,3 +118,7 @@ Open or import PES, DST, JEF, EXP and VP3 as editable stitch nodes. Select a nod
 ### Arbitrary guided fills
 
 Select a closed shape and open guide paths, then **Object → Make guided fill**. Edit the dashed guide with the node tool and choose translated copies, parallel offsets or finite-guide buffers. Holes, pull compensation and straight underlay are supported. [Three complete examples with GIFs](docs/guided-fill/README.md).
+
+### Reusable fabric profiles
+
+Design settings now saves custom spacing, compensation and underlay defaults with fabric/needle/thread/stabilizer notes. Profiles stay embedded in projects and can be reused locally or shared as JSON; per-object overrides remain in effect. [Example profile, sampler and GIF](docs/fabric/README.md).

@@ -101,10 +101,35 @@ const artwork = z.union([
   }),
 ]);
 
+export const fabricProfileSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  baseFabric: z.enum(['woven', 'knit', 'pile', 'lightweight']),
+  fillSpacing: z.number().min(0.15).max(2),
+  satinSpacing: z.number().min(0.15).max(2),
+  pullComp: z.number().min(0).max(2),
+  fillUnderlay: z.enum(['none', 'edge', 'tatami', 'edgeTatami']),
+  satinUnderlay: z.enum([
+    'auto',
+    'none',
+    'center',
+    'edge',
+    'zigzag',
+    'centerZigzag',
+    'edgeZigzag',
+    'centerEdge',
+  ]),
+  underlaySpacing: z.number().min(0.5).max(10),
+  stabilizer: z.string().max(500),
+  needle: z.string().max(100),
+  thread: z.string().max(100),
+  notes: z.string().max(4000),
+});
+
 export const designSchema = z.object({
   schemaVersion: z.literal(1),
   name: z.string(),
   fabric: z.enum(['woven', 'knit', 'pile', 'lightweight']),
+  fabricProfile: fabricProfileSchema.optional(),
   fabricColor: z
     .string()
     .regex(/^#[0-9a-f]{6}$/i)

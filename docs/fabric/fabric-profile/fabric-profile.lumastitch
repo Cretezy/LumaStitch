@@ -1,0 +1,197 @@
+{
+  "format": "lumastitch-project",
+  "schemaVersion": 1,
+  "app": "LumaStitch",
+  "savedAt": "2026-10-11T00:00:00.000Z",
+  "design": {
+    "schemaVersion": 1,
+    "name": "Reusable fabric profile sampler",
+    "fabric": "woven",
+    "threadChart": "exact",
+    "settings": {
+      "trimThreshold": 3,
+      "minStitchLength": 0.3,
+      "maxStitchLength": 12,
+      "tieLength": 0.8,
+      "machineSpm": 600,
+      "trimSeconds": 6,
+      "colorChangeSeconds": 30,
+      "defaultTie": "auto",
+      "scaleStrokeWidths": true
+    },
+    "threads": {
+      "blue": {
+        "id": "blue",
+        "name": "Blue calibration thread",
+        "color": "#234a73"
+      }
+    },
+    "shapes": {
+      "profile-0": {
+        "id": "profile-0",
+        "name": "Inherited tatami",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    30,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    30,
+                    30
+                  ]
+                },
+                {
+                  "p": [
+                    0,
+                    30
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "strokeWidth": 6
+        },
+        "fill": {
+          "id": "profile-el-0",
+          "role": "fill",
+          "type": "tatami",
+          "threadId": "blue",
+          "params": {},
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      },
+      "profile-1": {
+        "id": "profile-1",
+        "name": "Inherited satin",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    40,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    40,
+                    30
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "strokeWidth": 3
+        },
+        "fill": null,
+        "outline": {
+          "id": "profile-el-1",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "blue",
+          "params": {},
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      },
+      "profile-2": {
+        "id": "profile-2",
+        "name": "Inherited satin",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    50,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    50,
+                    30
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "strokeWidth": 6
+        },
+        "fill": null,
+        "outline": {
+          "id": "profile-el-2",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "blue",
+          "params": {},
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      }
+    },
+    "zOrder": [
+      "profile-0",
+      "profile-1",
+      "profile-2"
+    ],
+    "sequence": [
+      {
+        "kind": "element",
+        "elementId": "profile-el-0"
+      },
+      {
+        "kind": "element",
+        "elementId": "profile-el-1"
+      },
+      {
+        "kind": "element",
+        "elementId": "profile-el-2"
+      }
+    ],
+    "fabricProfile": {
+      "name": "Example cotton calibration (unsewn)",
+      "baseFabric": "woven",
+      "fillSpacing": 0.5,
+      "satinSpacing": 0.45,
+      "pullComp": 0.2,
+      "fillUnderlay": "tatami",
+      "satinUnderlay": "auto",
+      "underlaySpacing": 3,
+      "stabilizer": "Tear-away or cut-away stabiliser",
+      "needle": "Record the needle used",
+      "thread": "Record thread brand and weight",
+      "notes": "Software example only. Sew this sampler and adjust before treating it as a calibrated fabric profile."
+    }
+  }
+}

@@ -12,6 +12,7 @@ import type {
   DesignSettings,
   ElementRole,
   FabricId,
+  FabricProfile,
   Hoop,
   Id,
   Matrix,
@@ -161,7 +162,7 @@ function applyTransform(d: D, ids: Id[], m: Matrix) {
     for (const el of [sh.fill, sh.outline]) {
       if (!el) continue;
       const defAngle = hasStitchType(el.type)
-        ? (inheritedParams(el.type, d.fabric).angle as number | undefined)
+        ? (inheritedParams(el.type, d.fabric, d.fabricProfile).angle as number | undefined)
         : undefined;
       transformElement(el as StitchElement, m, scaleWidths, { angle: defAngle });
     }
@@ -487,7 +488,14 @@ export function setDesignSettings(patch: Partial<DesignSettings>, label = 'Desig
 }
 
 export function setDesignProps(
-  props: { name?: string; fabric?: FabricId; fabricColor?: string; threadChart?: string; hoop?: Hoop | null },
+  props: {
+    name?: string;
+    fabric?: FabricId;
+    fabricColor?: string;
+    threadChart?: string;
+    hoop?: Hoop | null;
+    fabricProfile?: FabricProfile | null;
+  },
   label = 'Design settings',
 ): void {
   exec(label, (d) => {
@@ -496,7 +504,17 @@ export function setDesignProps(
       else d.hoop = props.hoop;
     }
     if (props.name !== undefined) d.name = props.name;
-    if (props.fabric !== undefined) d.fabric = props.fabric;
+    if (props.fabric !== undefined) {
+      d.fabric = props.fabric;
+      delete d.fabricProfile;
+    }
+    if (props.fabricProfile !== undefined) {
+      if (props.fabricProfile === null) delete d.fabricProfile;
+      else {
+        d.fabricProfile = props.fabricProfile;
+        d.fabric = props.fabricProfile.baseFabric;
+      }
+    }
     if (props.fabricColor !== undefined) d.fabricColor = props.fabricColor;
     if (props.threadChart !== undefined) d.threadChart = props.threadChart;
   });

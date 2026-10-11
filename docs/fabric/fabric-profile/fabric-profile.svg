@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="57mm" height="40mm" viewBox="-2 -5 57 40">
+  <title>Reusable fabric profile sampler</title>
+  <path id="Inherited_tatami" data-name="Inherited tatami" d="M0 0L30 0L30 30L0 30L0 0Z" fill="#234a73" fill-rule="nonzero" stroke="none"/>
+  <path id="Inherited_satin" data-name="Inherited satin" d="M40 0L40 30" fill="none" fill-rule="nonzero" stroke="#234a73" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <path id="Inherited_satin_2" data-name="Inherited satin" d="M50 0L50 30" fill="none" fill-rule="nonzero" stroke="#234a73" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

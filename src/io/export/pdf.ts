@@ -69,7 +69,7 @@ export function worksheetDate(d: Date): string {
 /** Collects what the worksheet shows from a plan and its design. */
 export function worksheetData(
   plan: StitchPlan,
-  design: Pick<Design, 'name' | 'threads' | 'fabric'>,
+  design: Pick<Design, 'name' | 'threads' | 'fabric' | 'fabricProfile'>,
   date: Date = new Date(),
 ): WorksheetData {
   const s = plan.stats;
@@ -106,8 +106,8 @@ export function worksheetData(
       ['Trims', fmtInt(s.trims)],
       ['Estimated time', fmtTime(s.estSeconds)],
     ],
-    fabric: fabric?.label ?? String(design.fabric ?? ''),
-    stabilizer: fabric?.stabilizer ?? '',
+    fabric: design.fabricProfile?.name ?? fabric?.label ?? String(design.fabric ?? ''),
+    stabilizer: design.fabricProfile?.stabilizer ?? fabric?.stabilizer ?? '',
     rows,
   };
 }
@@ -188,8 +188,12 @@ function sidePanel(page: PdfPage, data: WorksheetData): void {
     if (!value) return;
     page.text(x, y + 10, label, { size: 9, color: MUTED });
     y += 14;
-    for (const line of wrapText(value, 'regular', 10, w)) {
-      page.text(x, y + 10, line, { size: 10, color: INK });
+    const lines = wrapText(value, 'regular', 10, w);
+    for (const [index, line] of lines.slice(0, 3).entries()) {
+      page.text(x, y + 10, index === 2 && lines.length > 3 ? fitText(line + '…', 'regular', 10, w) : line, {
+        size: 10,
+        color: INK,
+      });
       y += 13;
     }
     y += 8;
@@ -335,7 +339,7 @@ export async function renderPlanJpeg(
 /** Builds the production worksheet for a plan. */
 export async function exportPdf(
   plan: StitchPlan,
-  design: Pick<Design, 'name' | 'threads' | 'fabric'>,
+  design: Pick<Design, 'name' | 'threads' | 'fabric' | 'fabricProfile'>,
   opts: PdfExportOptions = {},
 ): Promise<Blob> {
   const date = opts.date ?? new Date();

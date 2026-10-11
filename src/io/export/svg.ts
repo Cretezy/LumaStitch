@@ -65,7 +65,7 @@ function paintOf(design: Design, shape: Shape): ShapePaint {
   }
   let strokeWidth = THREAD_WIDTH_MM;
   if (shape.outline) {
-    const w = resolveParams(shape.outline, design.fabric).width;
+    const w = resolveParams(shape.outline, design.fabric, design.fabricProfile).width;
     if (typeof w === 'number' && w > 0) strokeWidth = w;
     else if (shape.art.strokeWidth && shape.art.strokeWidth > 0) strokeWidth = shape.art.strokeWidth;
   }

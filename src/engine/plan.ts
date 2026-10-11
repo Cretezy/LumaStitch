@@ -274,7 +274,7 @@ export function* planGenerator(design: Design, opts: BuildOptions = {}): Generat
       continue;
     }
     const def = getStitchType(el.type);
-    const params = resolveParams(el, design.fabric);
+    const params = resolveParams(el, design.fabric, design.fabricProfile);
     const elDiags: Diagnostic[] = [];
 
     // Cutout growth clip: union of fills sewn later whose bboxes touch this one.

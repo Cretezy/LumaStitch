@@ -165,10 +165,28 @@ export interface LetteringGroup {
   matrix: Matrix;
 }
 
+export interface FabricProfile {
+  name: string;
+  baseFabric: FabricId;
+  fillSpacing: number;
+  satinSpacing: number;
+  pullComp: number;
+  fillUnderlay: 'none' | 'edge' | 'tatami' | 'edgeTatami';
+  satinUnderlay:
+    'auto' | 'none' | 'center' | 'edge' | 'zigzag' | 'centerZigzag' | 'edgeZigzag' | 'centerEdge';
+  underlaySpacing: number;
+  stabilizer: string;
+  needle: string;
+  thread: string;
+  notes: string;
+}
+
 export interface Design {
   schemaVersion: 1;
   name: string;
   fabric: FabricId;
+  /** Portable calibration defaults; explicit element overrides still take precedence. */
+  fabricProfile?: FabricProfile;
   /** Colour of the fabric (canvas background, exports on fabric); default DEFAULT_FABRIC_COLOR. */
   fabricColor?: string;
   threadChart: string;
