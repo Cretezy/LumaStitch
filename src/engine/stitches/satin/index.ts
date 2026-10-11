@@ -7,6 +7,8 @@ import { F } from '../../types';
 import { RunBuilder } from '../common';
 import { orderPaths, type PathItem } from '../running';
 import { exactRouteStates } from '../running/exactOrder';
+import { buildRunningNetwork, type RunningNetwork } from '../running/network';
+import { routeSatinBranches } from './branches';
 import {
   columnFromCenterline,
   resolveSatinUnderlay,
@@ -133,6 +135,7 @@ export const satinCommonDefaults = {
 };
 
 export interface SatinColumnPrep {
+  network?: RunningNetwork;
   paths: PathItem[];
   halfWidth: number;
   width: number;
@@ -147,6 +150,7 @@ export interface SatinColumnPrep {
 }
 
 function routeColumns(prep: SatinColumnPrep, entry?: [number, number], exit?: [number, number]) {
+  if (prep.network) return routeSatinBranches(prep.network, prep.halfWidth, prep, entry, exit);
   const b = new RunBuilder();
   // Price the actual entry/exit needle points, including the underlay passes and rail offsets.
   // Keep both directions intact: choosing a nearest entry again would undo the joint solution.
@@ -243,8 +247,15 @@ export const satinDef: StitchTypeDef<SatinColumnPrep> = {
       allowAuto: true,
     },
     ...satinCommonParams,
+    {
+      key: 'connectBranches',
+      label: 'Connect satin branches',
+      help: 'Route intersecting centerlines continuously. Extra running underpaths are covered by the final satin pass. Junctions can be denser; inspect a sample.',
+      kind: 'boolean',
+      group: 'advanced',
+    },
   ],
-  defaults: { width: 'auto', ...satinCommonDefaults },
+  defaults: { width: 'auto', ...satinCommonDefaults, connectBranches: false },
   appliesTo: (s) => s.hasClosed || s.hasOpen,
   prepare(geom, params, _el, ctx) {
     const wParam = params.width;
@@ -254,8 +265,16 @@ export const satinDef: StitchTypeDef<SatinColumnPrep> = {
       ctx.diag('satin-wide', `Satin is ${width.toFixed(1)} mm wide; above 8 mm stitches may snag.`);
     if (width < 1)
       ctx.diag('satin-narrow', `Satin is only ${width.toFixed(1)} mm wide; consider a triple run.`);
+    const paths = flattenToPaths(geom, ctx.tolerance);
+    const network = bool(params, 'connectBranches') ? (buildRunningNetwork(paths) ?? undefined) : undefined;
+    if (bool(params, 'connectBranches') && !network)
+      ctx.diag(
+        'satin-network-limit',
+        'Satin branch routing exceeded the geometry limit or found no usable paths; using separate columns.',
+      );
     return {
-      paths: flattenToPaths(geom, ctx.tolerance),
+      paths,
+      network,
       width,
       halfWidth: width / 2 + pull,
       density: num(params, 'density', 0.4),

@@ -126,3 +126,7 @@ Design settings now saves custom spacing, compensation and underlay defaults wit
 ### Multi-hooping
 
 File → Multi-hooping export splits a large stitch plan into overlapping rectangular fields. Numbered ZIP packages include machine files, editable stitch projects, the source project, shared registration marks, basting frames, a placement SVG and a manifest. All five machine formats receive decoded field-fit checks. [Complete three-hoop example and GIFs](docs/hooping/README.md).
+
+### Connected satin branches
+
+Combine intersecting paths, choose Satin, then enable **Advanced → Connect satin branches**. Repeated branch visits become running underpaths covered by the final satin pass. [Fern before/after projects, machine files and GIFs](docs/satin-branches/README.md).

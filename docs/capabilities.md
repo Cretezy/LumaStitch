@@ -4,7 +4,7 @@ This is the acceptance ledger for the expanded LumaStitch scope. A feature is co
 
 | Capability | Current evidence | Remaining acceptance work |
 | --- | --- | --- |
-| Running, satin, tatami routing | [Measured before/after cases](routing/README.md), [complete examples and GIFs](stitch-examples/README.md) | Broader real-design corpus; satin splitting and branch underpaths |
+| Running, satin, tatami routing | [Measured before/after cases](routing/README.md), [complete examples and GIFs](stitch-examples/README.md) | [Connected centerline satin branches](satin-branches/README.md) delivered; satin splitting, variable-width rail branching and broader real-design corpus remain |
 | Lettering | [118-glyph digitized font, kerning, editable text, multiline/circular layout, monograms, batch names, project round-trip and GIF examples](lettering/README.md) | Arbitrary-path baselines, additional licensed fonts, font import, script shaping |
 | Density inspection | Exact worker-computed circular penetration map, fixed quantitative legend, four radii; [UI screenshots and calibration fixture](inspection/README.md) | Fabric-specific thresholds backed by physical samples |
 | Fabric calibration | Four starter presets, [calibration sampler](inspection/README.md), [portable custom profiles and example GIF](fabric/README.md) with inherited defaults and recorded setup notes | Recorded physical sew-out results |
