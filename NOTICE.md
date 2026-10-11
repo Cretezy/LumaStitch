@@ -49,3 +49,12 @@ It includes, ports or is derived from the following works. Their copyright notic
 | [zod](https://zod.dev/)                                                                                                                                                   | MIT                   | Project file validation                                                                                                                          |
 | [Mediabunny](https://mediabunny.dev/) ([source](https://github.com/Vanilagy/mediabunny))                                                                                  | MPL-2.0               | MP4/WebM muxing and WebCodecs encoding for the stitch-out video (`src/io/export/video.ts`); used unmodified                                      |
 | [nanoid](https://github.com/ai/nanoid)                                                                                                                                    | MIT                   | Ids                                                                                                                                              |
+
+
+### Geneva Simple Sans embroidery font — CC BY-SA 2.5 and Hershey acknowledgements
+
+- Source: https://github.com/inkstitch/embroidery-fonts/tree/084eac038bf1af5a3a8b881a6cf0cc3340cf6e9b/src/geneva_simple (Ink/Stitch embroidery-fonts contributors).
+- Upstream requested citation: [Geneva-simple typefaces, University of Geneva EduTech Wiki](https://edutechwiki.unige.ch/en/InkStitch_-_Geneva-simple_typefaces).
+- License and original Hershey acknowledgements: [src/lettering/fonts/geneva-simple/LICENSE](src/lettering/fonts/geneva-simple/LICENSE). Font data is separately licensed under [CC BY-SA 2.5](https://creativecommons.org/licenses/by-sa/2.5/), not the application's GPL.
+- The Hershey Fonts were originally created by Dr. A. V. Hershey at the U.S. National Bureau of Standards. Their distribution format was created by James Hurt, Cognition, Inc., 900 Technology Park Drive, Billerica, MA 01821 (mit-eddie!ci-dandelion!hurt).
+- Retained: original `source.svg`, metadata and license. Adaptation: `scripts/extract-lettering-font.py` extracts geometry into JSON; LumaStitch reorders rail/rung subpaths and lays out/rigidly transforms glyphs at runtime. The derived font data remains CC BY-SA 2.5. No proprietary commercial fonts are included.

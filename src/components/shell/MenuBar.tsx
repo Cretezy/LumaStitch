@@ -20,6 +20,7 @@ import * as A from '@/store/actions';
 import { arrange, insertStop, moveElements, selectedElementIds, setElementEnabled } from '@/store/commands';
 import { useDoc } from '@/store/documentStore';
 import { useUi, type ViewMode } from '@/store/uiStore';
+import { detachLettering, selectedLetteringId } from '@/store/commands/lettering';
 import { sim } from '@/simulator/controller';
 
 export function MenuBar() {
@@ -124,6 +125,25 @@ export function MenuBar() {
       <MenubarMenu>
         <MenubarTrigger>Object</MenubarTrigger>
         <MenubarContent>
+          <MenubarItem disabled={sim_} onSelect={() => ui.openDialog('lettering')}>
+            Add lettering…
+          </MenubarItem>
+          <MenubarItem
+            disabled={sim_ || !selectedLetteringId()}
+            onSelect={() => ui.openDialog('lettering', { groupId: selectedLetteringId() })}
+          >
+            Edit lettering…
+          </MenubarItem>
+          <MenubarItem
+            disabled={sim_ || !selectedLetteringId()}
+            onSelect={() => {
+              const id = selectedLetteringId();
+              if (id) detachLettering(id);
+            }}
+          >
+            Detach lettering
+          </MenubarItem>
+          <MenubarSeparator />
           <MenubarItem disabled={!has} onSelect={() => A.flip('h')}>
             Flip horizontal
           </MenubarItem>

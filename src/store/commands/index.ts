@@ -145,6 +145,12 @@ export function duplicateShapes(ids: Id[], offset: Vec2 = [2, 2]): Id[] {
 }
 
 function applyTransform(d: D, ids: Id[], m: Matrix) {
+  for (const [key, group] of Object.entries(d.lettering ?? {})) {
+    const hits = group.shapeIds.filter((id) => ids.includes(id));
+    if (!hits.length) continue;
+    if (hits.length === group.shapeIds.length) group.matrix = compose(m, group.matrix as Matrix);
+    else delete d.lettering![key];
+  }
   const scaleWidths = d.settings.scaleStrokeWidths;
   const s = Math.sqrt(Math.abs(m[0] * m[3] - m[1] * m[2]));
   for (const id of ids) {

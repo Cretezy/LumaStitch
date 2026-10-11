@@ -64,5 +64,7 @@ export function repairDesign(d: Design): Design {
         d.threads[el.threadId] = { id: el.threadId, name: 'Missing thread', color: '#000000' };
     }
   }
+  for (const [id, group] of Object.entries(d.lettering ?? {}))
+    if (!group.shapeIds.length || group.shapeIds.some((sid) => !d.shapes[sid])) delete d.lettering![id];
   return d;
 }

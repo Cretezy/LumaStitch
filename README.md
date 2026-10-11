@@ -25,6 +25,7 @@ No account · No upload · Works offline · Free and open source (GPL-3.0)
 - **Import SVG or images.** SVGs from Illustrator, Inkscape, Figma and friends keep their shapes, holes and transforms. PNG, JPG and WebP artwork is reduced to thread colours and traced into editable shapes.
 - **Auto-digitize.** Every shape gets a sensible stitch type (tatami fill, satin columns, running stitch) and a thread colour, sewn in an optimised order with few trims.
 - **Optimize stitch routes.** Exact small-route ordering, precedence-aware colour sequencing and an optional intersection router for running/bean networks. [Measured before/after and Ink/Stitch comparison](docs/routing/README.md).
+- **Editable embroidery lettering.** Digitized satin rails, kerning, multiline and curved text, monograms and batch names with project/PES ZIP downloads. [Complete examples and GIFs](docs/lettering/README.md).
 - **Edit like a vector app.** Select, move, scale, rotate and edit nodes; draw shapes; combine them with booleans; set stitch angle, density, underlay, compensation and start/end points per shape.
 - **Many stitch types.** Tatami, satin, contour, meander, ripple, gradient and pattern fills, cross-stitch, appliqué, triple run, bean, motif and blanket stitches.
 - **Complete stitch examples.** [Satin and tatami designs](docs/stitch-examples/README.md) with animated GIF stitch-outs, before/after comparisons, editable projects, SVG artwork and PES/DST downloads.
@@ -60,6 +61,7 @@ The PES, DST, JEF, EXP and VP3 writers are byte-for-byte ports of [pyembroidery]
 
 ## Documentation
 
+- [Capability acceptance ledger](docs/capabilities.md): comparison targets, evidence and outstanding work
 - [SPEC.md](./SPEC.md): what LumaStitch does and why
 - [ARCHITECTURE.md](./ARCHITECTURE.md): how it is built
 - [LICENSE](./LICENSE) (GPL-3.0-or-later) and [NOTICE.md](./NOTICE.md) (third-party code and data)

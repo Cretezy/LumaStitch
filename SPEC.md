@@ -417,17 +417,19 @@ The image digitizer turns pixels into the same kind of shapes an SVG import prod
 | Accessibility     | Every common action has a keyboard shortcut. UI controls use accessible Radix/shadcn primitives.                                                                                                                                                                                                                                               |
 | Licensing         | **GPL-3.0-or-later**, open source. Ink/Stitch (GPL-3.0) algorithms, code and thread palettes may be ported, and potrace (GPL-2.0-or-later) may be used, keeping their copyright notices and attribution. pyembroidery (MIT) is the reference for PES.                                                                                          |
 
-## 11. Out of scope for v1
+## 11. Expanded scope and remaining work
+
+The capability expansion supersedes the original v1 exclusions. Track acceptance and gaps in [docs/capabilities.md](docs/capabilities.md).
+
+Implemented beyond the initial scope: editable digitized lettering (Geneva Simple Sans, 10–20 mm capital height, kerning, multiline spacing, circular baselines, three-letter monograms and batch project/PES output); DST/JEF/EXP/VP3 export; appliqué, motifs, patterns, gradients, meander, ripple and cross-stitch; manual needle editing; PDF worksheets. Lettering is added/edited from the Object menu. Full-block transforms preserve its editable text; direct path edits detach it into ordinary digitized paths. Unsupported characters are reported, never silently substituted.
+
+Still outside the completed implementation:
 
 - Photo-realistic image digitizing ("photo stitch"). Photos are posterised into flat colour regions instead.
-- Lettering and fonts. SVG text must be converted to outlines first.
-- Export formats other than PES (DST for commercial machines, JEF for Janome, EXP for Bernina, VP3 for Husqvarna/Pfaff, and others). The architecture supports adding them, and pyembroidery has writers to port.
-- Appliqué wizard, motif and pattern fills, gradient fills, meander, ripple, 3D puff, sequins, cross-stitch.
-- Editing individual stitches by hand.
-- Hoop selection and hoop-size checks (by design, §7); splitting across multiple hoopings.
+- Advanced satin branching, arbitrary guided fills, editable machine imports, optional hoop checks and multiple hoopings (now planned).
+- 3D puff, sequins, beads and cording with validated hardware workflows.
 - Sending directly to a machine (USB or Wi-Fi), cloud storage, accounts, collaboration.
 - Mobile and touch layouts.
-- PDF production worksheets (P2).
 
 ## 12. v1 acceptance criteria
 

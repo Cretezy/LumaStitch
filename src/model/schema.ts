@@ -30,6 +30,7 @@ const element = z.object({
     'motifRun',
     'blanket',
     'manual',
+    'satinColumn',
   ]),
   threadId: z.string(),
   params: z.record(z.string(), z.union([z.number(), z.boolean(), z.string()])),
@@ -123,6 +124,26 @@ export const designSchema = z.object({
     ]),
   ),
   artwork: artwork.optional(),
+  lettering: z
+    .record(
+      z.string(),
+      z.object({
+        options: z.object({
+          font: z.literal('geneva-simple'),
+          text: z.string().max(1000),
+          height: z.number().min(10).max(20),
+          letterSpacing: z.number().min(-5).max(20),
+          wordSpacing: z.number().min(0).max(30),
+          lineSpacing: z.number().min(1).max(4),
+          align: z.enum(['left', 'center', 'right']),
+          arcAngle: z.number().min(-300).max(300),
+          monogram: z.boolean(),
+        }),
+        shapeIds: z.array(z.string()),
+        matrix,
+      }),
+    )
+    .optional(),
 });
 
 export const PROJECT_FORMAT = 'lumastitch-project';

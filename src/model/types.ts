@@ -56,7 +56,8 @@ export type FillType =
   | 'patternFill'
   | 'crossStitch'
   | 'applique';
-export type OutlineType = 'running' | 'triple' | 'satin' | 'zigzag' | 'motifRun' | 'blanket' | 'manual';
+export type OutlineType =
+  'running' | 'triple' | 'satin' | 'zigzag' | 'motifRun' | 'blanket' | 'manual' | 'satinColumn';
 export type StitchType = FillType | OutlineType;
 export type ParamValue = number | boolean | string;
 export type TieMode = 'auto' | 'on' | 'off';
@@ -142,6 +143,25 @@ export type Artwork = { matrix: Matrix; visible: boolean; opacity: number } & (
   | { kind: 'image'; dataUrl: string; pxWidth: number; pxHeight: number; trace: TraceSettings }
 );
 
+export interface LetteringOptions {
+  font: 'geneva-simple';
+  text: string;
+  /** Capital height in mm; supported range 10–20 mm. */
+  height: number;
+  letterSpacing: number;
+  wordSpacing: number;
+  lineSpacing: number;
+  align: 'left' | 'center' | 'right';
+  arcAngle: number;
+  monogram: boolean;
+}
+
+export interface LetteringGroup {
+  options: LetteringOptions;
+  shapeIds: Id[];
+  matrix: Matrix;
+}
+
 export interface Design {
   schemaVersion: 1;
   name: string;
@@ -157,6 +177,7 @@ export interface Design {
   /** Sewing order. */
   sequence: SequenceEntry[];
   artwork?: Artwork;
+  lettering?: Record<Id, LetteringGroup>;
 }
 
 export const CURRENT_SCHEMA_VERSION = 1 as const;

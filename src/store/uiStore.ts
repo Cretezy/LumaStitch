@@ -26,6 +26,7 @@ export type DialogId =
   | 'myThreads'
   | 'newDesign'
   | 'about'
+  | 'lettering'
   | null;
 
 export interface NodeRef {

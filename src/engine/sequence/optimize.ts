@@ -134,6 +134,14 @@ function optimizeSegment(design: Design, opts: OptimizeOpts): SequenceEntry[] {
   // Elements that are not being re-placed keep their relative order.
   for (let k = 1; k < fixedIdx.length; k++) edge(fixedIdx[k - 1], fixedIdx[k]);
 
+  // Digitized letters contain authored underpaths followed by covering satin. Preserve that
+  // dependency until a column-aware router can replace the underpaths as well as the order.
+  for (const group of Object.values(design.lettering ?? {})) {
+    const members = new Set(group.shapeIds);
+    const ordered = nodes.map((n, i) => (members.has(n.shapeId) ? i : -1)).filter((i) => i >= 0);
+    for (let i = 1; i < ordered.length; i++) edge(ordered[i - 1], ordered[i]);
+  }
+
   // Distance from a point to an element's bounding box (0 inside).
   const distTo = (p: [number, number], i: number) => {
     const b = nodes[i].bbox;

@@ -791,3 +791,10 @@ The app is a static Vite build served by Workers static assets. There is no Work
 - **Limits to remember**: each static asset must be under 25 MiB (the potrace WASM is far below this). Vite's content-hashed `/assets/*` filenames make long-lived immutable caching safe, while `index.html` is revalidated, so a new deploy reaches users on their next load.
 - **No cross-origin isolation** (COOP/COEP) is needed in v1, because nothing uses `SharedArrayBuffer`. If threaded WASM is added later, add those headers to `_headers`.
 - **Offline (P2)**: a service worker precaching the build (e.g. `vite-plugin-pwa`) makes the app installable and fully offline.
+
+
+## Digitized lettering
+
+`src/lettering` lays out the pinned Geneva Simple Sans embroidery font. Licensed source SVG, metadata and the reproducible extraction script are retained; JSON contains the original paths, transforms, underlay and compensation. Rail/rung intersection topology identifies the two satin rails; monotonic rung positions pair arc-length samples. `satinColumn` generates density-controlled satin and underlay from these explicit rails without skeleton inference. SVG paths and ordinary running underpaths preserve the font's authored sewing order.
+
+Layout supports source kerning/advance widths, NFC characters, multiline alignment/spacing, a circular baseline using rigid glyph rotations, and three-initial monograms. Unsupported characters and sizes are errors. `Design.lettering` stores text options, member shape IDs and an affine matrix. Whole-block transforms update that matrix; geometry changes to individual members or member deletion detach the editable text. Text regeneration replaces members in place in the sequence as one undo step. The resulting shapes remain ordinary editable geometry. Batch project/PES ZIP generation runs in a dedicated worker and terminates after export.

@@ -14,6 +14,7 @@ import { patternFillDef } from './stitches/patternFill';
 import { rippleDef } from './stitches/ripple';
 import { runningDef, tripleDef } from './stitches/running';
 import { satinDef, zigzagDef } from './stitches/satin';
+import { satinColumnDef } from './stitches/satinColumn';
 import { satinFillDef } from './stitches/satinFill';
 import { tatamiDef } from './stitches/tatami';
 import { perPart } from './stitches/multipart';
@@ -32,6 +33,7 @@ for (const d of [
   runningDef,
   tripleDef,
   satinDef,
+  satinColumnDef,
   zigzagDef,
 ])
   registerStitchType(d);

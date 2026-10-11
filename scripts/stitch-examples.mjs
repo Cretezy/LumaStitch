@@ -29,7 +29,7 @@ try {
   browser = await chromium.launch();
   const page = await browser.newPage();
   await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/__stitch_examples`);
-  const { stitchExamples } = await server.ssrLoadModule('/tests/routing/stitch-examples.ts');
+  const { stitchExamples } = await server.ssrLoadModule(process.env.EXAMPLES_MODULE ?? '/tests/routing/stitch-examples.ts');
   const { buildPlan } = await server.ssrLoadModule('/src/engine/plan.ts');
   const { optimizeSequence } = await server.ssrLoadModule('/src/engine/sequence/optimize.ts');
   const { serializeProject } = await server.ssrLoadModule('/src/model/schema.ts');
@@ -37,10 +37,10 @@ try {
   const { pesFormat } = await server.ssrLoadModule('/src/io/export/pesFormat.ts');
   const { dstFormat } = await server.ssrLoadModule('/src/io/export/machineFormats.ts');
   const metrics = [];
-  for (const { name, design } of stitchExamples()) {
+  for (const { name, design, optimize = true } of stitchExamples()) {
     const dir = join(out, name);
     mkdirSync(dir, { recursive: true });
-    design.sequence = optimizeSequence(design);
+    if (optimize) design.sequence = optimizeSequence(design);
     const plan = buildPlan(design);
     if (plan.diagnostics.some((d) => d.severity === 'error'))
       throw new Error(JSON.stringify(plan.diagnostics));
