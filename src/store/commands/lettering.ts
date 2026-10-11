@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { letteringBaseline } from '@/lettering/baseline';
 import { layoutLettering } from '@/lettering/layout';
 import { IDENTITY } from '@/geom/matrix';
 import { newId } from '@/lib/ids';
@@ -14,7 +15,12 @@ export function selectedLetteringId(): string | undefined {
   )?.[0];
 }
 
-export function setLettering(options: LetteringOptions, color: string, groupId?: string): string {
+export function setLettering(
+  options: LetteringOptions,
+  color: string,
+  groupId?: string,
+  baselineSourceId?: string,
+): string {
   const design = useDoc.getState().design;
   if (!design) throw new Error('Open a design first.');
   const old = groupId ? design.lettering?.[groupId] : undefined;
@@ -31,6 +37,13 @@ export function setLettering(options: LetteringOptions, color: string, groupId?:
         'The letters are interleaved with other sewing operations. Restore their contiguous order before editing text, or use Object → Detach lettering to edit its paths.',
       );
   }
+  if (baselineSourceId && (!design.shapes[baselineSourceId] || design.shapes[baselineSourceId].locked))
+    throw new Error('Select an unlocked baseline path.');
+  if (
+    baselineSourceId &&
+    Object.values(design.lettering ?? {}).some((g) => g.shapeIds.includes(baselineSourceId))
+  )
+    throw new Error('Use Edit lettering for an existing lettering baseline.');
   const id = groupId ?? newId('text');
   const thread = Object.values(design.threads).find((t) => t.color.toLowerCase() === color.toLowerCase()) ?? {
     id: newId('t'),
@@ -39,10 +52,12 @@ export function setLettering(options: LetteringOptions, color: string, groupId?:
   };
   const matrix = old?.matrix ?? IDENTITY;
   const shapes = layoutLettering(options, thread.id, color, matrix);
+  const baseline = letteringBaseline(options, matrix);
+  if (baseline) shapes.push(baseline);
   exec(
     old ? 'Edit lettering' : 'Add lettering',
     (d) => {
-      const removed = new Set(old?.shapeIds ?? []);
+      const removed = new Set(old?.shapeIds ?? (baselineSourceId ? [baselineSourceId] : []));
       const elements = new Set(
         [...removed].flatMap((sid) => [d.shapes[sid]?.fill?.id, d.shapes[sid]?.outline?.id]),
       );
@@ -59,10 +74,17 @@ export function setLettering(options: LetteringOptions, color: string, groupId?:
       d.sequence.splice(
         seqIndex,
         0,
-        ...shapes.map((s) => ({ kind: 'element' as const, elementId: s.outline!.id })),
+        ...shapes
+          .filter((s) => s.outline)
+          .map((s) => ({ kind: 'element' as const, elementId: s.outline!.id })),
       );
       d.lettering ??= {};
-      d.lettering[id] = { options, matrix, shapeIds: shapes.map((s) => s.id) };
+      d.lettering[id] = {
+        options,
+        matrix,
+        shapeIds: shapes.map((s) => s.id),
+        ...(baseline ? { baselineShapeId: baseline.id } : {}),
+      };
     },
     { selection: { shapeIds: shapes.map((s) => s.id), elementIds: [], nodes: [] } },
   );
@@ -73,4 +95,15 @@ export function detachLettering(id: string): void {
   exec('Detach lettering', (d) => {
     if (d.lettering) delete d.lettering[id];
   });
+}
+
+export function editLetteringBaseline(): void {
+  const id = selectedLetteringId();
+  const sid = id && useDoc.getState().design?.lettering?.[id]?.baselineShapeId;
+  if (!sid) {
+    useUi.getState().showToast('Select lettering with a path baseline.');
+    return;
+  }
+  useUi.getState().setSelection({ shapeIds: [sid], elementIds: [], nodes: [] });
+  useUi.getState().setTool('direct');
 }

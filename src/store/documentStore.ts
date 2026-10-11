@@ -2,6 +2,7 @@
 /** The undoable document. Every change goes through exec(label, recipe). */
 import { create } from 'zustand';
 import { current, isDraft, produce, type Draft } from 'immer';
+import { BaselineEditError, reflowLetteringBaselines } from '@/lettering/baseline';
 import { checkInvariants } from '@/model/invariants';
 import type { Design } from '@/model/types';
 import { EMPTY_SELECTION, useUi, type Selection } from './uiStore';
@@ -50,25 +51,36 @@ export const useDoc = create<DocState>((set, get) => ({
       useUi.getState().showToast('Stop the simulation to edit the design.');
       return;
     }
-    const next = produce(design, (draft) => {
-      recipe(draft);
-      // Editing individual letter paths detaches their text block; a whole-block transform
-      // updates the saved matrix and keeps text editable. Never leave dangling text members.
-      for (const [id, group] of Object.entries(draft.lettering ?? {})) {
-        const old = design.lettering?.[id];
-        const missing = group.shapeIds.some((sid) => !draft.shapes[sid]);
-        const unchangedDefinition = old && JSON.stringify(old) === JSON.stringify(group);
-        const editedGeometry =
-          !missing &&
-          unchangedDefinition &&
-          group.shapeIds.some(
-            (sid) =>
-              design.shapes[sid]?.geom !==
-              (isDraft(draft.shapes[sid].geom) ? current(draft.shapes[sid].geom) : draft.shapes[sid].geom),
-          );
-        if (missing || editedGeometry) delete draft.lettering![id];
-      }
-    });
+    let next: Design;
+    try {
+      next = produce(design, (draft) => {
+        recipe(draft);
+        reflowLetteringBaselines(draft, design);
+        // Editing individual letter paths detaches their text block; a whole-block transform
+        // updates the saved matrix and keeps text editable. Never leave dangling text members.
+        for (const [id, group] of Object.entries(draft.lettering ?? {})) {
+          const old = design.lettering?.[id];
+          const missing = group.shapeIds.some((sid) => !draft.shapes[sid]);
+          const unchangedDefinition = old && JSON.stringify(old) === JSON.stringify(group);
+          const editedGeometry =
+            !missing &&
+            unchangedDefinition &&
+            group.shapeIds.some(
+              (sid) =>
+                sid !== group.baselineShapeId &&
+                design.shapes[sid]?.geom !==
+                  (isDraft(draft.shapes[sid].geom)
+                    ? current(draft.shapes[sid].geom)
+                    : draft.shapes[sid].geom),
+            );
+          if (missing || editedGeometry) delete draft.lettering![id];
+        }
+      });
+    } catch (error) {
+      if (!(error instanceof BaselineEditError)) throw error;
+      useUi.getState().showToast(error.message, 'error');
+      return;
+    }
     if (next === design) {
       if (opts?.selection) useUi.getState().setSelection(opts.selection);
       return;

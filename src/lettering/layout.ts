@@ -5,7 +5,7 @@ import metadata from './fonts/geneva-simple/metadata.json';
 import { flattenSubpath } from '@/geom/flatten';
 import { compose, IDENTITY, rotateScreen, scale, translate } from '@/geom/matrix';
 import { parsePathData } from '@/geom/pathData';
-import { cumulativeLengths } from '@/geom/polyline';
+import { cumulativeLengths, pointAtLength } from '@/geom/polyline';
 import { columnFromRails } from '@/engine/stitches/satinColumn';
 import { parseTransform } from '@/io/svg-import/tree';
 import { createElement, createShape } from '@/model/factories';
@@ -139,6 +139,20 @@ export function validateLettering(o: LetteringOptions): void {
       'Monograms need a capital height of at least 13.34 mm to keep the smaller initials within the font range.',
     );
   if (o.arcAngle && o.text.includes('\n')) throw new Error('Curved lettering uses one line.');
+  if (o.baseline) {
+    if (o.arcAngle || o.text.includes('\n'))
+      throw new Error('A path baseline uses one line and no circular arc.');
+    if (
+      o.baseline.subpaths.length !== 1 ||
+      o.baseline.subpaths[0].closed ||
+      o.baseline.subpaths[0].nodes.length < 2
+    )
+      throw new Error('The lettering baseline must be one open path.');
+    if (o.baseline.subpaths[0].nodes.length > 2000 || o.baseline.subpaths[0].nodes.some((n) => n.command))
+      throw new Error('Use a vector baseline with at most 2,000 nodes.');
+    if (!Number.isFinite(o.baselineOffset ?? 0) || Math.abs(o.baselineOffset ?? 0) > 100)
+      throw new Error('Baseline offset must be between -100 and 100 mm.');
+  }
 }
 
 export function layoutLettering(
@@ -150,6 +164,17 @@ export function layoutLettering(
   validateLettering(options);
   const o = { ...options, text: options.text.normalize('NFC') };
   const unit = o.height / CAP_HEIGHT;
+  let baseline = o.baseline ? flattenSubpath(o.baseline.subpaths[0], 0.03) : undefined;
+  if (baseline && o.baselineReverse) {
+    const reverse = new Float64Array(baseline.length);
+    for (let i = 0; i < baseline.length; i += 2) {
+      reverse[i] = baseline[baseline.length - 2 - i];
+      reverse[i + 1] = baseline[baseline.length - 1 - i];
+    }
+    baseline = reverse;
+  }
+  const lengths = baseline ? cumulativeLengths(baseline) : undefined;
+  const baselineLength = lengths?.at(-1) ?? 0;
   const shapes: Shape[] = [];
   for (const [lineIndex, line] of o.text.split('\n').entries()) {
     const letters: { char: string; x: number; factor: number; advance: number }[] = [];
@@ -170,11 +195,31 @@ export function layoutLettering(
     const offset = o.align === 'center' ? -x / 2 : o.align === 'right' ? -x : 0;
     const angle = (o.arcAngle * Math.PI) / 180;
     const radius = angle ? x / angle : 0;
+    if (baseline && (!(x > 0) || x > baselineLength + 1e-6))
+      throw new Error(
+        `Text needs ${x.toFixed(1)} mm along the baseline; the path provides ${baselineLength.toFixed(1)} mm. Lengthen the path, reduce text/spacing, or choose a smaller supported height.`,
+      );
     for (const letter of letters) {
       if (letter.char === ' ') continue;
       const center = letter.x + letter.advance / 2;
       let placement: Matrix;
-      if (angle) {
+      if (baseline && lengths) {
+        const margin =
+          o.align === 'center' ? (baselineLength - x) / 2 : o.align === 'right' ? baselineLength - x : 0;
+        const at = margin + center;
+        if (at < 0 || at > baselineLength)
+          throw new Error('Letter spacing places a glyph outside the baseline.');
+        const p = pointAtLength(baseline, lengths, at);
+        const a = pointAtLength(baseline, lengths, Math.max(0, at - 0.05));
+        const b = pointAtLength(baseline, lengths, Math.min(baselineLength, at + 0.05));
+        const theta = Math.atan2(b[1] - a[1], b[0] - a[0]);
+        const shift = o.baselineOffset ?? 0;
+        placement = compose(
+          translate(p[0] - Math.sin(theta) * shift, p[1] + Math.cos(theta) * shift),
+          rotateScreen((-theta * 180) / Math.PI),
+          translate(-letter.advance / 2, 0),
+        );
+      } else if (angle) {
         const t = (center / x - 0.5) * angle;
         placement = compose(
           translate(radius * Math.sin(t), radius * (1 - Math.cos(t))),

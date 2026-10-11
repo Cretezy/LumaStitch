@@ -22,8 +22,15 @@ import { fitSelection } from '@/canvas/CanvasView';
 
 export default function LetteringDialog({ open, onClose, data }: DialogProps) {
   const groupId = data?.groupId as string | undefined;
+  const baselineSourceId = data?.baselineShapeId as string | undefined;
+  const sourceBaseline = useDoc.getState().design?.shapes[baselineSourceId ?? ''];
   const group = useDoc.getState().design?.lettering?.[groupId ?? ''];
-  const [options, setOptions] = useState<LetteringOptions>(group?.options ?? DEFAULT_LETTERING);
+  const [options, setOptions] = useState<LetteringOptions>(
+    group?.options ??
+      (sourceBaseline
+        ? { ...DEFAULT_LETTERING, baseline: structuredClone(sourceBaseline.geom) }
+        : DEFAULT_LETTERING),
+  );
   const first = useDoc.getState().design?.shapes[group?.shapeIds[0] ?? ''];
   const threadId = first?.outline?.threadId;
   const [color, setColor] = useState(
@@ -36,7 +43,7 @@ export default function LetteringDialog({ open, onClose, data }: DialogProps) {
   function apply() {
     try {
       validateLettering(options);
-      setLettering(options, color, groupId);
+      setLettering(options, color, groupId, baselineSourceId);
       onClose();
       requestAnimationFrame(fitSelection);
     } catch (e) {
@@ -107,6 +114,7 @@ export default function LetteringDialog({ open, onClose, data }: DialogProps) {
                   max={max}
                   step={step}
                   value={options[key]}
+                  disabled={Boolean(options.baseline) && (key === 'arcAngle' || key === 'lineSpacing')}
                   onChange={(e) => patch({ [key]: e.target.valueAsNumber })}
                 />
               </div>
@@ -116,6 +124,35 @@ export default function LetteringDialog({ open, onClose, data }: DialogProps) {
               <Input id="text-color" type="color" value={color} onChange={(e) => setColor(e.target.value)} />
             </div>
           </div>
+          {options.baseline && (
+            <fieldset className="grid gap-2 rounded border p-3">
+              <legend className="px-1 text-sm">Path baseline</legend>
+              <Label htmlFor="baseline-offset">Offset from baseline (mm)</Label>
+              <Input
+                id="baseline-offset"
+                type="number"
+                min={-100}
+                max={100}
+                step={0.5}
+                value={options.baselineOffset ?? 0}
+                onChange={(e) => patch({ baselineOffset: e.target.valueAsNumber })}
+              />
+              <label className="flex gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={options.baselineReverse ?? false}
+                  onChange={(e) => patch({ baselineReverse: e.target.checked })}
+                />
+                Reverse baseline direction
+              </label>
+              <p className="text-xs text-muted-foreground">
+                Letters keep their shape and follow the path tangent. Use Object → Edit lettering baseline to
+                move its nodes. Baseline edits clear custom stitch entry/exit and direction hints. Alignment
+                positions text along the available path; text must fit without shrinking below the font's
+                supported size.
+              </p>
+            </fieldset>
+          )}
           <Label htmlFor="text-align">Alignment</Label>
           <select
             id="text-align"

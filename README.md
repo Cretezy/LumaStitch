@@ -138,3 +138,7 @@ Select an open satin outline or rail column and choose **Object → Split satin 
 ### Appliqué production
 
 Use **Pre-cut fabric** to skip the trimming stop, and **Omit covered satin** to remove cover edges hidden by later appliqué patches. **File → Appliqué cutting export** produces numbered SVG/DXF pieces with holes, allowance, mirroring and a reference layout. [Complete overlapping-patch example, cutting ZIP and GIFs](docs/applique/README.md).
+
+### Lettering along editable paths
+
+Select an open curve and choose **Object → Add lettering on path**. Set alignment, normal offset or reversed direction, then use **Object → Edit lettering baseline** to reshape the guide. Letters reposition with the committed edit and remain editable as text. [Straight/curved projects, GIFs and baseline editor](docs/lettering-path/README.md).

@@ -37,6 +37,7 @@ const ShapePath = memo(function ShapePath({
 }) {
   const d = geomToD(shape.geom);
   const guided = shape.fill?.type === 'guidedFill';
+  const baseline = Object.values(design.lettering ?? {}).some((g) => g.baselineShapeId === shape.id);
   const p = paintOf(design, shape);
   const art = mode === 'artwork';
   const tf = transform ? `matrix(${transform.join(' ')})` : undefined;
@@ -56,7 +57,7 @@ const ShapePath = memo(function ShapePath({
         strokeLinecap="round"
         style={{ cursor: shape.locked ? 'not-allowed' : undefined }}
       />
-      {guided && (
+      {(guided || baseline) && (
         <path
           d={geomToD(subpathKind(shape.geom, false))}
           fill="none"
@@ -124,6 +125,7 @@ function CanvasShapes({ design, mode }: { design: Design; mode: 'artwork' | 'sti
       if (m) ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
       const p = paintOf(design, s);
       const guided = s.fill?.type === 'guidedFill';
+      const baseline = Object.values(design.lettering ?? {}).some((g) => g.baselineShapeId === s.id);
       const path = path2d(guided ? subpathKind(geom, true) : geom);
       if (p.fill !== 'none') {
         ctx.globalAlpha = art ? 1 : 0.12;
@@ -138,7 +140,7 @@ function CanvasShapes({ design, mode }: { design: Design; mode: 'artwork' | 'sti
         ctx.lineCap = 'round';
         ctx.stroke(path);
       }
-      if (guided) {
+      if (guided || baseline) {
         ctx.globalAlpha = 1;
         ctx.strokeStyle = '#008b9b';
         ctx.lineWidth = 1.5 / viewport.zoom;

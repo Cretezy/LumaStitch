@@ -156,10 +156,15 @@ export interface LetteringOptions {
   lineSpacing: number;
   align: 'left' | 'center' | 'right';
   arcAngle: number;
+  /** Editable baseline in lettering-local coordinates; replaces the circular arc. */
+  baseline?: PathGeom;
+  baselineOffset?: number;
+  baselineReverse?: boolean;
   monogram: boolean;
 }
 
 export interface LetteringGroup {
+  baselineShapeId?: Id;
   options: LetteringOptions;
   shapeIds: Id[];
   matrix: Matrix;

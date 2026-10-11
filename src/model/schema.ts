@@ -198,9 +198,13 @@ export const designSchema = z.object({
           lineSpacing: z.number().min(1).max(4),
           align: z.enum(['left', 'center', 'right']),
           arcAngle: z.number().min(-300).max(300),
+          baseline: pathGeom.optional(),
+          baselineOffset: z.number().min(-100).max(100).optional(),
+          baselineReverse: z.boolean().optional(),
           monogram: z.boolean(),
         }),
         shapeIds: z.array(z.string()),
+        baselineShapeId: z.string().optional(),
         matrix,
       }),
     )

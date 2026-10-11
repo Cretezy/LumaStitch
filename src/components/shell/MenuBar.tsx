@@ -20,7 +20,7 @@ import * as A from '@/store/actions';
 import { arrange, insertStop, moveElements, selectedElementIds, setElementEnabled } from '@/store/commands';
 import { useDoc } from '@/store/documentStore';
 import { useUi, type ViewMode } from '@/store/uiStore';
-import { detachLettering, selectedLetteringId } from '@/store/commands/lettering';
+import { detachLettering, selectedLetteringId, editLetteringBaseline } from '@/store/commands/lettering';
 import { sim } from '@/simulator/controller';
 
 export function MenuBar() {
@@ -129,6 +129,15 @@ export function MenuBar() {
         <MenubarContent>
           <MenubarItem disabled={sim_} onSelect={() => ui.openDialog('lettering')}>
             Add lettering…
+          </MenubarItem>
+          <MenubarItem
+            disabled={sim_ || !has || ui.selection.shapeIds.length !== 1}
+            onSelect={() => ui.openDialog('lettering', { baselineShapeId: ui.selection.shapeIds[0] })}
+          >
+            Add lettering on path…
+          </MenubarItem>
+          <MenubarItem disabled={sim_ || !selectedLetteringId()} onSelect={() => editLetteringBaseline()}>
+            Edit lettering baseline
           </MenubarItem>
           <MenubarItem
             disabled={sim_ || !selectedLetteringId()}

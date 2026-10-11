@@ -151,7 +151,7 @@ function applyTransform(d: D, ids: Id[], m: Matrix) {
     const hits = group.shapeIds.filter((id) => ids.includes(id));
     if (!hits.length) continue;
     if (hits.length === group.shapeIds.length) group.matrix = compose(m, group.matrix as Matrix);
-    else delete d.lettering![key];
+    else if (!(hits.length === 1 && hits[0] === group.baselineShapeId)) delete d.lettering![key];
   }
   const scaleWidths = d.settings.scaleStrokeWidths;
   const s = Math.sqrt(Math.abs(m[0] * m[3] - m[1] * m[2]));
