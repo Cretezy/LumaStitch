@@ -144,6 +144,9 @@ export function MenuBar() {
             Detach lettering
           </MenubarItem>
           <MenubarSeparator />
+          <MenubarItem disabled={!has} onSelect={() => A.makeGuidedFill()}>
+            Make guided fill
+          </MenubarItem>
           <MenubarItem disabled={!has} onSelect={() => A.flip('h')}>
             Flip horizontal
           </MenubarItem>

@@ -25,6 +25,7 @@ const element = z.object({
     'contour',
     'meander',
     'ripple',
+    'guidedFill',
     'gradientFill',
     'patternFill',
     'crossStitch',

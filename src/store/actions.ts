@@ -466,6 +466,37 @@ export function combineSelection(): void {
   replaceShapes('Combine', ids, [r], ids[ids.length - 1]);
 }
 
+/** Moves editable guide geometry into one fill shape; all changes undo together. */
+export function makeGuidedFill(): void {
+  if (hasSelectedMachineProgram()) return;
+  const d = useDoc.getState().design;
+  if (!d) return;
+  const ids = editableSelection();
+  const closed = ids.filter((id) => hasClosedSubpath(d.shapes[id].geom));
+  if (
+    closed.length !== 1 ||
+    !ids.some((id) => d.shapes[id].geom.subpaths.some((p) => !p.closed && p.nodes.length >= 2))
+  ) {
+    toast('Select one closed fill shape and one or more open guide paths.');
+    return;
+  }
+  const target = d.shapes[closed[0]];
+  const source = target.fill ?? target.outline;
+  if (!source) {
+    toast('Assign a thread to the fill shape first.');
+    return;
+  }
+  const result: Shape = {
+    ...structuredClone(target),
+    id: newId('s'),
+    name: `${target.name} (guided)`,
+    geom: { ...combine(ids.map((id) => d.shapes[id].geom)), fillRule: target.geom.fillRule },
+    fill: createElement('fill', 'guidedFill', source.threadId, { ...source.params }),
+    outline: null,
+  };
+  replaceShapes('Make guided fill', ids, [result], target.id);
+}
+
 export function breakApart(): void {
   if (hasSelectedMachineProgram()) return;
   const d = useDoc.getState().design;

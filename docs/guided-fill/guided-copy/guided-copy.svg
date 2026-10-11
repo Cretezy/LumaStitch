@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64mm" height="54mm" viewBox="-32 -27 64 54">
+  <title>Guided fill: copy</title>
+  <path id="Curved_fill_with_a_hole" data-name="Curved fill with a hole" d="M30 0C30 13.807 16.569 25 0 25C-16.569 25 -30 13.807 -30 0C-30 -13.807 -16.569 -25 0 -25C16.569 -25 30 -13.807 30 0ZM7 0C7 3.314 3.866 6 0 6C-3.866 6 -7 3.314 -7 0C-7 -3.314 -3.866 -6 0 -6C3.866 -6 7 -3.314 7 0Z" fill="#286e86" fill-rule="evenodd" stroke="none"/>
+  <path data-role="guide" d="M-23 -8C-9 -12 -10 -2 0 0C10 2 9 12 23 8" fill="none" stroke="#008b9b" stroke-width="0.2" stroke-dasharray="1 0.6"/>
+</svg>

@@ -6,6 +6,7 @@ import { appliqueDef } from './stitches/applique';
 import { blanketDef } from './stitches/blanket';
 import { contourDef } from './stitches/contour';
 import { crossStitchDef } from './stitches/crossStitch';
+import { guidedFillDef } from './stitches/guidedFill';
 import { gradientFillDef } from './stitches/gradientFill';
 import { manualDef } from './stitches/manual';
 import { meanderDef } from './stitches/meander';
@@ -40,6 +41,7 @@ for (const d of [
 // P2 types.
 for (const d of [
   patternFillDef,
+  guidedFillDef,
   gradientFillDef,
   perPart(meanderDef),
   perPart(rippleDef),

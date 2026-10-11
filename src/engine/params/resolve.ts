@@ -7,7 +7,10 @@ import type { Params } from './types';
 /** Inherited values: type defaults ← fabric preset (no element overrides). */
 export function inheritedParams(type: StitchType, fabric: FabricId): Params {
   const def = getStitchType(type);
-  const preset = FABRIC_PRESETS[fabric]?.params[type === 'satinColumn' ? 'satinFill' : type] ?? {};
+  const preset =
+    FABRIC_PRESETS[fabric]?.params[
+      type === 'satinColumn' ? 'satinFill' : type === 'guidedFill' ? 'tatami' : type
+    ] ?? {};
   const out: Params = { ...def.defaults };
   for (const k of Object.keys(preset)) if (k in def.defaults) out[k] = preset[k];
   return out;

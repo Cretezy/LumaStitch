@@ -4,7 +4,7 @@ import { memo, useEffect, useRef } from 'react';
 import type { Design, Matrix, Shape } from '@/model/types';
 import { useDoc } from '@/store/documentStore';
 import { useUi, type DragPreview } from '@/store/uiStore';
-import { geomToD } from './pathD';
+import { geomToD, subpathKind } from './pathD';
 
 function paintOf(design: Design, s: Shape) {
   const fillThread = s.fill ? design.threads[s.fill.threadId] : null;
@@ -36,13 +36,14 @@ const ShapePath = memo(function ShapePath({
   transform?: Matrix;
 }) {
   const d = geomToD(shape.geom);
+  const guided = shape.fill?.type === 'guidedFill';
   const p = paintOf(design, shape);
   const art = mode === 'artwork';
   const tf = transform ? `matrix(${transform.join(' ')})` : undefined;
   return (
     <g transform={tf}>
       <path
-        d={d}
+        d={guided ? geomToD(subpathKind(shape.geom, true)) : d}
         data-hit="shape"
         data-id={shape.id}
         fillRule={shape.geom.fillRule}
@@ -55,6 +56,18 @@ const ShapePath = memo(function ShapePath({
         strokeLinecap="round"
         style={{ cursor: shape.locked ? 'not-allowed' : undefined }}
       />
+      {guided && (
+        <path
+          d={geomToD(subpathKind(shape.geom, false))}
+          fill="none"
+          stroke="#008b9b"
+          strokeWidth={1.5}
+          strokeDasharray="5 3"
+          vectorEffect="non-scaling-stroke"
+          data-hit="shape"
+          data-id={shape.id}
+        />
+      )}
       {/* Wider invisible hit area for thin/open paths. */}
       <path
         d={d}
@@ -110,7 +123,8 @@ function CanvasShapes({ design, mode }: { design: Design; mode: 'artwork' | 'sti
       );
       if (m) ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
       const p = paintOf(design, s);
-      const path = path2d(geom);
+      const guided = s.fill?.type === 'guidedFill';
+      const path = path2d(guided ? subpathKind(geom, true) : geom);
       if (p.fill !== 'none') {
         ctx.globalAlpha = art ? 1 : 0.12;
         ctx.fillStyle = p.fill;
@@ -123,6 +137,14 @@ function CanvasShapes({ design, mode }: { design: Design; mode: 'artwork' | 'sti
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
         ctx.stroke(path);
+      }
+      if (guided) {
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = '#008b9b';
+        ctx.lineWidth = 1.5 / viewport.zoom;
+        ctx.setLineDash([5 / viewport.zoom, 3 / viewport.zoom]);
+        ctx.stroke(path2d(subpathKind(geom, false)));
+        ctx.setLineDash([]);
       }
     }
     ctx.globalAlpha = 1;

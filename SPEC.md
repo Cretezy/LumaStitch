@@ -426,7 +426,7 @@ Implemented beyond the initial scope: editable digitized lettering (Geneva Simpl
 Still outside the completed implementation:
 
 - Photo-realistic image digitizing ("photo stitch"). Photos are posterised into flat colour regions instead.
-- Advanced satin branching, arbitrary guided fills and multiple hoopings (now planned).
+- Advanced satin branching and multiple hoopings (now planned).
 - 3D puff, sequins, beads and cording with validated hardware workflows.
 - Sending directly to a machine (USB or Wi-Fi), cloud storage, accounts, collaboration.
 - Mobile and touch layouts.
@@ -474,3 +474,7 @@ View → Needle density map shows the exact number of needle penetrations in a s
 PES/DST/JEF/EXP/VP3 import runs in a worker and creates a manual element per explicit color block. Needle coordinates, duplicate penetrations and explicit jump/trim/stop commands survive project saving and plan regeneration. The node inspector edits command kinds with undo. Moving/scaling changes existing stitch coordinates; density is not regenerated. Path reconstruction operations require disabling Preserve commands first; automatic sequence optimization retains imported block order.
 
 Machine files do not retain original vector boundaries, satin rails, fill parameters or editable text. DST/EXP without embedded thread data require assigning placeholder colors. DST/JEF trim-like jump sequences remain jumps; machine interpretation varies and no heuristic trim inference is applied. PES imported needles re-export without added jump-ending penetrations; coordinates quantize to 0.1 mm. Other output formats apply their documented command/length limitations. Import limits are 50 MB and one million commands; unsupported accessory commands produce errors.
+
+## Arbitrary guide-path fills
+
+Object → Make guided fill combines one closed fill shape with selected open guide paths in one undo step. Open subpaths remain editable guides, rendered separately from filled artwork. Strategies are translated copies (user-selected translation angle), parallel offsets with tangent extension, and buffers around finite guides. Closed subpaths define the fill and holes; clipped guide rows and needle chords stay within the compensated fill, with inset inside travel or jumps. Density, stitch length, compensation and straight edge/tatami underlay are editable. Projects retain guides; SVG export separates guide paths from fill artwork. Excessive work or missing guides produces explicit errors.

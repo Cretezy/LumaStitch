@@ -114,3 +114,7 @@ LumaStitch is free software under the [GNU General Public License v3.0 or later]
 ### Editable machine files
 
 Open or import PES, DST, JEF, EXP and VP3 as editable stitch nodes. Select a node to change needle/jump/trim/stop commands, move needles, or resize the existing stitch program. Imported programs preserve duplicate penetrations and short jumps; they do not regenerate density or recover original lettering/vector objects. [Complete import example and GIF](docs/machine-import/README.md).
+
+### Arbitrary guided fills
+
+Select a closed shape and open guide paths, then **Object → Make guided fill**. Edit the dashed guide with the node tool and choose translated copies, parallel offsets or finite-guide buffers. Holes, pull compensation and straight underlay are supported. [Three complete examples with GIFs](docs/guided-fill/README.md).

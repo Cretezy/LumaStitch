@@ -54,6 +54,7 @@ export type FillType =
   | 'contour'
   | 'meander'
   | 'ripple'
+  | 'guidedFill'
   | 'gradientFill'
   | 'patternFill'
   | 'crossStitch'

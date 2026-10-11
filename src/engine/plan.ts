@@ -478,6 +478,9 @@ export function* planGenerator(design: Design, opts: BuildOptions = {}): Generat
         // so short that one small stitch beats a tie-off, trim and tie-in (and, on machines
         // without a trimmer, a thread to cut by hand).
         const trim =
+          // Guided rows are clipped at holes and disconnected boundaries. A short gap still
+          // represents unstitched space, so its explicit no-inside-path jump must remain a jump.
+          (el.type === 'guidedFill' && (f & F.TRIM) !== 0) ||
           ((f & F.TRIM) !== 0 && d > SHORT_HOP) ||
           (el.trimAfter !== 'never' && (el.trimAfter === 'always' || d > settings.trimThreshold));
         if (trim) {
