@@ -51,6 +51,7 @@ import {
 } from './commands';
 import { exec, useDoc } from './documentStore';
 import { useUi } from './uiStore';
+import { splitSatinShape } from '@/satin/split';
 import { selectionBBox } from '@/tools/selection';
 
 const toast = (m: string, k: 'info' | 'error' | 'success' = 'info') => useUi.getState().showToast(m, k);
@@ -467,6 +468,14 @@ export function combineSelection(): void {
 }
 
 /** Moves editable guide geometry into one fill shape; all changes undo together. */
+export function splitSelectedSatin(fraction: number): void {
+  const d = useDoc.getState().design;
+  const ids = useUi.getState().selection.shapeIds;
+  if (!d || ids.length !== 1 || !d.shapes[ids[0]]) throw new Error('Select one satin column.');
+  const source = d.shapes[ids[0]];
+  replaceShapes('Split satin column', ids, splitSatinShape(source, d, fraction), source.id);
+}
+
 export function makeGuidedFill(): void {
   if (hasSelectedMachineProgram()) return;
   const d = useDoc.getState().design;

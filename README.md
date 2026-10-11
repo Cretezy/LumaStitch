@@ -130,3 +130,7 @@ File → Multi-hooping export splits a large stitch plan into overlapping rectan
 ### Connected satin branches
 
 Combine intersecting paths, choose Satin, then enable **Advanced → Connect satin branches**. Repeated branch visits become running underpaths covered by the final satin pass. [Fern before/after projects, machine files and GIFs](docs/satin-branches/README.md).
+
+### Split satin columns
+
+Select an open satin outline or rail column and choose **Object → Split satin column**. Preview a cut percentage and create two editable rail sections with the current stitch settings. [Curved ribbon example and before/after GIFs](docs/satin-split/README.md).

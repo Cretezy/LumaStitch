@@ -145,6 +145,9 @@ export function MenuBar() {
             Detach lettering
           </MenubarItem>
           <MenubarSeparator />
+          <MenubarItem disabled={!has} onSelect={() => ui.openDialog('satinSplit')}>
+            Split satin column…
+          </MenubarItem>
           <MenubarItem disabled={!has} onSelect={() => A.makeGuidedFill()}>
             Make guided fill
           </MenubarItem>
