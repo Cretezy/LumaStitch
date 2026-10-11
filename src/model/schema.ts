@@ -125,11 +125,25 @@ export const fabricProfileSchema = z.object({
   notes: z.string().max(4000),
 });
 
+export const multiHoopSchema = z
+  .object({
+    width: z.number().min(30).max(1000),
+    height: z.number().min(30).max(1000),
+    margin: z.number().min(1).max(20),
+    overlap: z.number().min(6).max(100),
+    joinSeams: z.boolean().optional(),
+  })
+  .refine(
+    (v) => Math.min(v.width, v.height) - 2 * v.margin - v.overlap >= 10,
+    'The field must leave at least 10 mm between hoop centers after margin and overlap.',
+  );
+
 export const designSchema = z.object({
   schemaVersion: z.literal(1),
   name: z.string(),
   fabric: z.enum(['woven', 'knit', 'pile', 'lightweight']),
   fabricProfile: fabricProfileSchema.optional(),
+  multiHoop: multiHoopSchema.optional(),
   fabricColor: z
     .string()
     .regex(/^#[0-9a-f]{6}$/i)

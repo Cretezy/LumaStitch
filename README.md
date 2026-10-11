@@ -122,3 +122,7 @@ Select a closed shape and open guide paths, then **Object → Make guided fill**
 ### Reusable fabric profiles
 
 Design settings now saves custom spacing, compensation and underlay defaults with fabric/needle/thread/stabilizer notes. Profiles stay embedded in projects and can be reused locally or shared as JSON; per-object overrides remain in effect. [Example profile, sampler and GIF](docs/fabric/README.md).
+
+### Multi-hooping
+
+File → Multi-hooping export splits a large stitch plan into overlapping rectangular fields. Numbered ZIP packages include machine files, editable stitch projects, the source project, shared registration marks, basting frames, a placement SVG and a manifest. All five machine formats receive decoded field-fit checks. [Complete three-hoop example and GIFs](docs/hooping/README.md).

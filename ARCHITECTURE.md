@@ -819,3 +819,9 @@ PES pattern construction detects command-preserving elements and disables PEC's 
 ## Fabric calibration profiles
 
 Optional `Design.fabricProfile` stores a validated, portable snapshot. Parameter resolution is type defaults → starter fabric → supported custom profile defaults → element overrides; plan cache keys already include resolved parameters, so profile edits invalidate generated stitches. Inspector, transforms and SVG export use the same resolver. `fabric/profiles.ts` stores up to 100 profiles in IndexedDB preferences and verifies writes; versioned JSON backups validate through the same schema. Applying/removing a profile is a document command; library edits do not mutate project snapshots. PDF worksheets select profile metadata and bound its displayed text to the available sidebar space.
+
+## Multi-hooping packages
+
+`hooping/split.ts` partitions the already-generated needle program at midlines of an overlapping rectangular grid. Each segment is split at all crossed grid boundaries; original endpoint ownership is counted exactly once. Tile-local programs retain color order and propagate source STOPs to all tiles touched since the previous stop. Visits add locks, trims and jumps; optional neighboring endpoints on one seam join within 1 mm. A symmetric basting frame and shared cross pairs establish placement and a stable local origin. Tile projects use command-preserving manual elements, while the original vector project is retained separately.
+
+`hooping/archive.ts` writes numbered projects and the selected machine format, decodes the bytes to validate needle/jump field fit (including DST trim oscillations), and bundles a manifest, actual-size SVG placement diagram and instructions. `hooping.worker.ts` isolates splitting/export from the UI. `Design.multiHoop` stores the last successful dimensions/options; cancellation terminates the worker. Work is capped at 64 fields and 500,000 source commands.

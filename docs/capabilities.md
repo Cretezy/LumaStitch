@@ -10,7 +10,7 @@ This is the acceptance ledger for the expanded LumaStitch scope. A feature is co
 | Fabric calibration | Four starter presets, [calibration sampler](inspection/README.md), [portable custom profiles and example GIF](fabric/README.md) with inherited defaults and recorded setup notes | Recorded physical sew-out results |
 | Machine-file editing | [PES/DST/JEF/EXP/VP3 editable import](machine-import/README.md), command editing, 48 independent decoder references, project/PES needle round trips | Original-object recognition; format-specific machine sew-outs |
 | Guided fills | [Editable arbitrary Bézier guides with copy/parallel/buffer modes](guided-fill/README.md), clipped holes and needle chords, inside travel, underlay, three complete GIF examples | Broader pathological-guide corpus and physical sew-outs |
-| Hooping | Optional rectangle/ellipse sewing fields, margin, canvas boundary and warnings for all five export formats | Multiple hoopings, registration and export manifest |
+| Hooping | Optional rectangle/ellipse checks; [registered multi-hooping packages](hooping/README.md), seam splitting, shared crosses, placement SVG, manifest and five-format decoded fit checks | Physical registration tests; arbitrary/rotated hoop placement, object-preserving optimization, machine-specific multi-position hoops |
 | Appliqué | Placement/tackdown/cover passes and stops | Partial edge coverage, cut-file workflow, production examples |
 | Specialty stitches | Motif, pattern, cross stitch, blanket, meander | Machine-specific sequins, beads and cording with validated command formats |
 | Production | PES/DST/JEF/EXP/VP3 exports, simulation, worksheets | Format-specific round-trip coverage and reference-machine sew-outs |

@@ -181,6 +181,14 @@ export interface FabricProfile {
   notes: string;
 }
 
+export interface MultiHoopOptions {
+  width: number;
+  height: number;
+  margin: number;
+  overlap: number;
+  joinSeams?: boolean;
+}
+
 export interface Design {
   schemaVersion: 1;
   name: string;
@@ -201,6 +209,7 @@ export interface Design {
   lettering?: Record<Id, LetteringGroup>;
   /** Optional usable sewing field, centered on stitch bounds (not the outside hoop dimensions). */
   hoop?: Hoop;
+  multiHoop?: MultiHoopOptions;
 }
 
 export interface Hoop {

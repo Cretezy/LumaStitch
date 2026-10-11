@@ -426,7 +426,7 @@ Implemented beyond the initial scope: editable digitized lettering (Geneva Simpl
 Still outside the completed implementation:
 
 - Photo-realistic image digitizing ("photo stitch"). Photos are posterised into flat colour regions instead.
-- Advanced satin branching and multiple hoopings (now planned).
+- Advanced satin branching (now planned).
 - 3D puff, sequins, beads and cording with validated hardware workflows.
 - Sending directly to a machine (USB or Wi-Fi), cloud storage, accounts, collaboration.
 - Mobile and touch layouts.
@@ -482,3 +482,9 @@ Object → Make guided fill combines one closed fill shape with selected open gu
 ## Reusable fabric calibration profiles
 
 Design settings supports named custom profiles containing a base fabric, tatami/pattern/guided-fill spacing, satin/appliqué spacing, compensation, fill/satin underlay, fill-underlay spacing and stabilizer/needle/thread/sew-out notes. Profile defaults apply between the starter preset and explicit element overrides; new shapes inherit the active profile. Apply/remove is undoable. Changing the starter fabric removes the custom profile. The current project embeds a snapshot independent of library edits. Browser library profiles support save/select/delete and versioned JSON import/export with validation, a 1 MB import limit and 100-profile limit. Import replaces same-name library entries. Worksheets show the custom name and stabilizer; full metadata remains in project/JSON. Physical validation is recorded by the user, not inferred.
+
+## Multi-hooping export
+
+File → Multi-hooping export offers rectangular field dimensions, margin, overlap, an optional nearby-seam joining policy, and PES/DST/JEF/EXP/VP3 output. Calculation runs in a cancellable worker. A centered grid partitions stitch segments at ownership seams inside the field overlaps, retains original penetrations, and adds seam locks and registration commands. Source-stage stops propagate to every participating hoop. Optional same-seam connections are at most 1 mm; source jumps/trims/stops terminate sections.
+
+Each numbered file starts with temporary basting and registration crosses, then stops before design stitching. A symmetric frame fixes centering and reserves 0.5 mm for trim-encoding movement. Shared pairs align neighboring fields. Output is validated by decoding the selected machine format and checking all needle/jump positions against the usable field. The ZIP includes machine files, editable stitch projects, the original project, a dimensioned SVG placement diagram and a JSON manifest. Layout settings persist in the source project and are undoable. Limits are 64 hoopings and 500,000 source commands. Physical registration remains unverified; arbitrary hoop placement/rotation, object-preserving optimization and machine-specific multi-position hoops are not implemented by this workflow.

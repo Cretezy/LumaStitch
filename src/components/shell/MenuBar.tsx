@@ -69,6 +69,7 @@ export function MenuBar() {
           <MenubarItem onSelect={() => ui.openDialog('export')}>
             Export machine file… <MenubarShortcut>{MOD}E</MenubarShortcut>
           </MenubarItem>
+          <MenubarItem onSelect={() => ui.openDialog('hooping')}>Multi-hooping export…</MenubarItem>
           <MenubarItem onSelect={() => ui.openDialog('export', { format: 'png' })}>
             Export PNG preview…
           </MenubarItem>
