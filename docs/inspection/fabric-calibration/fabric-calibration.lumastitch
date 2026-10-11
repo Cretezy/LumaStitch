@@ -1,0 +1,423 @@
+{
+  "format": "lumastitch-project",
+  "schemaVersion": 1,
+  "app": "LumaStitch",
+  "savedAt": "2026-10-11T00:00:00.000Z",
+  "design": {
+    "schemaVersion": 1,
+    "name": "Fabric calibration sampler",
+    "fabric": "woven",
+    "threadChart": "exact",
+    "settings": {
+      "trimThreshold": 3,
+      "minStitchLength": 0.3,
+      "maxStitchLength": 12,
+      "tieLength": 0.8,
+      "machineSpm": 600,
+      "trimSeconds": 6,
+      "colorChangeSeconds": 30,
+      "defaultTie": "auto",
+      "scaleStrokeWidths": true
+    },
+    "threads": {
+      "blue": {
+        "id": "blue",
+        "name": "Blue calibration thread",
+        "color": "#234a73"
+      }
+    },
+    "shapes": {
+      "tatami-0": {
+        "id": "tatami-0",
+        "name": "Tatami 0.3 mm spacing",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    20,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    20,
+                    20
+                  ]
+                },
+                {
+                  "p": [
+                    0,
+                    20
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": {
+          "id": "fill-0",
+          "role": "fill",
+          "type": "tatami",
+          "threadId": "blue",
+          "params": {
+            "density": 0.3,
+            "angle": 45,
+            "underlay": "tatami",
+            "pullComp": 0.2
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      },
+      "tatami-1": {
+        "id": "tatami-1",
+        "name": "Tatami 0.4 mm spacing",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    27,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    47,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    47,
+                    20
+                  ]
+                },
+                {
+                  "p": [
+                    27,
+                    20
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": {
+          "id": "fill-1",
+          "role": "fill",
+          "type": "tatami",
+          "threadId": "blue",
+          "params": {
+            "density": 0.4,
+            "angle": 45,
+            "underlay": "tatami",
+            "pullComp": 0.2
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      },
+      "tatami-2": {
+        "id": "tatami-2",
+        "name": "Tatami 0.5 mm spacing",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    27
+                  ]
+                },
+                {
+                  "p": [
+                    20,
+                    27
+                  ]
+                },
+                {
+                  "p": [
+                    20,
+                    47
+                  ]
+                },
+                {
+                  "p": [
+                    0,
+                    47
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": {
+          "id": "fill-2",
+          "role": "fill",
+          "type": "tatami",
+          "threadId": "blue",
+          "params": {
+            "density": 0.5,
+            "angle": 45,
+            "underlay": "tatami",
+            "pullComp": 0.2
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      },
+      "tatami-3": {
+        "id": "tatami-3",
+        "name": "Tatami 0.6 mm spacing",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    27,
+                    27
+                  ]
+                },
+                {
+                  "p": [
+                    47,
+                    27
+                  ]
+                },
+                {
+                  "p": [
+                    47,
+                    47
+                  ]
+                },
+                {
+                  "p": [
+                    27,
+                    47
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": {
+          "id": "fill-3",
+          "role": "fill",
+          "type": "tatami",
+          "threadId": "blue",
+          "params": {
+            "density": 0.6,
+            "angle": 45,
+            "underlay": "tatami",
+            "pullComp": 0.2
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      },
+      "satin-0": {
+        "id": "satin-0",
+        "name": "Satin 2 mm width",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    57,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    57,
+                    47
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": null,
+        "outline": {
+          "id": "outline-0",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "blue",
+          "params": {
+            "width": 2,
+            "density": 0.4,
+            "pullComp": 0.2
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      },
+      "satin-1": {
+        "id": "satin-1",
+        "name": "Satin 4 mm width",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    67,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    67,
+                    47
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": null,
+        "outline": {
+          "id": "outline-1",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "blue",
+          "params": {
+            "width": 4,
+            "density": 0.4,
+            "pullComp": 0.2
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      },
+      "satin-2": {
+        "id": "satin-2",
+        "name": "Satin 6 mm width",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    77,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    77,
+                    47
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": null,
+        "outline": {
+          "id": "outline-2",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "blue",
+          "params": {
+            "width": 6,
+            "density": 0.4,
+            "pullComp": 0.2
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      }
+    },
+    "zOrder": [
+      "tatami-0",
+      "tatami-1",
+      "tatami-2",
+      "tatami-3",
+      "satin-0",
+      "satin-1",
+      "satin-2"
+    ],
+    "sequence": [
+      {
+        "kind": "element",
+        "elementId": "outline-2"
+      },
+      {
+        "kind": "element",
+        "elementId": "outline-1"
+      },
+      {
+        "kind": "element",
+        "elementId": "outline-0"
+      },
+      {
+        "kind": "element",
+        "elementId": "fill-1"
+      },
+      {
+        "kind": "element",
+        "elementId": "fill-3"
+      },
+      {
+        "kind": "element",
+        "elementId": "fill-2"
+      },
+      {
+        "kind": "element",
+        "elementId": "fill-0"
+      }
+    ],
+    "hoop": {
+      "width": 100,
+      "height": 100,
+      "margin": 2,
+      "shape": "rectangle"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+[
+  {
+    "name": "fabric-calibration",
+    "stitches": 2841,
+    "jumps": 7,
+    "trims": 6,
+    "colorChanges": 0,
+    "stops": 0,
+    "threadLengthMm": 8510.482991042143,
+    "estSeconds": 320.1,
+    "jumpMm": 60.3169174329342,
+    "travelMm": 80.47177188623338,
+    "bounds": {
+      "minX": -0.20000000298023224,
+      "minY": -0.20000000298023224,
+      "maxX": 80.19999694824219,
+      "maxY": 47.20000076293945
+    },
+    "diagnostics": []
+  }
+]

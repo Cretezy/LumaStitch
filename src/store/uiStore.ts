@@ -54,6 +54,7 @@ export interface Viewport {
 export interface ViewOptions {
   jumps: boolean;
   needlePoints: boolean;
+  density: boolean;
   grid: boolean;
   dimensions: boolean;
   backdrop: boolean;
@@ -115,6 +116,7 @@ function loadView(): { view: ViewOptions; viewMode: ViewMode } {
   const def: ViewOptions = {
     jumps: true,
     needlePoints: false,
+    density: false,
     grid: true,
     dimensions: true,
     backdrop: true,

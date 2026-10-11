@@ -32,6 +32,7 @@ import { WATERMARK_TEXT } from '@/io/export/watermark';
 import { getMachineFormat } from '@/io/export/registry';
 import { exportSvg } from '@/io/export/svg';
 import { exportVideo, videoContainer } from '@/io/export/video';
+import { hoopWarnings } from '@/engine/hoop';
 import { hasErrors, validateMachineExport, validatePesExport } from '@/io/export/validation';
 import { safeFileName } from '@/io/project/files';
 import { getPref, setPref } from '@/library/library';
@@ -167,8 +168,14 @@ function ExportBody({
   }, [requestedMachine, videoSpeed]);
 
   const diagnostics = useMemo(
-    () => (!plan ? [] : machine === 'pes' ? validatePesExport(plan) : validateMachineExport(plan, machine)),
-    [plan, machine],
+    () =>
+      !plan
+        ? []
+        : [
+            ...(machine === 'pes' ? validatePesExport(plan) : validateMachineExport(plan, machine)),
+            ...hoopWarnings(plan, design?.hoop),
+          ],
+    [plan, machine, design?.hoop],
   );
   const blocked = hasErrors(diagnostics);
 

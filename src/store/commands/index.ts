@@ -12,6 +12,7 @@ import type {
   DesignSettings,
   ElementRole,
   FabricId,
+  Hoop,
   Id,
   Matrix,
   ParamValue,
@@ -486,10 +487,14 @@ export function setDesignSettings(patch: Partial<DesignSettings>, label = 'Desig
 }
 
 export function setDesignProps(
-  props: { name?: string; fabric?: FabricId; fabricColor?: string; threadChart?: string },
+  props: { name?: string; fabric?: FabricId; fabricColor?: string; threadChart?: string; hoop?: Hoop | null },
   label = 'Design settings',
 ): void {
   exec(label, (d) => {
+    if (props.hoop !== undefined) {
+      if (props.hoop === null) delete d.hoop;
+      else d.hoop = props.hoop;
+    }
     if (props.name !== undefined) d.name = props.name;
     if (props.fabric !== undefined) d.fabric = props.fabric;
     if (props.fabricColor !== undefined) d.fabricColor = props.fabricColor;

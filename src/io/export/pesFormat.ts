@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Brother PES as an export format.
+import { hoopWarnings } from '@/engine/hoop';
 import type { StitchPlan } from '@/engine/types';
 import type { Design } from '@/model/types';
 import { writePes, type PesWriteOptions } from '@/io/pes/pesWriter';
@@ -32,8 +33,8 @@ export const pesFormat: MachineExportFormat = {
   ext: 'pes',
   mime: 'application/octet-stream',
   label: 'Brother PES',
-  validate(plan: StitchPlan, _design: Design) {
-    return validatePesExport(plan);
+  validate(plan: StitchPlan, design: Design) {
+    return [...validatePesExport(plan), ...hoopWarnings(plan, design.hoop)];
   },
   write(plan: StitchPlan, design: Design, opts: unknown) {
     const diagnostics = validatePesExport(plan);

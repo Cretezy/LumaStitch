@@ -178,6 +178,15 @@ export interface Design {
   sequence: SequenceEntry[];
   artwork?: Artwork;
   lettering?: Record<Id, LetteringGroup>;
+  /** Optional usable sewing field, centered on stitch bounds (not the outside hoop dimensions). */
+  hoop?: Hoop;
+}
+
+export interface Hoop {
+  width: number;
+  height: number;
+  margin: number;
+  shape: 'rectangle' | 'ellipse';
 }
 
 export const CURRENT_SCHEMA_VERSION = 1 as const;

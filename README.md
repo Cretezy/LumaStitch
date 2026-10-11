@@ -30,6 +30,7 @@ No account · No upload · Works offline · Free and open source (GPL-3.0)
 - **Many stitch types.** Tatami, satin, contour, meander, ripple, gradient and pattern fills, cross-stitch, appliqué, triple run, bean, motif and blanket stitches.
 - **Complete stitch examples.** [Satin and tatami designs](docs/stitch-examples/README.md) with animated GIF stitch-outs, before/after comparisons, editable projects, SVG artwork and PES/DST downloads.
 - **What you see is what gets sewn.** The canvas, the simulator and every export come from the same stitch plan, with realistic thread rendering.
+- **Inspect stitch quality.** A worker-computed needle density map includes ties and underlay. Optional rectangular/elliptical sewing fields show fit warnings before machine export. [Calibration sampler](docs/inspection/README.md).
 - **Simulator.** Play the stitch-out at machine speed or faster, step stitch by stitch, and jump between colours.
 - **Export.** Brother PES (v1 and v6), DST, JEF, EXP and VP3, plus a PNG preview, SVG geometry, a printable PDF worksheet and an MP4/WebM stitch-out video.
 - **Private by design.** Everything runs in your browser. Designs are saved in a local library (IndexedDB), never on a server, and can be backed up as `.lumastitch` files.

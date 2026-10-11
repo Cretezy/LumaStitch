@@ -330,6 +330,9 @@ export function MenuBar() {
           <MenubarCheckboxItem checked={v.underlay} onCheckedChange={(c) => ui.setView({ underlay: !!c })}>
             Highlight underlay
           </MenubarCheckboxItem>
+          <MenubarCheckboxItem checked={v.density} onCheckedChange={(c) => ui.setView({ density: !!c })}>
+            Needle density map
+          </MenubarCheckboxItem>
           <MenubarCheckboxItem checked={v.grid} onCheckedChange={(c) => ui.setView({ grid: !!c })}>
             Grid
           </MenubarCheckboxItem>

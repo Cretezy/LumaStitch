@@ -648,7 +648,7 @@ PEC @pecOffset
 ### 15.5 Validation
 
 - **Errors**: empty plan; a delta out of range after splitting; zero colours.
-- **Warnings**: stitches over 12 mm; more than about 200 trims. There are no hoop or size warnings (SPEC §7).
+- **Warnings**: stitches over 12 mm; more than about 200 trims. Optional sewing-field warnings are appended independently (SPEC §7).
 
 ### 15.6 Reader and verification
 
@@ -676,7 +676,7 @@ Machine formats write synchronously; document formats (the PDF worksheet) are as
 ### 15.8 Other machine formats and the worksheet (P2)
 
 - **DST, JEF, EXP, VP3** (`src/io/formats`) are ports of pyembroidery's writers. A shared encoder reproduces pyembroidery's normalisation with each writer's settings (DST: max jump/stitch 121; JEF and EXP: 127, jump to the first stitch after a trim; VP3: jumps up to 3200, stitches up to 255, stops become colour blocks because VP3 has no stop). Output is byte-identical to pyembroidery 1.5.1 on the golden patterns (`tests/fixtures/formats`, `tests/tools/make_goldens_formats.py`), and pyembroidery reads our files back with the same stitch counts, colour changes and extents (`tests/tools/crosscheck_formats.py`).
-- Per-format notes: DST and EXP carry no colours (the dialog lists the thread order to set at the machine); JEF maps colours to the 78-colour Janome palette and names the smallest Janome hoop that fits (the only hoop check in the app, a warning); VP3 stores exact RGB, brand and code.
+- Per-format notes: DST and EXP carry no colours (the dialog lists the thread order to set at the machine); JEF maps colours to the 78-colour Janome palette and names the smallest Janome hoop that fits (a format-specific hoop warning); VP3 stores exact RGB, brand and code.
 - `validateMachineExport(plan, format)` adds per-format limits to the shared checks of §15.5.
 - **PDF worksheet** (`src/io/export/pdfWriter.ts`, `pdf.ts`): a dependency-free PDF 1.4 writer (Helvetica, WinAnsi text, embedded JPEG). A4 sheet with design name, date, size, stitch/colour/trim/stop counts, estimated time, fabric and stabiliser, a realistic preview and the colour sequence table (continued over further pages when long).
 - **Stitch-out video** (`src/io/export/video.ts`): the simulator's playback rendered offscreen and encoded with WebCodecs through mediabunny (MPL-2.0), as MP4/H.264 or, where H.264 encoding isn't available, WebM (VP9, VP8 or AV1). Timing is a length in seconds or a multiple of the machine's stitch rate; penetrations advance at a constant rate and jumps, trims and colour changes are instant. Frames are drawn incrementally (`createStitchOutRenderer`, shared with the dialog's live preview), 30 fps, then the finished design is held (2 s by default, 0–10 s). The "Made with LumaStitch" watermark with the app icon (`src/io/export/watermark.ts`, on by default) is drawn on the frame canvas with the needle, above the stitches; the PNG export adds a strip below the design for it instead. Encoding runs faster than real time and can be stopped.
@@ -798,3 +798,10 @@ The app is a static Vite build served by Workers static assets. There is no Work
 `src/lettering` lays out the pinned Geneva Simple Sans embroidery font. Licensed source SVG, metadata and the reproducible extraction script are retained; JSON contains the original paths, transforms, underlay and compensation. Rail/rung intersection topology identifies the two satin rails; monotonic rung positions pair arc-length samples. `satinColumn` generates density-controlled satin and underlay from these explicit rails without skeleton inference. SVG paths and ordinary running underpaths preserve the font's authored sewing order.
 
 Layout supports source kerning/advance widths, NFC characters, multiline alignment/spacing, a circular baseline using rigid glyph rotations, and three-initial monograms. Unsupported characters and sizes are errors. `Design.lettering` stores text options, member shape IDs and an affine matrix. Whole-block transforms update that matrix; geometry changes to individual members or member deletion detach the editable text. Text regeneration replaces members in place in the sequence as one undo step. The resulting shapes remain ordinary editable geometry. Batch project/PES ZIP generation runs in a dedicated worker and terminates after export.
+
+
+## Density inspection and sewing fields
+
+`engine/density.ts` counts exact circular neighborhoods using radius/2 spatial buckets. Identical coordinates are aggregated and wholly contained buckets contribute their total without pairwise scans. Command flags exclude jumps/trims/stops/changes/end while retaining every penetration, including ties and underlay. A dedicated worker returns command-indexed counts; `DensityLayer` draws fixed quantitative bins and a radius/peak legend without changing the plan.
+
+`Design.hoop` optionally records a rectangular or elliptical usable sewing field and inset margin. `engine/hoop.ts` centers it on plan bounds and checks each needle/jump destination; control records are ignored. `HoopLayer` displays the usable boundary; all machine format adapters and the export dialog append non-blocking fit warnings. Coordinates and encoded hoop metadata remain controlled by each exporter. Fields are not scaled when artwork is resized.

@@ -124,6 +124,14 @@ export const designSchema = z.object({
     ]),
   ),
   artwork: artwork.optional(),
+  hoop: z
+    .object({
+      width: z.number().min(10).max(1000),
+      height: z.number().min(10).max(1000),
+      margin: z.number().min(0).max(20),
+      shape: z.enum(['rectangle', 'ellipse']),
+    })
+    .optional(),
   lettering: z
     .record(
       z.string(),

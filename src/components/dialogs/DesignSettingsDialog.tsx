@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { FabricColorInput } from '@/components/inspector/FabricColorInput';
+import { HoopSettings } from '@/components/inspector/HoopSettings';
 import { NumberField } from '@/components/inspector/NumberField';
 import { FABRIC_IDS, FABRIC_PRESETS } from '@/engine/params/fabric';
 import { DEFAULT_SETTINGS } from '@/model/factories';
@@ -150,7 +151,7 @@ export default function DesignSettingsDialog({ open, onClose }: DialogProps) {
   const s = design.settings;
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Design settings</DialogTitle>
           <DialogDescription>Changes apply immediately and can be undone.</DialogDescription>
@@ -217,6 +218,7 @@ export default function DesignSettingsDialog({ open, onClose }: DialogProps) {
             </div>
           </div>
         </Section>
+        <HoopSettings />
         <Section title="Stitching">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {STITCH_FIELDS.map((f) => (
