@@ -181,6 +181,12 @@ export interface FabricProfile {
   notes: string;
 }
 
+export interface AppliqueCutOptions {
+  allowance: number;
+  mirror: boolean;
+  sheetWidth: number;
+}
+
 export interface MultiHoopOptions {
   width: number;
   height: number;
@@ -210,6 +216,7 @@ export interface Design {
   /** Optional usable sewing field, centered on stitch bounds (not the outside hoop dimensions). */
   hoop?: Hoop;
   multiHoop?: MultiHoopOptions;
+  appliqueCut?: AppliqueCutOptions;
 }
 
 export interface Hoop {

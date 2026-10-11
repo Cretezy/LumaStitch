@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="63mm" height="44mm" viewBox="-22 -22 63 44">
+  <title>Pre-cut overlapping appliqué</title>
+  <path id="Lower_patch_with_window" data-name="Lower patch with window" d="M20 0C20 11.046 11.046 20 0 20C-11.046 20 -20 11.046 -20 0C-20 -11.046 -11.046 -20 0 -20C11.046 -20 20 -11.046 20 0ZM-4 0C-4 2.209 -5.791 4 -8 4C-10.209 4 -12 2.209 -12 0C-12 -2.209 -10.209 -4 -8 -4C-5.791 -4 -4 -2.209 -4 0Z" fill="#3d7564" fill-rule="evenodd" stroke="none"/>
+  <path id="Upper_patch" data-name="Upper patch" d="M39 0C39 11.046 31.389 20 22 20C12.611 20 5 11.046 5 0C5 -11.046 12.611 -20 22 -20C31.389 -20 39 -11.046 39 0Z" fill="#c49635" fill-rule="nonzero" stroke="none"/>
+</svg>

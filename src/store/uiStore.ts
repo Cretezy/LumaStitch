@@ -17,6 +17,7 @@ export type ToolId =
 export type ViewMode = 'artwork' | 'stitches' | 'realistic';
 export type SidebarTab = 'inspector' | 'sequence' | 'threads' | 'issues';
 export type DialogId =
+  | 'appliqueCut'
   | 'satinSplit'
   | 'hooping'
   | 'import'

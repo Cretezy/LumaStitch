@@ -8,7 +8,7 @@
  * Machine stops inside the element are requested with a run point flagged F.JUMP | F.STOP:
  * "stop here, then continue at this point" (see plan.ts).
  */
-import { offset } from '@/geom/clipper';
+import { clipPolylines, offset } from '@/geom/clipper';
 import { rotateClosedTo } from '@/geom/polyline';
 import type { Polyline, Ring } from '@/geom/types';
 import type { InsideRouter } from '@/geom/visibility';
@@ -17,6 +17,7 @@ import type { StitchTypeDef } from '../../def';
 import { bool, num, str } from '../../params/types';
 import { F } from '../../types';
 import { RunBuilder, dist, runningPoints } from '../common';
+import { orderPaths, type PathItem } from '../running';
 import { closeRing } from '../p2util';
 import { columnFromCenterline, satinPass } from '../satin/column';
 import { fillPolygon, makeRouter, travelTo } from '../tatami';
@@ -32,6 +33,8 @@ export interface AppliquePrep {
   tackSpacing: number;
   shortStitches: boolean;
   router: InsideRouter | null;
+  covers?: PathItem[];
+  precut: boolean;
 }
 
 /** Greedy nearest order of the rings, each rotated to start nearest the previous end. */
@@ -67,6 +70,20 @@ export const appliqueDef: StitchTypeDef<AppliquePrep> = {
     'Sews a placement line, stops for you to lay fabric, tacks it down, stops for trimming, then covers the edge with satin.',
   role: 'fill',
   params: [
+    {
+      key: 'precut',
+      label: 'Pre-cut fabric',
+      kind: 'boolean',
+      group: 'basic',
+      help: 'Stop after placement to position a pre-cut patch. Skip the trimming stop after tack-down.',
+    },
+    {
+      key: 'partialCover',
+      label: 'Omit covered satin',
+      kind: 'boolean',
+      group: 'advanced',
+      help: 'Omit cover sections fully inside the fabric footprint of later appliqué pieces. Placement and tack-down remain complete.',
+    },
     {
       key: 'width',
       label: 'Cover width',
@@ -156,6 +173,8 @@ export const appliqueDef: StitchTypeDef<AppliquePrep> = {
     },
   ],
   defaults: {
+    precut: false,
+    partialCover: false,
     width: 3,
     density: 0.4,
     tackDown: 'zigzag',
@@ -182,6 +201,18 @@ export const appliqueDef: StitchTypeDef<AppliquePrep> = {
     if (!travelArea.length) travelArea = base;
     return {
       rings,
+      covers:
+        bool(params, 'partialCover') && ctx.appliqueCoverClip?.length
+          ? clipPolylines(
+              rings.map(closeRing),
+              offset(ctx.appliqueCoverClip, -(width / 2 + pull + 0.1)),
+              false,
+            ).map((pts) => ({
+              pts,
+              closed: Math.hypot(pts[0] - pts[pts.length - 2], pts[1] - pts[pts.length - 1]) < 1e-6,
+            }))
+          : undefined,
+      precut: bool(params, 'precut'),
       // The cover's outer edge sits on the outline (plus pull compensation).
       halfWidth: width / 2 + pull,
       density: Math.max(0.1, num(params, 'density', 0.4)),
@@ -200,7 +231,7 @@ export const appliqueDef: StitchTypeDef<AppliquePrep> = {
     const rings = orderRings(prep.rings, hints.entry);
     /** Starts a phase: the first point of every phase after the first carries a machine stop. */
     const begin = (x: number, y: number, phase: number, ri: number) => {
-      if (ri === 0 && phase > 0) b.push(x, y, F.JUMP | F.STOP);
+      if (ri === 0 && phase > 0) b.push(x, y, F.JUMP | (phase === 2 && prep.precut ? 0 : F.STOP));
       else if (ri === 0) b.push(x, y);
       // Within a phase, connect rings by inside travel (placement) or a jump (fabric is down).
       else if (phase === 0) travelTo(b, [x, y], t);
@@ -228,13 +259,17 @@ export const appliqueDef: StitchTypeDef<AppliquePrep> = {
       }
     });
     // 3. Satin cover.
-    rings.forEach((r, ri) => {
-      const col = columnFromCenterline(r, true, prep.halfWidth);
+    const covers = prep.covers
+      ? orderPaths(prep.covers, b.last() ?? undefined, 1)
+      : rings.map((pts) => ({ pts, closed: true }));
+    covers.forEach(({ pts: r, closed }, ri) => {
+      const col = columnFromCenterline(r, closed, prep.halfWidth);
       const tmp = new RunBuilder();
       satinPass(tmp, col, true, { density: prep.density, shortStitches: prep.shortStitches, splitAbove: 7 });
       begin(tmp.xy[0], tmp.xy[1], 2, ri);
       b.pushPolyline(tmp.xy, 0, true);
     });
+    if (!covers.length && !prep.precut && b.last()) b.push(...b.last()!, F.JUMP | F.STOP);
     return b.build();
   },
 };

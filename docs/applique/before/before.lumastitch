@@ -1,0 +1,305 @@
+{
+  "format": "lumastitch-project",
+  "schemaVersion": 1,
+  "app": "LumaStitch",
+  "savedAt": "2026-10-11T00:00:00.000Z",
+  "design": {
+    "schemaVersion": 1,
+    "name": "Full-cover overlapping appliqué",
+    "fabric": "woven",
+    "threadChart": "exact",
+    "settings": {
+      "trimThreshold": 3,
+      "minStitchLength": 0.3,
+      "maxStitchLength": 12,
+      "tieLength": 0.8,
+      "machineSpm": 600,
+      "trimSeconds": 6,
+      "colorChangeSeconds": 30,
+      "defaultTie": "auto",
+      "scaleStrokeWidths": true
+    },
+    "threads": {
+      "green": {
+        "id": "green",
+        "name": "Green patch border",
+        "color": "#3d7564"
+      },
+      "gold": {
+        "id": "gold",
+        "name": "Gold patch border",
+        "color": "#c49635"
+      }
+    },
+    "shapes": {
+      "lower": {
+        "id": "lower",
+        "name": "Lower patch with window",
+        "geom": {
+          "fillRule": "evenodd",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    20,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    -11.045694996615872
+                  ],
+                  "out": [
+                    0,
+                    11.045694996615872
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    0,
+                    20
+                  ],
+                  "in": [
+                    11.045694996615872,
+                    0
+                  ],
+                  "out": [
+                    -11.045694996615872,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    -20,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    11.045694996615872
+                  ],
+                  "out": [
+                    0,
+                    -11.045694996615872
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    0,
+                    -20
+                  ],
+                  "in": [
+                    -11.045694996615872,
+                    0
+                  ],
+                  "out": [
+                    11.045694996615872,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            },
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    -4,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    -2.2091389993231743
+                  ],
+                  "out": [
+                    0,
+                    2.2091389993231743
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    -8,
+                    4
+                  ],
+                  "in": [
+                    2.2091389993231743,
+                    0
+                  ],
+                  "out": [
+                    -2.2091389993231743,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    -12,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    2.2091389993231743
+                  ],
+                  "out": [
+                    0,
+                    -2.2091389993231743
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    -8,
+                    -4
+                  ],
+                  "in": [
+                    -2.2091389993231743,
+                    0
+                  ],
+                  "out": [
+                    2.2091389993231743,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": {
+          "id": "lower-fill",
+          "role": "fill",
+          "type": "applique",
+          "threadId": "green",
+          "params": {
+            "width": 3,
+            "density": 0.45,
+            "precut": false,
+            "partialCover": false,
+            "pullComp": 0.15
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      },
+      "upper": {
+        "id": "upper",
+        "name": "Upper patch",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    39,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    -11.045694996615872
+                  ],
+                  "out": [
+                    0,
+                    11.045694996615872
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    22,
+                    20
+                  ],
+                  "in": [
+                    9.38884074712349,
+                    0
+                  ],
+                  "out": [
+                    -9.38884074712349,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    5,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    11.045694996615872
+                  ],
+                  "out": [
+                    0,
+                    -11.045694996615872
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    22,
+                    -20
+                  ],
+                  "in": [
+                    -9.38884074712349,
+                    0
+                  ],
+                  "out": [
+                    9.38884074712349,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": {
+          "id": "upper-fill",
+          "role": "fill",
+          "type": "applique",
+          "threadId": "gold",
+          "params": {
+            "width": 3,
+            "density": 0.45,
+            "precut": false,
+            "partialCover": false,
+            "pullComp": 0.15
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      }
+    },
+    "zOrder": [
+      "lower",
+      "upper"
+    ],
+    "sequence": [
+      {
+        "kind": "element",
+        "elementId": "lower-fill"
+      },
+      {
+        "kind": "element",
+        "elementId": "upper-fill"
+      }
+    ],
+    "appliqueCut": {
+      "allowance": 0,
+      "mirror": false,
+      "sheetWidth": 120
+    }
+  }
+}

@@ -35,6 +35,8 @@ export interface EngineCtx {
   art?: ArtPaint;
   /** For cutout growth: union of regions sewn later that may cover this fill's seams. */
   growClip?: PolyShape;
+  /** Fabric footprints of later appliqué objects, for conservative hidden-cover removal. */
+  appliqueCoverClip?: PolyShape;
 }
 
 export interface StitchTypeDef<Prep = unknown> {

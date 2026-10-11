@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "design": "Pre-cut overlapping appliqué",
+  "units": "mm",
+  "options": {
+    "allowance": 0,
+    "mirror": false,
+    "sheetWidth": 120
+  },
+  "sheetSizeMm": [
+    120,
+    46.996
+  ],
+  "pieces": [
+    {
+      "number": 1,
+      "name": "Lower patch with window",
+      "shapeId": "lower",
+      "elementId": "lower-fill",
+      "threadId": "green",
+      "svg": "piece-001.svg",
+      "dxf": "piece-001.dxf",
+      "widthMm": 36.996,
+      "heightMm": 36.996,
+      "holes": 1,
+      "sourceBounds": {
+        "minX": -18.498,
+        "minY": -18.498,
+        "maxX": 18.498,
+        "maxY": 18.498
+      },
+      "sheetPositionMm": [
+        5,
+        5
+      ],
+      "precut": true
+    },
+    {
+      "number": 2,
+      "name": "Upper patch",
+      "shapeId": "upper",
+      "elementId": "upper-fill",
+      "threadId": "gold",
+      "svg": "piece-002.svg",
+      "dxf": "piece-002.dxf",
+      "widthMm": 30.997,
+      "heightMm": 36.994,
+      "holes": 0,
+      "sourceBounds": {
+        "minX": 6.501,
+        "minY": -18.497,
+        "maxX": 37.498,
+        "maxY": 18.497
+      },
+      "sheetPositionMm": [
+        51.996,
+        5
+      ],
+      "precut": true
+    }
+  ]
+}

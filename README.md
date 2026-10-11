@@ -134,3 +134,7 @@ Combine intersecting paths, choose Satin, then enable **Advanced → Connect sat
 ### Split satin columns
 
 Select an open satin outline or rail column and choose **Object → Split satin column**. Preview a cut percentage and create two editable rail sections with the current stitch settings. [Curved ribbon example and before/after GIFs](docs/satin-split/README.md).
+
+### Appliqué production
+
+Use **Pre-cut fabric** to skip the trimming stop, and **Omit covered satin** to remove cover edges hidden by later appliqué patches. **File → Appliqué cutting export** produces numbered SVG/DXF pieces with holes, allowance, mirroring and a reference layout. [Complete overlapping-patch example, cutting ZIP and GIFs](docs/applique/README.md).

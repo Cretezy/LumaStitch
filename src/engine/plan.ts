@@ -5,7 +5,7 @@
  */
 import { flattenGeom, flattenToPaths } from '@/geom/flatten';
 import { closestBoundaryPoints } from '@/geom/closest';
-import { makeValid, unionAll } from '@/geom/clipper';
+import { makeValid, offset, unionAll } from '@/geom/clipper';
 import { bboxIntersects, createPointTester, emptyBBox, extendBBox } from '@/geom/polygon';
 import type { BBox, PolyShape } from '@/geom/types';
 import { hashKey, stableStringify } from '@/lib/hash';
@@ -306,6 +306,23 @@ export function* planGenerator(design: Design, opts: BuildOptions = {}): Generat
       diag: (code, message, at, severity = 'warning') =>
         elDiags.push({ severity, code, message, elementId: el.id, at }),
     };
+    let appliqueKey = '';
+    if (el.type === 'applique' && params.partialCover === true) {
+      const footprints: PolyShape[] = [];
+      const keys: string[] = [];
+      for (let j = ii + 1; j < items.length; j++) {
+        const later = items[j];
+        if (later.kind !== 'el' || later.el.type !== 'applique' || later.shape.id === shape.id) continue;
+        const width = Math.max(
+          0.5,
+          num(resolveParams(later.el, design.fabric, design.fabricProfile), 'width', 3),
+        );
+        footprints.push(offset(shapePoly(cache, later.shape).poly, -width / 2));
+        keys.push(`${geomKey(cache, later.shape.geom)}:${width}`);
+      }
+      if (footprints.length) ctx.appliqueCoverClip = unionAll(footprints);
+      appliqueKey = keys.sort().join(',');
+    }
     const prepKey = hashKey(
       stableStringify({
         t: el.type,
@@ -314,6 +331,7 @@ export function* planGenerator(design: Design, opts: BuildOptions = {}): Generat
         gu: el.guides ?? null,
         rs: el.railSplit ?? null,
         gc: growKey,
+        ac: appliqueKey,
         sw: def.id === 'satin' ? (shape.art.strokeWidth ?? null) : null,
         ms: settings.minStitchLength,
       }),

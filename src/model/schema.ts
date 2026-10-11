@@ -125,6 +125,12 @@ export const fabricProfileSchema = z.object({
   notes: z.string().max(4000),
 });
 
+export const appliqueCutSchema = z.object({
+  allowance: z.number().finite().min(-2).max(2),
+  mirror: z.boolean(),
+  sheetWidth: z.number().finite().min(20).max(1000),
+});
+
 export const multiHoopSchema = z
   .object({
     width: z.number().min(30).max(1000),
@@ -144,6 +150,7 @@ export const designSchema = z.object({
   fabric: z.enum(['woven', 'knit', 'pile', 'lightweight']),
   fabricProfile: fabricProfileSchema.optional(),
   multiHoop: multiHoopSchema.optional(),
+  appliqueCut: appliqueCutSchema.optional(),
   fabricColor: z
     .string()
     .regex(/^#[0-9a-f]{6}$/i)
