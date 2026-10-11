@@ -99,6 +99,8 @@ The screenshots above are generated from a production build with `node scripts/r
 
 The app is static files served by Cloudflare Workers static assets (see `wrangler.jsonc`; there is no Worker script). Cloudflare Workers Builds deploys every push to `main`; `npm run deploy` builds and deploys by hand.
 
+Non-production branches use `npx wrangler preview`; the empty `previews` block inherits the static asset configuration for branch previews.
+
 `public/_headers` sets long-lived caching for hashed assets and a strict Content-Security-Policy. `npx wrangler dev` serves `dist/` the way production does.
 
 ## Licence

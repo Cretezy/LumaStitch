@@ -766,6 +766,7 @@ The app is a static Vite build served by Workers static assets. There is no Work
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "lumastitch",
   "compatibility_date": "2026-10-01",
+  "previews": {},
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application",
@@ -783,7 +784,7 @@ The app is a static Vite build served by Workers static assets. There is no Work
   Content-Security-Policy: default-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; connect-src 'self'
 ```
 
-- **CI/CD**: connect the GitHub repo in the Cloudflare dashboard (Workers Builds). Build command: `npm ci && npm run build`. Deploy command: `npx wrangler deploy`. Non-production branches use `npx wrangler versions upload` to get preview URLs. CI also runs `npm test` before the build.
+- **CI/CD**: connect the GitHub repo in the Cloudflare dashboard (Workers Builds). Build command: `npm ci && npm run build`. Deploy command: `npx wrangler deploy`. Non-production branches use `npx wrangler preview`; the empty `previews` block inherits the static asset configuration. CI also runs `npm test` before the build.
 - **Local**: `npm run dev` (Vite). `npx wrangler dev` serves `dist/` the same way production does, which is useful for checking `_headers` and the SPA fallback.
 - **Limits to remember**: each static asset must be under 25 MiB (the potrace WASM is far below this). Vite's content-hashed `/assets/*` filenames make long-lived immutable caching safe, while `index.html` is revalidated, so a new deploy reaches users on their next load.
 - **No cross-origin isolation** (COOP/COEP) is needed in v1, because nothing uses `SharedArrayBuffer`. If threaded WASM is added later, add those headers to `_headers`.
