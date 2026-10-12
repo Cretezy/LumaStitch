@@ -47,7 +47,7 @@ it('shapes Latin kerning and ligatures with font metrics and vector outlines', (
   expect(shape.geom.subpaths).toHaveLength(2);
   expect(geomBBox(shape.geom).minY).toBeLessThan(-15);
 });
-it('joins Arabic, positions marks, and rejects unsupported mixed-direction runs', () => {
+it('joins Arabic, positions marks, and keeps numbers left-to-right in mixed text', () => {
   const o = options('سَلَام', arabic),
     p = prepareOpenType(o).openType!.prepared!;
   expect(p.lines[0].glyphs.length).toBeGreaterThan(3);
@@ -58,7 +58,8 @@ it('joins Arabic, positions marks, and rejects unsupported mixed-direction runs'
   const plan = buildPlan(d);
   expect(plan.stats.stitches).toBeGreaterThan(100);
   expect(plan.diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
-  expect(() => prepareOpenType({ ...o, text: 'سلام 123' })).toThrow('Mixed-direction');
+  const mixed = prepareOpenType({ ...o, text: 'سلام 123' }).openType!.prepared!.lines[0];
+  expect(mixed.glyphs.slice(0, 3).map((g) => g.cluster)).toEqual([5, 6, 7]);
   expect(() => prepareOpenType({ ...o, letterSpacing: 1 })).toThrow('spacing');
 });
 it('applies variable weight and preserves complete font/options through project round trips', () => {

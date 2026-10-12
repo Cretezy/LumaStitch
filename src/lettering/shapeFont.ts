@@ -3,6 +3,7 @@
 import * as hb from 'harfbuzzjs';
 import type { LetteringOptions, OpenTypeLettering } from '@/model/types';
 import { shapingKey } from './opentype';
+import { textRuns } from './textRuns';
 
 export function fontBytes(data: string): Uint8Array {
   if (data.length > 14_000_000) throw new Error('Fonts must be at most 10 MB.');
@@ -70,26 +71,25 @@ export function prepareOpenType(o: LetteringOptions): LetteringOptions {
     .normalize('NFC')
     .split('\n')
     .map((line) => {
-      // HarfBuzz shapes directional runs; it is not a paragraph bidi engine.
-      // Reject mixed-direction runs instead of silently reversing numbers/Latin inside Arabic.
-      const rtl = /[\p{Script=Arabic}\p{Script=Hebrew}]/u.test(line);
-      if (rtl && /[\p{Script=Latin}\p{Script=Greek}\p{Script=Cyrillic}\p{Number}]/u.test(line))
-        throw new Error(
-          'Use separate text blocks for right-to-left scripts and Latin text or numbers. Mixed-direction paragraph layout is not supported yet.',
-        );
-      if (rtl && o.letterSpacing !== 0)
+      if (/[\t\r\u2028\u2029]/u.test(line))
+        throw new Error('Use newlines instead of tabs or paragraph separator controls.');
+      const runs = textRuns(line, f.direction);
+      if (runs.some((r) => r.direction === 'rtl') && o.letterSpacing !== 0)
         throw new Error('Keep extra letter spacing at zero for connected right-to-left scripts.');
-      if (/[\u202a-\u202e\u2066-\u2069\t\r]/u.test(line))
-        throw new Error('Use plain text without bidi controls or tabs.');
-      const buffer = new hb.Buffer();
-      buffer.addText(line);
-      buffer.guessSegmentProperties();
-      if (f.direction !== 'auto')
-        buffer.setDirection(f.direction === 'rtl' ? hb.Direction.RTL : hb.Direction.LTR);
-      if (f.language) buffer.setLanguage(f.language);
-      hb.shape(font, buffer);
-      const infos = buffer.getGlyphInfos(),
-        positions = buffer.getGlyphPositions();
+      const infos: hb.GlyphInfo[] = [],
+        positions: hb.GlyphPosition[] = [];
+      for (const run of runs) {
+        const buffer = new hb.Buffer();
+        // Full text plus a substring range provides context while retaining original UTF-16 clusters.
+        buffer.addText(line, run.start, run.end - run.start);
+        buffer.setDirection(run.direction === 'rtl' ? hb.Direction.RTL : hb.Direction.LTR);
+        buffer.setScript(run.script);
+        if (f.language) buffer.setLanguage(f.language);
+        buffer.setFlags(hb.BufferFlag.REMOVE_DEFAULT_IGNORABLES);
+        hb.shape(font, buffer);
+        infos.push(...buffer.getGlyphInfos());
+        positions.push(...buffer.getGlyphPositions());
+      }
       count += infos.length;
       if (count > 4000) throw new Error('Text exceeds the 4,000 shaped-glyph limit.');
       let x = 0;

@@ -1,6 +1,6 @@
 # Portable OpenType lettering
 
-LumaStitch now offers the original digitized satin font plus Noto Sans, Noto Serif and Noto Sans Arabic outline fonts. Import an individual `.ttf` or `.otf` file from **Object → Add lettering**, choose font size, variable weight/width, language, text direction and tatami or automatic satin fill. The original font, its available license metadata and shaped outlines are embedded in the project, so reopening and editing text does not depend on fonts installed on another computer. Bundled fonts carry their complete SIL Open Font License.
+LumaStitch now offers the original digitized satin font plus Noto Sans, Noto Serif, Noto Sans Arabic and Noto Sans Hebrew outline fonts. Import an individual `.ttf` or `.otf` file from **Object → Add lettering**, choose font size, variable weight/width, language, text direction and tatami or automatic satin fill. The original font, its available license metadata and shaped outlines are embedded in the project, so reopening and editing text does not depend on fonts installed on another computer. Bundled fonts carry their complete SIL Open Font License.
 
 Before this change, the lettering dialog supported only 118 digitized Geneva Simple Sans characters; Arabic and imported fonts were unavailable. These are feature examples, not a claim that outline fill replaces professionally digitized small-letter satin.
 
@@ -27,7 +27,7 @@ HarfBuzz supplies kerning, ligatures, contextual forms and mark offsets. Glyph c
 
 The independent `uharfbuzz 0.56.3` binding (HarfBuzz 14.6.0) matches every example's glyph IDs, clusters, advances and offsets. Tests reproduce all four committed PES files and compare every decoded needle coordinate with the rendered plan. Browser tests exercise the production WASM worker, bundled selection, file import, variable weight, batch names, undo/redo and editing after reload. These checks do not establish physical sew quality.
 
-Current bounds: 10 MB per individual TTF/OTF; 1,000 text characters; 4,000 shaped glyphs; 5 MB of outline path data; 100 MB of embedded font data per batch. Collections, WOFF and bitmap/color-only fonts are rejected. OpenType font size is 5–100 mm per em, not cap height. Thin stems at small sizes can still be unsuitable for sewing. Three-initial monograms use the digitized font. Mixed-direction paragraphs are not implemented: use separate blocks for RTL text and Latin/numbers, and keep connected RTL letter spacing at zero. Font coverage determines supported scripts; the bundled Arabic example does not imply all fonts cover all languages.
+Current bounds: 10 MB per individual TTF/OTF; 1,000 text characters; 4,000 shaped glyphs; 5 MB of outline path data; 100 MB of embedded font data per batch. Collections, WOFF and bitmap/color-only fonts are rejected. OpenType font size is 5–100 mm per em, not cap height. Thin stems at small sizes can still be unsuitable for sewing. Three-initial monograms use the digitized font. [Mixed-direction paragraphs are supported through Unicode 17 bidi layout](../bidi/README.md); keep connected RTL letter spacing at zero. Each block uses one font, so its coverage must include every script. Font coverage determines supported scripts; the bundled Arabic example does not imply all fonts cover all languages.
 
 Reproduce from the repository root:
 

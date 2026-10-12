@@ -1,0 +1,78 @@
+[
+  {
+    "name": "arabic-ltr",
+    "stitches": 1829,
+    "jumps": 17,
+    "trims": 16,
+    "colorChanges": 0,
+    "stops": 0,
+    "threadLengthMm": 2651.0689120426136,
+    "estSeconds": 278.9,
+    "jumpMm": 102.10765687682846,
+    "travelMm": 304.8064707742315,
+    "bounds": {
+      "minX": -63.58700180053711,
+      "minY": -18.25226593017578,
+      "maxX": 64.29158782958984,
+      "maxY": 7.257132053375244
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "arabic-rtl",
+    "stitches": 1822,
+    "jumps": 16,
+    "trims": 15,
+    "colorChanges": 0,
+    "stops": 0,
+    "threadLengthMm": 2662.4635781041866,
+    "estSeconds": 272.2,
+    "jumpMm": 122.74865924811603,
+    "travelMm": 318.29679022908863,
+    "bounds": {
+      "minX": -63.97737121582031,
+      "minY": -18.321025848388672,
+      "maxX": 63.856998443603516,
+      "maxY": 7.196890830993652
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "hebrew",
+    "stitches": 2151,
+    "jumps": 18,
+    "trims": 17,
+    "colorChanges": 0,
+    "stops": 0,
+    "threadLengthMm": 3120.7798543378526,
+    "estSeconds": 317.1,
+    "jumpMm": 110.88928201452623,
+    "travelMm": 315.2005069714167,
+    "bounds": {
+      "minX": -71.5250015258789,
+      "minY": -13.839311599731445,
+      "maxX": 71.95700073242188,
+      "maxY": 4.330999851226807
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "mixed-curve",
+    "stitches": 1828,
+    "jumps": 14,
+    "trims": 13,
+    "colorChanges": 0,
+    "stops": 0,
+    "threadLengthMm": 2661.2991225617534,
+    "estSeconds": 260.8,
+    "jumpMm": 123.12918198039475,
+    "travelMm": 276.5455082773478,
+    "bounds": {
+      "minX": 23.848642349243164,
+      "minY": -0.9328053593635559,
+      "maxX": 154.9239959716797,
+      "maxY": 21.94597053527832
+    },
+    "diagnostics": []
+  }
+]

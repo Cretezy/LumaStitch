@@ -179,7 +179,7 @@ export default function LetteringDialog({ open, onClose, data }: DialogProps) {
           {options.font === 'opentype' && options.openType && (
             <fieldset className="grid grid-cols-2 gap-2 rounded border p-3">
               <legend className="px-1 text-sm">OpenType shaping and fill</legend>
-              <Label htmlFor="font-direction">Direction</Label>
+              <Label htmlFor="font-direction">Paragraph direction</Label>
               <select
                 id="font-direction"
                 value={options.openType.direction}
@@ -237,9 +237,9 @@ export default function LetteringDialog({ open, onClose, data }: DialogProps) {
                 </div>
               ))}
               <p className="col-span-2 text-xs text-muted-foreground">
-                Kerning, ligatures and script joins use the font's shaping rules. Use separate blocks for
-                right-to-left text and Latin text/numbers. Outline fonts need suitable size, weight and stitch
-                settings; they are not pre-digitized embroidery fonts.
+                Kerning, ligatures and script joins use the font's shaping rules. Unicode bidirectional layout
+                supports mixed scripts and numbers in the same text block. Outline fonts need suitable size,
+                weight and stitch settings; they are not pre-digitized embroidery fonts.
               </p>
             </fieldset>
           )}

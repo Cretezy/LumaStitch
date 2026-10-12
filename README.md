@@ -143,8 +143,11 @@ Use **Pre-cut fabric** to skip the trimming stop, and **Omit covered satin** to 
 
 Select an open curve and choose **Object → Add lettering on path**. Set alignment, normal offset or reversed direction, then use **Object → Edit lettering baseline** to reshape the guide. Letters reposition with the committed edit and remain editable as text. [Straight/curved projects, GIFs and baseline editor](docs/lettering-path/README.md).
 
-Use **Object → Add lettering** to choose digitized satin or the bundled Noto Sans, Noto Serif and Noto Sans Arabic fonts. Import TTF/OTF files, adjust variable weight/width, language and direction, and generate tatami or automatic satin fill. Projects retain their fonts for portable text editing; path baselines also support connected scripts. [Full font examples, machine files and rendered GIFs](docs/opentype/README.md).
+Use **Object → Add lettering** to choose digitized satin or the bundled Noto Sans, Noto Serif, Noto Sans Arabic and Noto Sans Hebrew fonts. Import TTF/OTF files, adjust variable weight/width, language and direction, and generate tatami or automatic satin fill. Projects retain their fonts for portable text editing; path baselines also support connected scripts. [Full font examples, machine files and rendered GIFs](docs/opentype/README.md).
 
 Choose **Object → Appliqué edge coverage** to omit selected satin edges while retaining placement and tack-down. For open paths, choose **Outline → Appliqué border** to sew the three appliqué phases along the drawn border. [Before/after projects, open-border example and GIFs](docs/applique-edges/README.md).
 
 Select compatible **Satin rails** objects and choose **Object → Group satin rails for routing** to connect variable-width columns while retaining their rails and guides. Ungrouping restores separate editable columns. The seven-column vine removes all three trims and 35.67 mm of jumps, adding 29 needles. [Before/after projects, machine files and GIFs](docs/satin-rails/README.md).
+
+
+Mixed-script OpenType text uses Unicode 17 bidirectional layout, keeping numbers, combining marks and joining scripts in reading order. [Arabic/Latin and Hebrew/Latin projects, machine files and rendered GIFs](docs/bidi/README.md) include both paragraph directions and curved text. The bundled catalog now also includes Noto Sans Hebrew.

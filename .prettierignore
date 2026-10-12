@@ -3,3 +3,7 @@ node_modules
 src/threads/charts/*.json
 tests/fixtures
 LICENSE
+
+# Retain upstream formatting and reproducible Unicode data.
+src/lettering/vendor/bidi
+src/lettering/unicode17.json

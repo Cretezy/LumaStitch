@@ -65,10 +65,16 @@ It includes, ports or is derived from the following works. Their copyright notic
 
 ### OpenType fonts — SIL Open Font License 1.1
 
-- Unmodified Noto Sans, Noto Serif and Noto Sans Arabic variable TTF files from [Google Fonts commit bd8f81ddb5c74d5c8897b36ad88b440266245103](https://github.com/google/fonts/tree/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl), directories `notosans`, `notoserif`, `notosansarabic`.
-- Copyright 2022 The Noto Project Authors. Individual copyright statements and full license texts are retained in `src/lettering/fonts/opentype/NotoSans-OFL.txt`, `NotoSerif-OFL.txt` and `NotoSansArabic-OFL.txt`. These font files are separately licensed under SIL OFL 1.1, not the application's GPL.
+- Unmodified Noto Sans, Noto Serif, Noto Sans Arabic and Noto Sans Hebrew variable TTF files from [Google Fonts commit bd8f81ddb5c74d5c8897b36ad88b440266245103](https://github.com/google/fonts/tree/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl), directories `notosans`, `notoserif`, `notosansarabic`, `notosanshebrew`.
+- Copyright 2022 The Noto Project Authors. Individual copyright statements and full license texts are retained in `src/lettering/fonts/opentype/NotoSans-OFL.txt`, `NotoSerif-OFL.txt`, `NotoSansArabic-OFL.txt` and `NotoSansHebrew-OFL.txt`. These font files are separately licensed under SIL OFL 1.1, not the application's GPL.
 - Bundled-font projects retain the complete license text with the original font bytes. Shaped geometry and variable instances are generated at runtime; the bundled font binaries are not modified.
 
 ### HarfBuzz / harfbuzzjs
 
 - [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs), version 1.6.3, MIT; its unmodified WebAssembly build provides OpenType shaping and glyph outlines in a worker. [HarfBuzz](https://github.com/harfbuzz/harfbuzz) uses its permissive Old MIT license. The dependency package's LICENSE is retained under `node_modules/harfbuzzjs/LICENSE` on installation; original notices are reproduced in [src/lettering/fonts/opentype/HARFBUZZ-LICENSE.txt](src/lettering/fonts/opentype/HARFBUZZ-LICENSE.txt).
+
+
+### Bidirectional layout and Unicode data
+
+- `src/lettering/vendor/bidi` derives from [bidi-js](https://github.com/lojjic/bidi-js), npm version 1.1.0, Copyright 2021 Jason Johnston, MIT. The full license is retained as `LICENSE.txt` in that directory. LumaStitch updates the data to Unicode 17, indexes complete Unicode scalars, and corrects local-line indexing during whitespace reordering. Original source formatting is retained.
+- Unicode 17.0.0 bidi classes, paired brackets, mirroring, Scripts and Script_Extensions are generated from the [official Unicode Character Database](https://www.unicode.org/Public/17.0.0/ucd/). Copyright © 1991–2025 Unicode, Inc.; covered by the Unicode License V3, reproduced as `src/lettering/vendor/bidi/UNICODE-LICENSE.txt`. `src/lettering/unicode17.json` and the representative conformance fixtures derive from the same data. `scripts/generate-lettering-unicode.py` reproduces the tables; the complete official bidi tests can be checked with `tests/tools/check_bidi.mjs`.
