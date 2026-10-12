@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { DIGITIZED_FONTS, digitizedFont, type DigitizedFontId } from '@/lettering/digitizedFonts';
 import { FONT_CATALOG } from '@/lettering/fontCatalog';
 import { withFontWorker } from '@/lettering/client';
 import { DEFAULT_LETTERING, validateLettering } from '@/lettering/layout';
@@ -69,10 +70,14 @@ export default function LetteringDialog({ open, onClose, data }: DialogProps) {
     }
   }
   async function chooseFont(value: string) {
-    if (value === 'geneva-simple') {
+    const digitized = digitizedFont(value);
+    if (digitized) {
       patch({
-        font: 'geneva-simple',
-        height: Math.max(10, Math.min(20, options.height)),
+        font: value as DigitizedFontId,
+        height: Math.max(
+          options.monogram ? Math.ceil((digitized.min / 0.75) * 100) / 100 : digitized.min,
+          Math.min(digitized.max, options.height),
+        ),
         openType: undefined,
       });
       return;
@@ -148,10 +153,14 @@ export default function LetteringDialog({ open, onClose, data }: DialogProps) {
             id="lettering-font"
             disabled={busy}
             className="rounded-md border bg-background p-2 text-sm"
-            value={options.font === 'geneva-simple' ? 'geneva-simple' : (options.openType?.name ?? '')}
+            value={options.font !== 'opentype' ? options.font : (options.openType?.name ?? '')}
             onChange={(e) => void chooseFont(e.target.value)}
           >
-            <option value="geneva-simple">Geneva Simple Sans — digitized satin</option>
+            {Object.entries(DIGITIZED_FONTS).map(([id, font]) => (
+              <option key={id} value={id}>
+                {font.name} — digitized satin
+              </option>
+            ))}
             {FONT_CATALOG.map((f) => (
               <option key={f.name} value={f.name}>
                 {f.name} — outline fill
@@ -161,6 +170,21 @@ export default function LetteringDialog({ open, onClose, data }: DialogProps) {
               <option value={options.openType.name}>{options.openType.name} — imported</option>
             )}
           </select>
+          {digitizedFont(options.font) && (
+            <p className="text-xs text-muted-foreground">
+              Supported capital height: {digitizedFont(options.font)!.min}–{digitizedFont(options.font)!.max}{' '}
+              mm.{' '}
+              <a
+                href={digitizedFont(options.font)!.source}
+                target="_blank"
+                rel="noreferrer"
+                className="underline"
+              >
+                Font source and license
+              </a>
+              .
+            </p>
+          )}
           <Label htmlFor="lettering-font-import">Import TTF/OTF (up to 10 MB)</Label>
           <Input
             id="lettering-font-import"
@@ -257,9 +281,9 @@ export default function LetteringDialog({ open, onClose, data }: DialogProps) {
                 [
                   'height',
                   options.font === 'opentype' ? 'Font size (mm per em)' : 'Capital height (mm)',
-                  options.font === 'opentype' ? 5 : 10,
-                  options.font === 'opentype' ? 100 : 20,
-                  0.5,
+                  digitizedFont(options.font)?.min ?? 5,
+                  digitizedFont(options.font)?.max ?? 100,
+                  'any',
                 ],
                 ['letterSpacing', 'Extra letter spacing (mm)', -5, 20, 0.1],
                 ['wordSpacing', 'Extra word spacing (mm)', 0, 30, 0.1],
@@ -334,7 +358,13 @@ export default function LetteringDialog({ open, onClose, data }: DialogProps) {
               onChange={(e) =>
                 patch({
                   monogram: e.target.checked,
-                  height: e.target.checked ? Math.max(14, options.height) : options.height,
+                  height: e.target.checked
+                    ? Math.max(
+                        14,
+                        Math.ceil(((digitizedFont(options.font)?.min ?? 10) / 0.75) * 100) / 100,
+                        options.height,
+                      )
+                    : options.height,
                 })
               }
             />

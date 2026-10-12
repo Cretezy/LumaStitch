@@ -180,7 +180,7 @@ export interface OpenTypeLettering {
 }
 
 export interface LetteringOptions {
-  font: 'geneva-simple' | 'opentype';
+  font: 'geneva-simple' | 'geneva-rounded' | 'chopin' | 'opentype';
   openType?: OpenTypeLettering;
   text: string;
   /** Digitized cap height (10–20 mm) or OpenType em size (5–100 mm). */

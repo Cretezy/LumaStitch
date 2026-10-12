@@ -151,3 +151,7 @@ Select compatible **Satin rails** objects and choose **Object → Group satin ra
 
 
 Mixed-script OpenType text uses Unicode 17 bidirectional layout, keeping numbers, combining marks and joining scripts in reading order. [Arabic/Latin and Hebrew/Latin projects, machine files and rendered GIFs](docs/bidi/README.md) include both paragraph directions and curved text. The bundled catalog now also includes Noto Sans Hebrew.
+
+### More digitized lettering styles
+
+The lettering selector includes **Geneva Simple Sans Rounded** (120 glyphs) and **Chopin Script** (116 glyphs), alongside Geneva Simple Sans. These use authored satin rails and running connectors, with per-font size limits, editable layouts and monograms. Batch packages carry the selected fonts' license notices. [Full projects, machine files and rendered GIFs](docs/digitized-fonts/README.md).

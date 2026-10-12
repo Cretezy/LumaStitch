@@ -82,3 +82,11 @@ It includes, ports or is derived from the following works. Their copyright notic
 ### Recognition reference files
 
 `tests/fixtures/recognition` contains independently constructed synthetic patterns encoded by pyembroidery 1.5.1 (MIT, Copyright (c) 2018 Tatarize; license reproduced above). `tests/tools/make_recognition_references.py` reproduces all 30 files. No competitor recognition code or design artwork is included.
+
+### Additional digitized lettering fonts
+
+`src/lettering/fonts/geneva-rounded` contains Geneva Simple Sans Rounded from [Ink/Stitch embroidery-fonts](https://github.com/inkstitch/embroidery-fonts/tree/084eac038bf1af5a3a8b881a6cf0cc3340cf6e9b/src/geneva_rounded), pinned commit `084eac038bf1af5a3a8b881a6cf0cc3340cf6e9b`. The geometry is CC-BY-SA 2.5 and derives from the Hershey fonts. The complete source LICENSE includes the Hershey acknowledgements and the required Geneva citation. Source SVG and metadata are retained.
+
+`src/lettering/fonts/chopin` contains [Chopin Script at the same pinned commit](https://github.com/inkstitch/embroidery-fonts/tree/084eac038bf1af5a3a8b881a6cf0cc3340cf6e9b/src/chopin), adapted for Ink/Stitch by Célia Imbert Sabater under CC-BY-SA 4.0. Its complete source LICENSE identifies the original Chopin Script by Claude Pelletier (Diogene) as public domain and links the original download. The source SVG, metadata and notice are retained without geometry edits.
+
+The extracted JSON retains paths and transforms, with stitch-role/settings mappings for LumaStitch. Runtime layout normalizes rail ordering and places/scales letters; the fonts remain separately licensed. Rendered examples in `docs/digitized-fonts` derive from those geometries. Batch exports include the selected fonts' notices and source attribution. `scripts/extract-lettering-font.py` reproduces the path data.

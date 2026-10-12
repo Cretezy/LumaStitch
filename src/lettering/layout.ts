@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-/** Layout of the separately licensed, digitized Geneva Simple Sans font. */
+/** Layout of the separately licensed, digitized embroidery font catalog. */
 import { layoutOpenType } from './opentype';
-import glyphData from './fonts/geneva-simple/glyphs.json';
-import metadata from './fonts/geneva-simple/metadata.json';
+import { digitizedFont, DIGITIZED_FONTS, type DigitizedFontId, type FontPath } from './digitizedFonts';
 import { flattenSubpath } from '@/geom/flatten';
 import { compose, IDENTITY, rotateScreen, scale, translate } from '@/geom/matrix';
 import { parsePathData } from '@/geom/pathData';
@@ -24,14 +23,6 @@ export const DEFAULT_LETTERING: LetteringOptions = {
   arcAngle: 0,
   monogram: false,
 };
-type FontPath = { d: string; transforms: string[]; satin: boolean; underlay: string; pull: number };
-const glyphs: Record<string, FontPath[]> = glyphData;
-const advances: Record<string, number> = metadata.horiz_adv_x;
-const kern: Record<string, number> = metadata.kerning_pairs;
-// SVG guide positions, in the pinned source's 90×90 user coordinate system.
-const BASELINE = 90 - 27.2685;
-const CAP_HEIGHT = 62.9405 - 27.2685;
-
 function intersects(a: Float64Array, b: Float64Array): boolean {
   for (let i = 0; i + 3 < a.length; i += 2)
     for (let j = 0; j + 3 < b.length; j += 2) {
@@ -102,28 +93,31 @@ export function normalizeRails(g: PathGeom): PathGeom {
 }
 
 const cache = new Map<string, { geom: PathGeom; source: FontPath }[]>();
-function glyph(char: string) {
-  let value = cache.get(char);
+function glyph(fontId: DigitizedFontId, char: string) {
+  const font = DIGITIZED_FONTS[fontId];
+  const key = `${fontId}:${char}`;
+  let value = cache.get(key);
   if (value) return value;
-  value = glyphs[char].map((source) => {
+  value = font.glyphs[char].map((source) => {
     const m = compose(...source.transforms.map((s) => parseTransform(s) ?? IDENTITY));
     let geom = transformGeomM(parsePathData(source.d), m);
     if (source.satin) geom = normalizeRails(geom);
     return { geom, source };
   });
   const minX = Math.min(...value.map((p) => geomBBox(p.geom).minX));
-  value = value.map((p) => ({ ...p, geom: transformGeomM(p.geom, translate(-minX, -BASELINE)) }));
-  cache.set(char, value);
+  value = value.map((p) => ({ ...p, geom: transformGeomM(p.geom, translate(-minX, -font.baseline)) }));
+  cache.set(key, value);
   return value;
 }
 
 export function validateLettering(o: LetteringOptions): void {
-  if (o.font !== 'geneva-simple' && o.font !== 'opentype') throw new Error('Unknown embroidery font.');
+  const font = digitizedFont(o.font);
+  if (!font && o.font !== 'opentype') throw new Error('Unknown embroidery font.');
   if (o.font === 'opentype' && o.monogram)
     throw new Error('Use the digitized font for three-initial monograms.');
   if (!o.text.trim() || o.text.length > 1000) throw new Error('Enter between 1 and 1,000 characters.');
   for (const [key, min, max] of [
-    ['height', o.font === 'opentype' ? 5 : 10, o.font === 'opentype' ? 100 : 20],
+    ['height', font?.min ?? 5, font?.max ?? 100],
     ['letterSpacing', -5, 20],
     ['wordSpacing', 0, 30],
     ['lineSpacing', 1, 4],
@@ -132,15 +126,16 @@ export function validateLettering(o: LetteringOptions): void {
     if (!Number.isFinite(o[key]) || o[key] < min || o[key] > max)
       throw new Error(`${key} must be between ${min} and ${max}.`);
   const missing = [
-    ...new Set([...o.text.normalize('NFC')].filter((c) => c !== ' ' && c !== '\n' && !glyphs[c])),
+    ...new Set(
+      [...o.text.normalize('NFC')].filter((c) => c !== ' ' && c !== '\n' && font && !font.glyphs[c]),
+    ),
   ];
-  if (o.font === 'geneva-simple' && missing.length)
-    throw new Error(`This font has no glyph for: ${missing.join(' ')}.`);
+  if (font && missing.length) throw new Error(`This font has no glyph for: ${missing.join(' ')}.`);
   if (o.monogram && (!/^[^\s]{3}$/u.test(o.text) || [...o.text].length !== 3))
     throw new Error('A monogram needs exactly three characters, entered in sewing order.');
-  if (o.monogram && o.height < 10 / 0.75)
+  if (o.monogram && o.height < (font?.min ?? 10) / 0.75)
     throw new Error(
-      'Monograms need a capital height of at least 13.34 mm to keep the smaller initials within the font range.',
+      `Monograms need a capital height of at least ${(Math.ceil(((font?.min ?? 10) / 0.75) * 100) / 100).toFixed(2)} mm to keep the smaller initials within the font range.`,
     );
   if (o.arcAngle && o.text.includes('\n')) throw new Error('Curved lettering uses one line.');
   if (o.baseline) {
@@ -168,7 +163,11 @@ export function layoutLettering(
   validateLettering(options);
   if (options.font === 'opentype') return layoutOpenType(options, threadId, color, matrix);
   const o = { ...options, text: options.text.normalize('NFC') };
-  const unit = o.height / CAP_HEIGHT;
+  const font = DIGITIZED_FONTS[o.font as DigitizedFontId];
+  const metadata = font.metadata,
+    advances = metadata.horiz_adv_x,
+    kern = metadata.kerning_pairs ?? {};
+  const unit = o.height / font.capHeight;
   let baseline = o.baseline ? flattenSubpath(o.baseline.subpaths[0], 0.03) : undefined;
   if (baseline && o.baselineReverse) {
     const reverse = new Float64Array(baseline.length);
@@ -233,7 +232,7 @@ export function layoutLettering(
         );
       } else placement = translate(letter.x + offset, lineIndex * metadata.leading * unit * o.lineSpacing);
       const m = compose(matrix, placement, scale(unit * letter.factor));
-      for (const part of glyph(letter.char)) {
+      for (const part of glyph(o.font as DigitizedFontId, letter.char)) {
         const s = createShape(`Letter ${letter.char}`, transformGeomM(part.geom, m), {
           stroke: color,
           strokeWidth: 0.15,
@@ -244,7 +243,7 @@ export function layoutLettering(
           threadId,
           part.source.satin
             ? { underlay: part.source.underlay, pullComp: part.source.pull }
-            : { stitchLength: 2 },
+            : { stitchLength: part.source.stitchLength ?? 2 },
         );
         shapes.push(s);
       }
@@ -253,4 +252,4 @@ export function layoutLettering(
   return shapes;
 }
 
-export const FONT_CHARACTERS = Object.keys(glyphs).join('');
+export const FONT_CHARACTERS = Object.keys(DIGITIZED_FONTS['geneva-simple'].glyphs).join('');

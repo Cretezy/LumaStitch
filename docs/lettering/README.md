@@ -17,3 +17,5 @@ The bundled Geneva Simple Sans font has 118 glyphs, kerning and a supported capi
 These are actual engine outputs rendered at accelerated speed, with a two-second final hold. [Metrics](metrics.json) include every underlay, jump and trim. Lettering preserves the font's authored component order; it does not yet implement a branch-aware satin underpath optimizer. It also does not yet provide arbitrary-path baselines, a font importer, right-to-left shaping, or a commercial-sized font catalog. No physical sew-out is claimed.
 
 Reproduce with `EXAMPLES_MODULE=/tests/lettering/examples.ts node scripts/stitch-examples.mjs . docs/lettering`. The source font and extracted geometry are CC BY-SA 2.5 with the original Hershey acknowledgements retained; see [NOTICE.md](../../NOTICE.md).
+
+Additional [rounded and script digitized styles](../digitized-fonts/README.md) now share this workflow, with their own size ranges and batch license notices.

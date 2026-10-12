@@ -212,7 +212,7 @@ export const designSchema = z.object({
       z.string(),
       z.object({
         options: z.object({
-          font: z.enum(['geneva-simple', 'opentype']),
+          font: z.enum(['geneva-simple', 'geneva-rounded', 'chopin', 'opentype']),
           openType: z
             .object({
               license: z.string().max(100000).optional(),

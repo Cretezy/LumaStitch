@@ -5,6 +5,7 @@ import { serializeProject } from '@/model/schema';
 import type { LetteringOptions } from '@/model/types';
 import { writePes } from '@/io/pes/pesWriter';
 import { letteringBatch } from './batch';
+import { digitizedFont } from './digitizedFonts';
 import type { Design } from '@/model/types';
 
 export function letteringArchive(names: string[], options: LetteringOptions, color: string): Uint8Array {
@@ -23,10 +24,23 @@ export function archiveLetteringDesigns(designs: Design[]): Uint8Array {
     entries.push({ name: `${name}.lumastitch`, data: enc.encode(serializeProject(d)) });
     entries.push({ name: `${name}.pes`, data: writePes(plan, d, { version: 6 }) });
   }
+  const fonts = new Set(designs.flatMap((d) => Object.values(d.lettering ?? {}).map((g) => g.options.font)));
+  const credits: string[] = [];
+  for (const id of fonts) {
+    const font = digitizedFont(id);
+    if (font) {
+      credits.push(`${font.name}: ${font.attribution} Source: ${font.source}`);
+      entries.push({
+        name: `licenses/${id}.txt`,
+        data: enc.encode(`${font.attribution}\nSource: ${font.source}\n\n${font.license}`),
+      });
+    }
+  }
   entries.push({
     name: 'README.txt',
     data: enc.encode(
-      'LumaStitch lettering batch. Each numbered pair contains an editable project and a PES v6 machine file. OpenType projects embed their original font; its license continues to apply. Geneva Simple Sans digitized font: CC-BY-SA 2.5; https://github.com/inkstitch/embroidery-fonts/tree/084eac038bf1af5a3a8b881a6cf0cc3340cf6e9b/src/geneva_simple . Verify dimensions and test on the intended fabric before production.',
+      'LumaStitch lettering batch. Each numbered pair contains an editable project and a PES v6 machine file. OpenType projects embed their original font; its license continues to apply. Digitized font licenses are included in the licenses folder. Verify dimensions and test on the intended fabric before production.\n\n' +
+        credits.join('\n'),
     ),
   });
   return zipFiles(entries);
