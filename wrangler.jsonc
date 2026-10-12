@@ -2,6 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "lumastitch",
   "compatibility_date": "2026-10-01",
+  "previews": {},
   "routes": [{ "pattern": "lumastitch.cretezy.com", "custom_domain": true }],
   "assets": {
     "directory": "./dist",

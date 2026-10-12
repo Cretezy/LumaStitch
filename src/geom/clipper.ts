@@ -5,6 +5,7 @@
  */
 import {
   ClipType,
+  Clipper64,
   EndType,
   FillRule,
   JoinType,
@@ -172,4 +173,17 @@ export function offsetClosedStroke(
 /** Splits a multipolygon into its connected parts (each outer with its holes). */
 export function splitParts(ps: PolyShape): PolyShape[] {
   return ps.map((p) => [p]);
+}
+
+/** Exact open-path intersection with a polygon, retaining holes and disconnected pieces. */
+export function clipPolylines(lines: Polyline[], area: PolyShape, keepInside = true): Polyline[] {
+  if (!lines.length) return [];
+  if (!area.length) return keepInside ? [] : lines.slice();
+  const c = new Clipper64();
+  c.addOpenSubject(lines.filter((p) => p.length >= 4).map(ringToPath));
+  c.addClip(polyShapeToPaths(area));
+  const closed: Paths64 = [],
+    open: Paths64 = [];
+  c.execute(keepInside ? ClipType.Intersection : ClipType.Difference, FillRule.NonZero, closed, open);
+  return open.map(pathToRing);
 }

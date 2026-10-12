@@ -1,0 +1,331 @@
+{
+  "format": "lumastitch-project",
+  "schemaVersion": 1,
+  "app": "LumaStitch",
+  "savedAt": "2026-10-11T00:00:00.000Z",
+  "design": {
+    "schemaVersion": 1,
+    "name": "Whole satin medallions at hoop seams",
+    "fabric": "woven",
+    "threadChart": "exact",
+    "settings": {
+      "trimThreshold": 3,
+      "minStitchLength": 0.3,
+      "maxStitchLength": 12,
+      "tieLength": 0.8,
+      "machineSpm": 600,
+      "trimSeconds": 6,
+      "colorChangeSeconds": 30,
+      "defaultTie": "auto",
+      "scaleStrokeWidths": true
+    },
+    "threads": {
+      "green": {
+        "id": "green",
+        "color": "#296450",
+        "name": "Forest green"
+      },
+      "gold": {
+        "id": "gold",
+        "color": "#cc9933",
+        "name": "Gold"
+      }
+    },
+    "shapes": {
+      "panel": {
+        "id": "panel",
+        "name": "Long running border",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    -14
+                  ]
+                },
+                {
+                  "p": [
+                    160,
+                    -14
+                  ]
+                },
+                {
+                  "p": [
+                    160,
+                    14
+                  ]
+                },
+                {
+                  "p": [
+                    0,
+                    14
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": null,
+        "outline": {
+          "id": "panel-outline",
+          "role": "outline",
+          "type": "running",
+          "threadId": "green",
+          "params": {
+            "stitchLength": 2.5
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      },
+      "medallion-0": {
+        "id": "medallion-0",
+        "name": "Medallion 1",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    56,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    -4.4182779986463485
+                  ],
+                  "out": [
+                    0,
+                    4.4182779986463485
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    48,
+                    8
+                  ],
+                  "in": [
+                    4.4182779986463485,
+                    0
+                  ],
+                  "out": [
+                    -4.4182779986463485,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    40,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    4.4182779986463485
+                  ],
+                  "out": [
+                    0,
+                    -4.4182779986463485
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    48,
+                    -8
+                  ],
+                  "in": [
+                    -4.4182779986463485,
+                    0
+                  ],
+                  "out": [
+                    4.4182779986463485,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": {
+          "id": "medallion-fill-0",
+          "role": "fill",
+          "type": "tatami",
+          "threadId": "gold",
+          "params": {
+            "density": 0.6,
+            "angle": 90,
+            "underlay": "none",
+            "pullComp": 0
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": {
+          "id": "medallion-outline-0",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "gold",
+          "params": {
+            "width": 2,
+            "density": 0.42,
+            "pullComp": 0.1
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      },
+      "medallion-1": {
+        "id": "medallion-1",
+        "name": "Medallion 2",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    120,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    -4.4182779986463485
+                  ],
+                  "out": [
+                    0,
+                    4.4182779986463485
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    112,
+                    8
+                  ],
+                  "in": [
+                    4.4182779986463485,
+                    0
+                  ],
+                  "out": [
+                    -4.4182779986463485,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    104,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    4.4182779986463485
+                  ],
+                  "out": [
+                    0,
+                    -4.4182779986463485
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    112,
+                    -8
+                  ],
+                  "in": [
+                    -4.4182779986463485,
+                    0
+                  ],
+                  "out": [
+                    4.4182779986463485,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": {
+          "id": "medallion-fill-1",
+          "role": "fill",
+          "type": "tatami",
+          "threadId": "gold",
+          "params": {
+            "density": 0.6,
+            "angle": 90,
+            "underlay": "none",
+            "pullComp": 0
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": {
+          "id": "medallion-outline-1",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "gold",
+          "params": {
+            "width": 2,
+            "density": 0.42,
+            "pullComp": 0.1
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      }
+    },
+    "zOrder": [
+      "panel",
+      "medallion-0",
+      "medallion-1"
+    ],
+    "sequence": [
+      {
+        "kind": "element",
+        "elementId": "panel-outline"
+      },
+      {
+        "kind": "element",
+        "elementId": "medallion-fill-0"
+      },
+      {
+        "kind": "element",
+        "elementId": "medallion-outline-0"
+      },
+      {
+        "kind": "element",
+        "elementId": "medallion-fill-1"
+      },
+      {
+        "kind": "element",
+        "elementId": "medallion-outline-1"
+      }
+    ],
+    "multiHoop": {
+      "width": 100,
+      "height": 100,
+      "margin": 3,
+      "overlap": 30,
+      "keepObjects": true
+    }
+  }
+}

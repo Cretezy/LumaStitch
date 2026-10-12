@@ -1,0 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+import { preview } from 'vite';
+import { chromium } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+const server=await preview({preview:{port:4185,strictPort:true,host:'127.0.0.1'}}),browser=await chromium.launch();
+try{const page=await browser.newPage({viewport:{width:1440,height:1000},colorScheme:'light'});await page.goto('http://127.0.0.1:4185/?testHooks');await page.waitForFunction(()=>window.__lumastitch);await page.evaluate(async(project)=>{const L=window.__lumastitch;await L.actions.handleFile(new File([project],'ribbon.lumastitch'));L.useUi.getState().setSelection({shapeIds:['ribbon-0'],elementIds:['ribbon-satin-0'],nodes:[]});},readFileSync('docs/satin-split/before/before.lumastitch','utf8'));await page.getByRole('menuitem',{name:'Object',exact:true}).click();await page.getByRole('menuitem',{name:'Split satin column…'}).click();await page.getByRole('spinbutton',{name:'Position along column (%)'}).fill('45');await page.getByRole('img',{name:'Satin rails and split position'}).waitFor();await page.screenshot({path:'docs/satin-split/dialog.png'});}finally{await browser.close();await new Promise((resolve)=>server.httpServer.close(resolve));}

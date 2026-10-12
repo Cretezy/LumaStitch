@@ -20,6 +20,7 @@ import * as A from '@/store/actions';
 import { arrange, insertStop, moveElements, selectedElementIds, setElementEnabled } from '@/store/commands';
 import { useDoc } from '@/store/documentStore';
 import { useUi, type ViewMode } from '@/store/uiStore';
+import { detachLettering, selectedLetteringId, editLetteringBaseline } from '@/store/commands/lettering';
 import { sim } from '@/simulator/controller';
 
 export function MenuBar() {
@@ -68,6 +69,8 @@ export function MenuBar() {
           <MenubarItem onSelect={() => ui.openDialog('export')}>
             Export machine file… <MenubarShortcut>{MOD}E</MenubarShortcut>
           </MenubarItem>
+          <MenubarItem onSelect={() => ui.openDialog('hooping')}>Multi-hooping export…</MenubarItem>
+          <MenubarItem onSelect={() => ui.openDialog('appliqueCut')}>Appliqué cutting export…</MenubarItem>
           <MenubarItem onSelect={() => ui.openDialog('export', { format: 'png' })}>
             Export PNG preview…
           </MenubarItem>
@@ -80,7 +83,7 @@ export function MenuBar() {
           <MenubarItem onSelect={() => ui.openDialog('export', { format: 'video' })}>
             Export stitch-out video…
           </MenubarItem>
-          <MenubarItem onSelect={() => void A.openFile()}>View a .pes file…</MenubarItem>
+          <MenubarItem onSelect={() => void A.openFile()}>Open machine stitches…</MenubarItem>
           <MenubarSeparator />
           <MenubarItem onSelect={() => ui.openDialog('designSettings')}>Design settings…</MenubarItem>
         </MenubarContent>
@@ -124,6 +127,52 @@ export function MenuBar() {
       <MenubarMenu>
         <MenubarTrigger>Object</MenubarTrigger>
         <MenubarContent>
+          <MenubarItem disabled={sim_} onSelect={() => ui.openDialog('lettering')}>
+            Add lettering…
+          </MenubarItem>
+          <MenubarItem
+            disabled={sim_ || !has || ui.selection.shapeIds.length !== 1}
+            onSelect={() => ui.openDialog('lettering', { baselineShapeId: ui.selection.shapeIds[0] })}
+          >
+            Add lettering on path…
+          </MenubarItem>
+          <MenubarItem disabled={sim_ || !selectedLetteringId()} onSelect={() => editLetteringBaseline()}>
+            Edit lettering baseline
+          </MenubarItem>
+          <MenubarItem
+            disabled={sim_ || !selectedLetteringId()}
+            onSelect={() => ui.openDialog('lettering', { groupId: selectedLetteringId() })}
+          >
+            Edit lettering…
+          </MenubarItem>
+          <MenubarItem
+            disabled={sim_ || !selectedLetteringId()}
+            onSelect={() => {
+              const id = selectedLetteringId();
+              if (id) detachLettering(id);
+            }}
+          >
+            Detach lettering
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem disabled={!has} onSelect={() => ui.openDialog('appliqueEdges')}>
+            Appliqué edge coverage…
+          </MenubarItem>
+          <MenubarItem disabled={!has} onSelect={() => A.groupSelectedSatinRails()}>
+            Group satin rails for routing
+          </MenubarItem>
+          <MenubarItem disabled={!has} onSelect={() => A.ungroupSelectedSatinRails()}>
+            Ungroup satin rails
+          </MenubarItem>
+          <MenubarItem disabled={!has} onSelect={() => ui.openDialog('recognize')}>
+            Recognize stitches…
+          </MenubarItem>
+          <MenubarItem disabled={!has} onSelect={() => ui.openDialog('satinSplit')}>
+            Split satin column…
+          </MenubarItem>
+          <MenubarItem disabled={!has} onSelect={() => A.makeGuidedFill()}>
+            Make guided fill
+          </MenubarItem>
           <MenubarItem disabled={!has} onSelect={() => A.flip('h')}>
             Flip horizontal
           </MenubarItem>
@@ -309,6 +358,9 @@ export function MenuBar() {
           </MenubarCheckboxItem>
           <MenubarCheckboxItem checked={v.underlay} onCheckedChange={(c) => ui.setView({ underlay: !!c })}>
             Highlight underlay
+          </MenubarCheckboxItem>
+          <MenubarCheckboxItem checked={v.density} onCheckedChange={(c) => ui.setView({ density: !!c })}>
+            Needle density map
           </MenubarCheckboxItem>
           <MenubarCheckboxItem checked={v.grid} onCheckedChange={(c) => ui.setView({ grid: !!c })}>
             Grid

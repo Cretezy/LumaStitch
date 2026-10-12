@@ -1,0 +1,504 @@
+{
+  "format": "lumastitch-project",
+  "schemaVersion": 1,
+  "app": "LumaStitch",
+  "savedAt": "2026-10-11T00:00:00.000Z",
+  "design": {
+    "schemaVersion": 1,
+    "name": "Layered gold and cream badges at hoop seams",
+    "fabric": "woven",
+    "threadChart": "exact",
+    "settings": {
+      "trimThreshold": 3,
+      "minStitchLength": 0.3,
+      "maxStitchLength": 12,
+      "tieLength": 0.8,
+      "machineSpm": 600,
+      "trimSeconds": 6,
+      "colorChangeSeconds": 30,
+      "defaultTie": "auto",
+      "scaleStrokeWidths": true
+    },
+    "threads": {
+      "green": {
+        "id": "green",
+        "color": "#296450",
+        "name": "Forest green"
+      },
+      "gold": {
+        "id": "gold",
+        "color": "#c89432",
+        "name": "Gold"
+      },
+      "cream": {
+        "id": "cream",
+        "color": "#eee0bb",
+        "name": "Cream"
+      }
+    },
+    "shapes": {
+      "panel": {
+        "id": "panel",
+        "name": "Long running border",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    -14
+                  ]
+                },
+                {
+                  "p": [
+                    160,
+                    -14
+                  ]
+                },
+                {
+                  "p": [
+                    160,
+                    14
+                  ]
+                },
+                {
+                  "p": [
+                    0,
+                    14
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": null,
+        "outline": {
+          "id": "panel-outline",
+          "role": "outline",
+          "type": "running",
+          "threadId": "green",
+          "params": {
+            "stitchLength": 2.5
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      },
+      "background-0": {
+        "id": "background-0",
+        "name": "Badge 1 gold background",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    56,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    -4.4182779986463485
+                  ],
+                  "out": [
+                    0,
+                    4.4182779986463485
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    48,
+                    8
+                  ],
+                  "in": [
+                    4.4182779986463485,
+                    0
+                  ],
+                  "out": [
+                    -4.4182779986463485,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    40,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    4.4182779986463485
+                  ],
+                  "out": [
+                    0,
+                    -4.4182779986463485
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    48,
+                    -8
+                  ],
+                  "in": [
+                    -4.4182779986463485,
+                    0
+                  ],
+                  "out": [
+                    4.4182779986463485,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "fill": "#c89432"
+        },
+        "fill": {
+          "id": "background-fill-0",
+          "role": "fill",
+          "type": "tatami",
+          "threadId": "gold",
+          "params": {
+            "density": 0.6,
+            "angle": 90,
+            "underlay": "none",
+            "pullComp": 0
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      },
+      "background-1": {
+        "id": "background-1",
+        "name": "Badge 2 gold background",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    120,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    -4.4182779986463485
+                  ],
+                  "out": [
+                    0,
+                    4.4182779986463485
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    112,
+                    8
+                  ],
+                  "in": [
+                    4.4182779986463485,
+                    0
+                  ],
+                  "out": [
+                    -4.4182779986463485,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    104,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    4.4182779986463485
+                  ],
+                  "out": [
+                    0,
+                    -4.4182779986463485
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    112,
+                    -8
+                  ],
+                  "in": [
+                    -4.4182779986463485,
+                    0
+                  ],
+                  "out": [
+                    4.4182779986463485,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "fill": "#c89432"
+        },
+        "fill": {
+          "id": "background-fill-1",
+          "role": "fill",
+          "type": "tatami",
+          "threadId": "gold",
+          "params": {
+            "density": 0.6,
+            "angle": 90,
+            "underlay": "none",
+            "pullComp": 0
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      },
+      "star-0": {
+        "id": "star-0",
+        "name": "Badge 1 cream star",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    48,
+                    -5.8
+                  ]
+                },
+                {
+                  "p": [
+                    49.52824165596043,
+                    -2.1034441853748636
+                  ]
+                },
+                {
+                  "p": [
+                    53.51612779451189,
+                    -1.792298567374695
+                  ]
+                },
+                {
+                  "p": [
+                    50.4727469423674,
+                    0.8034441853748633
+                  ]
+                },
+                {
+                  "p": [
+                    51.409154463296346,
+                    4.692298567374695
+                  ]
+                },
+                {
+                  "p": [
+                    48,
+                    2.6
+                  ]
+                },
+                {
+                  "p": [
+                    44.590845536703654,
+                    4.692298567374695
+                  ]
+                },
+                {
+                  "p": [
+                    45.5272530576326,
+                    0.8034441853748635
+                  ]
+                },
+                {
+                  "p": [
+                    42.48387220548811,
+                    -1.7922985673746943
+                  ]
+                },
+                {
+                  "p": [
+                    46.47175834403957,
+                    -2.103444185374863
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "stroke": "#eee0bb",
+          "strokeWidth": 1.2
+        },
+        "fill": null,
+        "outline": {
+          "id": "star-outline-0",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "cream",
+          "params": {
+            "width": 1.2,
+            "density": 0.42,
+            "underlay": "center",
+            "pullComp": 0.05
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      },
+      "star-1": {
+        "id": "star-1",
+        "name": "Badge 2 cream star",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    112,
+                    -5.8
+                  ]
+                },
+                {
+                  "p": [
+                    113.52824165596043,
+                    -2.1034441853748636
+                  ]
+                },
+                {
+                  "p": [
+                    117.51612779451189,
+                    -1.792298567374695
+                  ]
+                },
+                {
+                  "p": [
+                    114.4727469423674,
+                    0.8034441853748633
+                  ]
+                },
+                {
+                  "p": [
+                    115.40915446329635,
+                    4.692298567374695
+                  ]
+                },
+                {
+                  "p": [
+                    112,
+                    2.6
+                  ]
+                },
+                {
+                  "p": [
+                    108.59084553670365,
+                    4.692298567374695
+                  ]
+                },
+                {
+                  "p": [
+                    109.5272530576326,
+                    0.8034441853748635
+                  ]
+                },
+                {
+                  "p": [
+                    106.48387220548811,
+                    -1.7922985673746943
+                  ]
+                },
+                {
+                  "p": [
+                    110.47175834403957,
+                    -2.103444185374863
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "stroke": "#eee0bb",
+          "strokeWidth": 1.2
+        },
+        "fill": null,
+        "outline": {
+          "id": "star-outline-1",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "cream",
+          "params": {
+            "width": 1.2,
+            "density": 0.42,
+            "underlay": "center",
+            "pullComp": 0.05
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      }
+    },
+    "zOrder": [
+      "panel",
+      "background-0",
+      "background-1",
+      "star-0",
+      "star-1"
+    ],
+    "sequence": [
+      {
+        "kind": "element",
+        "elementId": "panel-outline"
+      },
+      {
+        "kind": "element",
+        "elementId": "background-fill-0"
+      },
+      {
+        "kind": "element",
+        "elementId": "background-fill-1"
+      },
+      {
+        "kind": "element",
+        "elementId": "star-outline-0"
+      },
+      {
+        "kind": "element",
+        "elementId": "star-outline-1"
+      }
+    ],
+    "multiHoop": {
+      "width": 100,
+      "height": 100,
+      "margin": 3,
+      "overlap": 30,
+      "keepObjects": true
+    }
+  }
+}

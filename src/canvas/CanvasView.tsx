@@ -14,6 +14,8 @@ import { hitIndexFor } from './hitIndex';
 import { OverlayLayer } from './OverlayLayer';
 import { CANVAS_SHAPES_THRESHOLD, ShapesLayer } from './ShapesLayer';
 import { hitShape } from './shapeHit';
+import { HoopLayer } from './HoopLayer';
+import { DensityLayer } from './DensityLayer';
 import { StitchLayer } from './StitchLayer';
 import { fitBBox, screenToDoc, zoomAt } from './viewport';
 import { buildElementIndex } from '@/model/factories';
@@ -373,6 +375,8 @@ export function CanvasView() {
       <BackdropLayer />
       <ShapesLayer />
       <StitchLayer />
+      <HoopLayer />
+      <DensityLayer />
       <OverlayLayer />
       <RulersLayer />
     </div>

@@ -1,0 +1,21 @@
+[
+  {
+    "name": "fabric-profile",
+    "stitches": 1196,
+    "jumps": 3,
+    "trims": 2,
+    "colorChanges": 0,
+    "stops": 0,
+    "threadLengthMm": 3896.011603639614,
+    "estSeconds": 131.6,
+    "jumpMm": 15.364897170940004,
+    "travelMm": 29.73167696683322,
+    "bounds": {
+      "minX": -0.20000000298023224,
+      "minY": -0.20000000298023224,
+      "maxX": 53.20000076293945,
+      "maxY": 30.200000762939453
+    },
+    "diagnostics": []
+  }
+]

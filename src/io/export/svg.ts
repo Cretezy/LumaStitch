@@ -4,7 +4,7 @@
  * stacking order, sized in millimetres. Fill and stroke use the stitch element's thread
  * colour; shapes without stitch elements keep their original artwork paint.
  */
-import { geomToD } from '@/canvas/pathD';
+import { geomToD, subpathKind } from '@/canvas/pathD';
 import { resolveParams } from '@/engine/params/resolve';
 import { flattenGeom } from '@/geom/flatten';
 import { emptyBBox, extendBBox } from '@/geom/polygon';
@@ -65,7 +65,7 @@ function paintOf(design: Design, shape: Shape): ShapePaint {
   }
   let strokeWidth = THREAD_WIDTH_MM;
   if (shape.outline) {
-    const w = resolveParams(shape.outline, design.fabric).width;
+    const w = resolveParams(shape.outline, design.fabric, design.fabricProfile).width;
     if (typeof w === 'number' && w > 0) strokeWidth = w;
     else if (shape.art.strokeWidth && shape.art.strokeWidth > 0) strokeWidth = shape.art.strokeWidth;
   }
@@ -108,7 +108,8 @@ export function exportSvg(design: Design, opts: SvgExportOptions = {}): string {
     `  <title>${escapeXml(xmlSafe(design.name || 'Untitled'))}</title>`,
   ];
   for (const { shape, paint } of items) {
-    const d = geomToD(shape.geom);
+    const guided = shape.fill?.type === 'guidedFill';
+    const d = geomToD(guided ? subpathKind(shape.geom, true) : shape.geom);
     if (!d) continue;
     const name = xmlSafe(shape.name || 'Shape');
     const attrs = [
@@ -127,6 +128,10 @@ export function exportSvg(design: Design, opts: SvgExportOptions = {}): string {
       );
     } else attrs.push('stroke="none"');
     lines.push(`  <path ${attrs.join(' ')}/>`);
+    if (guided)
+      lines.push(
+        `  <path data-role="guide" d="${geomToD(subpathKind(shape.geom, false))}" fill="none" stroke="#008b9b" stroke-width="0.2" stroke-dasharray="1 0.6"/>`,
+      );
   }
   lines.push('</svg>', '');
   return lines.join('\n');

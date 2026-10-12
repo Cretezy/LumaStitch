@@ -1,0 +1,21 @@
+[
+  {
+    "name": "imported-botanical",
+    "stitches": 1759,
+    "jumps": 7,
+    "trims": 6,
+    "colorChanges": 3,
+    "stops": 0,
+    "threadLengthMm": 7438.773591913102,
+    "estSeconds": 301.9,
+    "jumpMm": 79.7955060644477,
+    "travelMm": 0,
+    "bounds": {
+      "minX": 17.299999237060547,
+      "minY": 8,
+      "maxX": 64.69999694824219,
+      "maxY": 76
+    },
+    "diagnostics": []
+  }
+]

@@ -13,6 +13,8 @@ export type Matrix = [a: number, b: number, c: number, d: number, e: number, f: 
 /** Bézier node in the style of Paper.js segments. Handles are relative to `p`. */
 export interface Node {
   p: Vec2;
+  /** Machine command at this point in an imported manual stitch stream; omitted = needle down. */
+  command?: 'jump' | 'trim' | 'stop';
   in?: Vec2;
   out?: Vec2;
   smooth?: boolean;
@@ -52,11 +54,21 @@ export type FillType =
   | 'contour'
   | 'meander'
   | 'ripple'
+  | 'guidedFill'
   | 'gradientFill'
   | 'patternFill'
   | 'crossStitch'
   | 'applique';
-export type OutlineType = 'running' | 'triple' | 'satin' | 'zigzag' | 'motifRun' | 'blanket' | 'manual';
+export type OutlineType =
+  | 'running'
+  | 'triple'
+  | 'satin'
+  | 'zigzag'
+  | 'motifRun'
+  | 'blanket'
+  | 'manual'
+  | 'satinColumn'
+  | 'appliqueBorder';
 export type StitchType = FillType | OutlineType;
 export type ParamValue = number | boolean | string;
 export type TieMode = 'auto' | 'on' | 'off';
@@ -81,6 +93,10 @@ export interface StitchElement {
   tieIn: TieMode;
   tieOut: TieMode;
   trimAfter: TrimMode;
+  /** Consecutive subpath counts for grouped explicit satin columns (rails, then rungs). */
+  satinGroups?: number[];
+  /** Omitted source Bézier edges; topology prevents stale indices after node insertion/removal. */
+  appliqueEdges?: { topology: string; omit: [number, number][] };
   /** Set on manual change; auto-digitize can skip. */
   userEdited?: boolean;
 }
@@ -142,10 +158,91 @@ export type Artwork = { matrix: Matrix; visible: boolean; opacity: number } & (
   | { kind: 'image'; dataUrl: string; pxWidth: number; pxHeight: number; trace: TraceSettings }
 );
 
+/** Embedded original font and reusable shaped outlines; no installed font dependency. */
+export interface OpenTypeLettering {
+  axes?: { tag: string; min: number; max: number; default: number }[];
+  license?: string;
+  name: string;
+  data: string;
+  direction: 'auto' | 'ltr' | 'rtl';
+  language: string;
+  variations: Record<string, number>;
+  stitch: 'tatami' | 'satinFill';
+  prepared?: {
+    key: string;
+    upem: number;
+    leading: number;
+    lines: {
+      advance: number;
+      glyphs: { id: number; cluster: number; x: number; y: number; path: string }[];
+    }[];
+  };
+}
+
+export interface LetteringOptions {
+  font: 'geneva-simple' | 'geneva-rounded' | 'chopin' | 'opentype';
+  openType?: OpenTypeLettering;
+  text: string;
+  /** Digitized cap height (10–20 mm) or OpenType em size (5–100 mm). */
+  height: number;
+  letterSpacing: number;
+  wordSpacing: number;
+  lineSpacing: number;
+  align: 'left' | 'center' | 'right';
+  arcAngle: number;
+  /** Editable baseline in lettering-local coordinates; replaces the circular arc. */
+  baseline?: PathGeom;
+  baselineOffset?: number;
+  baselineReverse?: boolean;
+  monogram: boolean;
+}
+
+export interface LetteringGroup {
+  baselineShapeId?: Id;
+  options: LetteringOptions;
+  shapeIds: Id[];
+  matrix: Matrix;
+}
+
+export interface FabricProfile {
+  name: string;
+  baseFabric: FabricId;
+  fillSpacing: number;
+  satinSpacing: number;
+  pullComp: number;
+  fillUnderlay: 'none' | 'edge' | 'tatami' | 'edgeTatami';
+  satinUnderlay:
+    'auto' | 'none' | 'center' | 'edge' | 'zigzag' | 'centerZigzag' | 'edgeZigzag' | 'centerEdge';
+  underlaySpacing: number;
+  stabilizer: string;
+  needle: string;
+  thread: string;
+  notes: string;
+}
+
+export interface AppliqueCutOptions {
+  allowance: number;
+  mirror: boolean;
+  sheetWidth: number;
+}
+
+export interface MultiHoopOptions {
+  width: number;
+  height: number;
+  margin: number;
+  overlap: number;
+  joinSeams?: boolean;
+  keepObjects?: boolean;
+  /** Explicit field centers in design millimetres and clockwise rotation in degrees. */
+  placements?: { center: Vec2; angle: number }[];
+}
+
 export interface Design {
   schemaVersion: 1;
   name: string;
   fabric: FabricId;
+  /** Portable calibration defaults; explicit element overrides still take precedence. */
+  fabricProfile?: FabricProfile;
   /** Colour of the fabric (canvas background, exports on fabric); default DEFAULT_FABRIC_COLOR. */
   fabricColor?: string;
   threadChart: string;
@@ -157,6 +254,18 @@ export interface Design {
   /** Sewing order. */
   sequence: SequenceEntry[];
   artwork?: Artwork;
+  lettering?: Record<Id, LetteringGroup>;
+  /** Optional usable sewing field, centered on stitch bounds (not the outside hoop dimensions). */
+  hoop?: Hoop;
+  multiHoop?: MultiHoopOptions;
+  appliqueCut?: AppliqueCutOptions;
+}
+
+export interface Hoop {
+  width: number;
+  height: number;
+  margin: number;
+  shape: 'rectangle' | 'ellipse';
 }
 
 export const CURRENT_SCHEMA_VERSION = 1 as const;

@@ -15,6 +15,7 @@ import {
   type BooleanOp,
 } from '@/geom/paperAdapter';
 import { newId } from '@/lib/ids';
+import { recognitionCandidates, recognizedShapes } from '@/recognition/recognize';
 import { createDesign, createElement, hasClosedSubpath, shapeElements } from '@/model/factories';
 import { polyShapeToGeom, transformGeomM } from '@/model/geomOps';
 import { shapeSchema, threadSchema } from '@/model/schema';
@@ -51,6 +52,8 @@ import {
 } from './commands';
 import { exec, useDoc } from './documentStore';
 import { useUi } from './uiStore';
+import { groupSatinColumns, ungroupSatinColumns } from '@/satin/group';
+import { splitSatinShape } from '@/satin/split';
 import { selectionBBox } from '@/tools/selection';
 
 const toast = (m: string, k: 'info' | 'error' | 'success' = 'info') => useUi.getState().showToast(m, k);
@@ -133,9 +136,9 @@ export async function handleFile(file: File, opts: { intoCurrent?: boolean } = {
     await openProjectText(await file.text());
     return;
   }
-  if (kind === 'pes') {
+  if (kind === 'machine') {
     ui.set({ pendingFile: file });
-    ui.openDialog('export', { viewPes: true, file });
+    ui.openDialog('machineImport', { file, intoCurrent: !!opts.intoCurrent });
     return;
   }
   if (kind === 'svg' || kind === 'image') {
@@ -404,6 +407,7 @@ function replaceShapes(label: string, inputIds: Id[], results: Shape[], zSlotOf:
 }
 
 export function booleanOp(op: BooleanOp): void {
+  if (hasSelectedMachineProgram()) return;
   const d = useDoc.getState().design;
   if (!d) return;
   const sel = editableSelection();
@@ -446,6 +450,7 @@ export function booleanOp(op: BooleanOp): void {
 }
 
 export function combineSelection(): void {
+  if (hasSelectedMachineProgram()) return;
   const d = useDoc.getState().design;
   if (!d) return;
   const sel = editableSelection();
@@ -464,7 +469,90 @@ export function combineSelection(): void {
   replaceShapes('Combine', ids, [r], ids[ids.length - 1]);
 }
 
+/** Moves editable guide geometry into one fill shape; all changes undo together. */
+export function groupSelectedSatinRails(): void {
+  const d = useDoc.getState().design,
+    ids = useUi.getState().selection.shapeIds;
+  if (!d) return;
+  try {
+    const result = groupSatinColumns(d, ids);
+    replaceShapes('Group satin rails', ids, [result], ids[0]);
+  } catch (error) {
+    toast(error instanceof Error ? error.message : String(error), 'error');
+  }
+}
+
+export function ungroupSelectedSatinRails(): void {
+  const d = useDoc.getState().design,
+    ids = useUi.getState().selection.shapeIds;
+  if (!d) return;
+  try {
+    if (ids.length !== 1 || !d.shapes[ids[0]]) throw new Error('Select one grouped satin object.');
+    replaceShapes('Ungroup satin rails', ids, ungroupSatinColumns(d.shapes[ids[0]]), ids[0]);
+  } catch (error) {
+    toast(error instanceof Error ? error.message : String(error), 'error');
+  }
+}
+
+export function recognizeSelectedStitches(keys: string[]): void {
+  const d = useDoc.getState().design;
+  if (!d) throw new Error('No design is open.');
+  const ids = useUi.getState().selection.shapeIds;
+  const candidates = recognitionCandidates(d, ids);
+  if (!keys.length || keys.some((key) => !candidates.some((c) => c.key === key)))
+    throw new Error('Select current recognition candidates.');
+  const selected = candidates.filter((c) => keys.includes(c.key));
+  replaceShapeGroups(
+    'Recognize stitches',
+    ids.flatMap((id) => {
+      const matches = selected.filter((c) => c.shapeId === id);
+      return matches.length
+        ? [{ inputIds: [id], results: recognizedShapes(d.shapes[id], matches), zSlotOf: id }]
+        : [];
+    }),
+  );
+}
+
+export function splitSelectedSatin(fraction: number): void {
+  const d = useDoc.getState().design;
+  const ids = useUi.getState().selection.shapeIds;
+  if (!d || ids.length !== 1 || !d.shapes[ids[0]]) throw new Error('Select one satin column.');
+  const source = d.shapes[ids[0]];
+  replaceShapes('Split satin column', ids, splitSatinShape(source, d, fraction), source.id);
+}
+
+export function makeGuidedFill(): void {
+  if (hasSelectedMachineProgram()) return;
+  const d = useDoc.getState().design;
+  if (!d) return;
+  const ids = editableSelection();
+  const closed = ids.filter((id) => hasClosedSubpath(d.shapes[id].geom));
+  if (
+    closed.length !== 1 ||
+    !ids.some((id) => d.shapes[id].geom.subpaths.some((p) => !p.closed && p.nodes.length >= 2))
+  ) {
+    toast('Select one closed fill shape and one or more open guide paths.');
+    return;
+  }
+  const target = d.shapes[closed[0]];
+  const source = target.fill ?? target.outline;
+  if (!source) {
+    toast('Assign a thread to the fill shape first.');
+    return;
+  }
+  const result: Shape = {
+    ...structuredClone(target),
+    id: newId('s'),
+    name: `${target.name} (guided)`,
+    geom: { ...combine(ids.map((id) => d.shapes[id].geom)), fillRule: target.geom.fillRule },
+    fill: createElement('fill', 'guidedFill', source.threadId, { ...source.params }),
+    outline: null,
+  };
+  replaceShapes('Make guided fill', ids, [result], target.id);
+}
+
 export function breakApart(): void {
+  if (hasSelectedMachineProgram()) return;
   const d = useDoc.getState().design;
   if (!d) return;
   const groups: ReplaceGroup[] = [];
@@ -489,7 +577,18 @@ export function breakApart(): void {
 }
 
 /** Applies a geometry transform to every editable selected shape as one undo step. */
+function hasSelectedMachineProgram(): boolean {
+  const d = useDoc.getState().design;
+  if (!d || !editableSelection().some((id) => d.shapes[id].outline?.params.preserveCommands === true))
+    return false;
+  toast(
+    'This operation changes machine command order. Disable Preserve commands in Advanced settings first, or edit individual needle nodes.',
+  );
+  return true;
+}
+
 function mapSelectedGeoms(label: string, fn: (s: Shape) => PathGeom | null): void {
+  if (hasSelectedMachineProgram()) return;
   const d = useDoc.getState().design;
   if (!d) return;
   const changes: [Id, PathGeom][] = [];
@@ -526,6 +625,7 @@ export function offsetPaths(delta: number): void {
 
 /** Converts each selected stroke into a filled shape (stroke → shape). */
 export function outlineStroke(): void {
+  if (hasSelectedMachineProgram()) return;
   const d = useDoc.getState().design;
   if (!d) return;
   const groups: ReplaceGroup[] = [];
@@ -586,6 +686,7 @@ export function closeOrOpenPath(close: boolean): void {
 }
 
 export function joinSelectedEndpoints(): void {
+  if (hasSelectedMachineProgram()) return;
   const d = useDoc.getState().design;
   if (!d) return;
   const nodes = useUi.getState().selection.nodes;

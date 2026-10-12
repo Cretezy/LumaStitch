@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="206mm" height="54mm" viewBox="-3 -8 206 54">
+  <title>Three-hoop botanical border</title>
+  <path id="Tatami_panel_with_two_holes" data-name="Tatami panel with two holes" d="M0 0L200 0L200 38L0 38L0 0ZM33 19C33 23.418 29.418 27 25 27C20.582 27 17 23.418 17 19C17 14.582 20.582 11 25 11C29.418 11 33 14.582 33 19ZM183 19C183 23.418 179.418 27 175 27C170.582 27 167 23.418 167 19C167 14.582 170.582 11 175 11C179.418 11 183 14.582 183 19Z" fill="#296450" fill-rule="evenodd" stroke="none"/>
+  <path id="Gold_flower_1" data-name="Gold flower 1" d="M36 19C36 25.075 31.075 30 25 30C18.925 30 14 25.075 14 19C14 12.925 18.925 8 25 8C31.075 8 36 12.925 36 19Z" fill="none" fill-rule="nonzero" stroke="#cc9933" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path id="Gold_flower_2" data-name="Gold flower 2" d="M111 19C111 25.075 106.075 30 100 30C93.925 30 89 25.075 89 19C89 12.925 93.925 8 100 8C106.075 8 111 12.925 111 19Z" fill="none" fill-rule="nonzero" stroke="#cc9933" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path id="Gold_flower_3" data-name="Gold flower 3" d="M186 19C186 25.075 181.075 30 175 30C168.925 30 164 25.075 164 19C164 12.925 168.925 8 175 8C181.075 8 186 12.925 186 19Z" fill="none" fill-rule="nonzero" stroke="#cc9933" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path id="Gold_border" data-name="Gold border" d="M0 -5L200 -5" fill="none" fill-rule="nonzero" stroke="#cc9933" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path id="Gold_border_2" data-name="Gold border" d="M0 43L200 43" fill="none" fill-rule="nonzero" stroke="#cc9933" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

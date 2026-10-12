@@ -1,0 +1,40 @@
+[
+  {
+    "name": "before",
+    "stitches": 1660,
+    "jumps": 8,
+    "trims": 7,
+    "colorChanges": 1,
+    "stops": 4,
+    "threadLengthMm": 4674.015338861241,
+    "estSeconds": 358,
+    "jumpMm": 70.91689613188221,
+    "travelMm": 15.40950090349181,
+    "bounds": {
+      "minX": -20.1417179107666,
+      "minY": -20.14105224609375,
+      "maxX": 39.13831329345703,
+      "maxY": 20.146085739135742
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "after",
+    "stitches": 1528,
+    "jumps": 7,
+    "trims": 6,
+    "colorChanges": 1,
+    "stops": 2,
+    "threadLengthMm": 4251.639388970178,
+    "estSeconds": 278.8,
+    "jumpMm": 56.04283515673515,
+    "travelMm": 17.20976078704214,
+    "bounds": {
+      "minX": -20.140703201293945,
+      "minY": -20.14314842224121,
+      "maxX": 39.14603805541992,
+      "maxY": 20.143789291381836
+    },
+    "diagnostics": []
+  }
+]

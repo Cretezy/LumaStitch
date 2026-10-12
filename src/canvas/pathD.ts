@@ -3,6 +3,17 @@
 import type { PathGeom } from '@/model/types';
 
 const cache = new WeakMap<PathGeom, string>();
+const subsets = [new WeakMap<PathGeom, PathGeom>(), new WeakMap<PathGeom, PathGeom>()];
+/** Stable geometry views for rendering fill boundaries separately from open guide paths. */
+export function subpathKind(g: PathGeom, closed: boolean): PathGeom {
+  const cache = subsets[closed ? 1 : 0];
+  let result = cache.get(g);
+  if (!result) {
+    result = { ...g, subpaths: g.subpaths.filter((p) => p.closed === closed) };
+    cache.set(g, result);
+  }
+  return result;
+}
 const r = (v: number) => Math.round(v * 1000) / 1000;
 
 export function geomToD(g: PathGeom): string {

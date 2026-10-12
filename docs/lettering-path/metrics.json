@@ -1,0 +1,40 @@
+[
+  {
+    "name": "straight",
+    "stitches": 1528,
+    "jumps": 23,
+    "trims": 22,
+    "colorChanges": 0,
+    "stops": 0,
+    "threadLengthMm": 3080.477200057407,
+    "estSeconds": 284.8,
+    "jumpMm": 135.08766404478828,
+    "travelMm": 0,
+    "bounds": {
+      "minX": 10.04799747467041,
+      "minY": 6.881281852722168,
+      "maxX": 108.65988159179688,
+      "maxY": 20.37447738647461
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "curve",
+    "stitches": 1522,
+    "jumps": 22,
+    "trims": 21,
+    "colorChanges": 0,
+    "stops": 0,
+    "threadLengthMm": 3079.1605377384676,
+    "estSeconds": 278.2,
+    "jumpMm": 129.83105449522736,
+    "travelMm": 0,
+    "bounds": {
+      "minX": 10.934803009033203,
+      "minY": -4.036849498748779,
+      "maxX": 103.4732437133789,
+      "maxY": 35.152931213378906
+    },
+    "diagnostics": []
+  }
+]

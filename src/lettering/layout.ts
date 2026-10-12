@@ -1,0 +1,255 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+/** Layout of the separately licensed, digitized embroidery font catalog. */
+import { layoutOpenType } from './opentype';
+import { digitizedFont, DIGITIZED_FONTS, type DigitizedFontId, type FontPath } from './digitizedFonts';
+import { flattenSubpath } from '@/geom/flatten';
+import { compose, IDENTITY, rotateScreen, scale, translate } from '@/geom/matrix';
+import { parsePathData } from '@/geom/pathData';
+import { cumulativeLengths, pointAtLength } from '@/geom/polyline';
+import { columnFromRails } from '@/engine/stitches/satinColumn';
+import { parseTransform } from '@/io/svg-import/tree';
+import { createElement, createShape } from '@/model/factories';
+import { geomBBox, transformGeomM } from '@/model/geomOps';
+import type { LetteringOptions, Matrix, PathGeom, Shape, Subpath } from '@/model/types';
+
+export const DEFAULT_LETTERING: LetteringOptions = {
+  font: 'geneva-simple',
+  text: 'LumaStitch',
+  height: 10,
+  letterSpacing: 0,
+  wordSpacing: 0,
+  lineSpacing: 1.2,
+  align: 'left',
+  arcAngle: 0,
+  monogram: false,
+};
+function intersects(a: Float64Array, b: Float64Array): boolean {
+  for (let i = 0; i + 3 < a.length; i += 2)
+    for (let j = 0; j + 3 < b.length; j += 2) {
+      const dx = a[i + 2] - a[i],
+        dy = a[i + 3] - a[i + 1];
+      const ex = b[j + 2] - b[j],
+        ey = b[j + 3] - b[j + 1];
+      const den = dx * ey - dy * ex;
+      if (Math.abs(den) < 1e-10) continue;
+      const px = b[j] - a[i],
+        py = b[j + 1] - a[i + 1];
+      const t = (px * ey - py * ex) / den,
+        u = (px * dy - py * dx) / den;
+      if (t >= -1e-6 && t <= 1 + 1e-6 && u >= -1e-6 && u <= 1 + 1e-6) return true;
+    }
+  return false;
+}
+
+function reverse(sp: Subpath): Subpath {
+  return {
+    ...sp,
+    nodes: sp.nodes
+      .slice()
+      .reverse()
+      .map((n) => ({ ...n, in: n.out, out: n.in })),
+  };
+}
+
+/** Font SVGs can interleave rails and rungs; identify rails by their shared rung intersections. */
+export function normalizeRails(g: PathGeom): PathGeom {
+  const flat = g.subpaths.map((sp) => flattenSubpath(sp, 0.05));
+  if (flat.length < 2) throw new Error('Digitized satin requires two rails.');
+  let best: [number, number] = [0, 1],
+    score = -Infinity;
+  for (let i = 0; i < flat.length; i++)
+    for (let j = i + 1; j < flat.length; j++) {
+      let count = 0;
+      for (let k = 0; k < flat.length; k++)
+        if (k !== i && k !== j && intersects(flat[i], flat[k]) && intersects(flat[j], flat[k])) count++;
+      const length = (cumulativeLengths(flat[i]).at(-1) ?? 0) + (cumulativeLengths(flat[j]).at(-1) ?? 0);
+      const value = count * 1e6 + length;
+      if (value > score) {
+        score = value;
+        best = [i, j];
+      }
+    }
+  const [i, j] = best;
+  const a = g.subpaths[i];
+  let b = g.subpaths[j];
+  const dist = (p: number[], q: number[]) => Math.hypot(p[0] - q[0], p[1] - q[1]);
+  const a0 = a.nodes[0].p,
+    a1 = a.nodes.at(-1)!.p,
+    b0 = b.nodes[0].p,
+    b1 = b.nodes.at(-1)!.p;
+  if (dist(a0, b1) + dist(a1, b0) < dist(a0, b0) + dist(a1, b1)) b = reverse(b);
+  const r = g.subpaths.filter((_, k) => k !== i && k !== j);
+  const rungs = r.map(
+    (sp) =>
+      [sp.nodes[0].p, sp.nodes.at(-1)!.p] as [import('@/model/types').Vec2, import('@/model/types').Vec2],
+  );
+  try {
+    columnFromRails(flattenSubpath(a, 0.05), flattenSubpath(b, 0.05), rungs);
+  } catch {
+    b = reverse(b);
+    columnFromRails(flattenSubpath(a, 0.05), flattenSubpath(b, 0.05), rungs);
+  }
+  return { ...g, subpaths: [a, b, ...r] };
+}
+
+const cache = new Map<string, { geom: PathGeom; source: FontPath }[]>();
+function glyph(fontId: DigitizedFontId, char: string) {
+  const font = DIGITIZED_FONTS[fontId];
+  const key = `${fontId}:${char}`;
+  let value = cache.get(key);
+  if (value) return value;
+  value = font.glyphs[char].map((source) => {
+    const m = compose(...source.transforms.map((s) => parseTransform(s) ?? IDENTITY));
+    let geom = transformGeomM(parsePathData(source.d), m);
+    if (source.satin) geom = normalizeRails(geom);
+    return { geom, source };
+  });
+  const minX = Math.min(...value.map((p) => geomBBox(p.geom).minX));
+  value = value.map((p) => ({ ...p, geom: transformGeomM(p.geom, translate(-minX, -font.baseline)) }));
+  cache.set(key, value);
+  return value;
+}
+
+export function validateLettering(o: LetteringOptions): void {
+  const font = digitizedFont(o.font);
+  if (!font && o.font !== 'opentype') throw new Error('Unknown embroidery font.');
+  if (o.font === 'opentype' && o.monogram)
+    throw new Error('Use the digitized font for three-initial monograms.');
+  if (!o.text.trim() || o.text.length > 1000) throw new Error('Enter between 1 and 1,000 characters.');
+  for (const [key, min, max] of [
+    ['height', font?.min ?? 5, font?.max ?? 100],
+    ['letterSpacing', -5, 20],
+    ['wordSpacing', 0, 30],
+    ['lineSpacing', 1, 4],
+    ['arcAngle', -300, 300],
+  ] as const)
+    if (!Number.isFinite(o[key]) || o[key] < min || o[key] > max)
+      throw new Error(`${key} must be between ${min} and ${max}.`);
+  const missing = [
+    ...new Set(
+      [...o.text.normalize('NFC')].filter((c) => c !== ' ' && c !== '\n' && font && !font.glyphs[c]),
+    ),
+  ];
+  if (font && missing.length) throw new Error(`This font has no glyph for: ${missing.join(' ')}.`);
+  if (o.monogram && (!/^[^\s]{3}$/u.test(o.text) || [...o.text].length !== 3))
+    throw new Error('A monogram needs exactly three characters, entered in sewing order.');
+  if (o.monogram && o.height < (font?.min ?? 10) / 0.75)
+    throw new Error(
+      `Monograms need a capital height of at least ${(Math.ceil(((font?.min ?? 10) / 0.75) * 100) / 100).toFixed(2)} mm to keep the smaller initials within the font range.`,
+    );
+  if (o.arcAngle && o.text.includes('\n')) throw new Error('Curved lettering uses one line.');
+  if (o.baseline) {
+    if (o.arcAngle || o.text.includes('\n'))
+      throw new Error('A path baseline uses one line and no circular arc.');
+    if (
+      o.baseline.subpaths.length !== 1 ||
+      o.baseline.subpaths[0].closed ||
+      o.baseline.subpaths[0].nodes.length < 2
+    )
+      throw new Error('The lettering baseline must be one open path.');
+    if (o.baseline.subpaths[0].nodes.length > 2000 || o.baseline.subpaths[0].nodes.some((n) => n.command))
+      throw new Error('Use a vector baseline with at most 2,000 nodes.');
+    if (!Number.isFinite(o.baselineOffset ?? 0) || Math.abs(o.baselineOffset ?? 0) > 100)
+      throw new Error('Baseline offset must be between -100 and 100 mm.');
+  }
+}
+
+export function layoutLettering(
+  options: LetteringOptions,
+  threadId: string,
+  color: string,
+  matrix: Matrix = IDENTITY,
+): Shape[] {
+  validateLettering(options);
+  if (options.font === 'opentype') return layoutOpenType(options, threadId, color, matrix);
+  const o = { ...options, text: options.text.normalize('NFC') };
+  const font = DIGITIZED_FONTS[o.font as DigitizedFontId];
+  const metadata = font.metadata,
+    advances = metadata.horiz_adv_x,
+    kern = metadata.kerning_pairs ?? {};
+  const unit = o.height / font.capHeight;
+  let baseline = o.baseline ? flattenSubpath(o.baseline.subpaths[0], 0.03) : undefined;
+  if (baseline && o.baselineReverse) {
+    const reverse = new Float64Array(baseline.length);
+    for (let i = 0; i < baseline.length; i += 2) {
+      reverse[i] = baseline[baseline.length - 2 - i];
+      reverse[i + 1] = baseline[baseline.length - 1 - i];
+    }
+    baseline = reverse;
+  }
+  const lengths = baseline ? cumulativeLengths(baseline) : undefined;
+  const baselineLength = lengths?.at(-1) ?? 0;
+  const shapes: Shape[] = [];
+  for (const [lineIndex, line] of o.text.split('\n').entries()) {
+    const letters: { char: string; x: number; factor: number; advance: number }[] = [];
+    let x = 0,
+      previous = '';
+    for (const [index, char] of [...line].entries()) {
+      const factor = o.monogram && index !== 1 ? 0.75 : 1;
+      if (index) x += o.letterSpacing - (kern[`${previous} ${char}`] ?? 0) * unit * factor;
+      const advance =
+        (char === ' ' ? metadata.horiz_adv_x_space : (advances[char] ?? metadata.horiz_adv_x_default)) *
+          unit *
+          factor +
+        (char === ' ' ? o.wordSpacing : 0);
+      letters.push({ char, x, factor, advance });
+      x += advance;
+      previous = char;
+    }
+    const offset = o.align === 'center' ? -x / 2 : o.align === 'right' ? -x : 0;
+    const angle = (o.arcAngle * Math.PI) / 180;
+    const radius = angle ? x / angle : 0;
+    if (baseline && (!(x > 0) || x > baselineLength + 1e-6))
+      throw new Error(
+        `Text needs ${x.toFixed(1)} mm along the baseline; the path provides ${baselineLength.toFixed(1)} mm. Lengthen the path, reduce text/spacing, or choose a smaller supported height.`,
+      );
+    for (const letter of letters) {
+      if (letter.char === ' ') continue;
+      const center = letter.x + letter.advance / 2;
+      let placement: Matrix;
+      if (baseline && lengths) {
+        const margin =
+          o.align === 'center' ? (baselineLength - x) / 2 : o.align === 'right' ? baselineLength - x : 0;
+        const at = margin + center;
+        if (at < 0 || at > baselineLength)
+          throw new Error('Letter spacing places a glyph outside the baseline.');
+        const p = pointAtLength(baseline, lengths, at);
+        const a = pointAtLength(baseline, lengths, Math.max(0, at - 0.05));
+        const b = pointAtLength(baseline, lengths, Math.min(baselineLength, at + 0.05));
+        const theta = Math.atan2(b[1] - a[1], b[0] - a[0]);
+        const shift = o.baselineOffset ?? 0;
+        placement = compose(
+          translate(p[0] - Math.sin(theta) * shift, p[1] + Math.cos(theta) * shift),
+          rotateScreen((-theta * 180) / Math.PI),
+          translate(-letter.advance / 2, 0),
+        );
+      } else if (angle) {
+        const t = (center / x - 0.5) * angle;
+        placement = compose(
+          translate(radius * Math.sin(t), radius * (1 - Math.cos(t))),
+          rotateScreen((-t * 180) / Math.PI),
+          translate(-letter.advance / 2, 0),
+        );
+      } else placement = translate(letter.x + offset, lineIndex * metadata.leading * unit * o.lineSpacing);
+      const m = compose(matrix, placement, scale(unit * letter.factor));
+      for (const part of glyph(o.font as DigitizedFontId, letter.char)) {
+        const s = createShape(`Letter ${letter.char}`, transformGeomM(part.geom, m), {
+          stroke: color,
+          strokeWidth: 0.15,
+        });
+        s.outline = createElement(
+          'outline',
+          part.source.satin ? 'satinColumn' : 'running',
+          threadId,
+          part.source.satin
+            ? { underlay: part.source.underlay, pullComp: part.source.pull }
+            : { stitchLength: part.source.stitchLength ?? 2 },
+        );
+        shapes.push(s);
+      }
+    }
+  }
+  return shapes;
+}
+
+export const FONT_CHARACTERS = Object.keys(DIGITIZED_FONTS['geneva-simple'].glyphs).join('');

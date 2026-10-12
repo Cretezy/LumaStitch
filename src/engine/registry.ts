@@ -2,10 +2,11 @@
 /** Stitch type registry. Adding a type = a folder in stitches/ + one line here. */
 import type { ElementRole, StitchType } from '@/model/types';
 import type { StitchTypeDef } from './def';
-import { appliqueDef } from './stitches/applique';
+import { appliqueDef, appliqueBorderDef } from './stitches/applique';
 import { blanketDef } from './stitches/blanket';
 import { contourDef } from './stitches/contour';
 import { crossStitchDef } from './stitches/crossStitch';
+import { guidedFillDef } from './stitches/guidedFill';
 import { gradientFillDef } from './stitches/gradientFill';
 import { manualDef } from './stitches/manual';
 import { meanderDef } from './stitches/meander';
@@ -14,6 +15,7 @@ import { patternFillDef } from './stitches/patternFill';
 import { rippleDef } from './stitches/ripple';
 import { runningDef, tripleDef } from './stitches/running';
 import { satinDef, zigzagDef } from './stitches/satin';
+import { satinColumnDef } from './stitches/satinColumn';
 import { satinFillDef } from './stitches/satinFill';
 import { tatamiDef } from './stitches/tatami';
 import { perPart } from './stitches/multipart';
@@ -32,17 +34,20 @@ for (const d of [
   runningDef,
   tripleDef,
   satinDef,
+  satinColumnDef,
   zigzagDef,
 ])
   registerStitchType(d);
 // P2 types.
 for (const d of [
   patternFillDef,
+  guidedFillDef,
   gradientFillDef,
   perPart(meanderDef),
   perPart(rippleDef),
   perPart(crossStitchDef),
   appliqueDef,
+  appliqueBorderDef,
   motifRunDef,
   blanketDef,
   manualDef,

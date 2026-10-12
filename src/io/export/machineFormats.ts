@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // DST, JEF, EXP and VP3 as export formats (writers in src/io/formats, ported from pyembroidery).
+import { hoopWarnings } from '@/engine/hoop';
 import type { StitchPlan } from '@/engine/types';
 import type { Design } from '@/model/types';
 import { writeDst, type DstWriteOptions } from '@/io/formats/dst';
@@ -37,8 +38,8 @@ function machineFormat(
     ext: id,
     mime: 'application/octet-stream',
     label,
-    validate(plan: StitchPlan, _design: Design) {
-      return validateMachineExport(plan, id);
+    validate(plan: StitchPlan, design: Design) {
+      return [...validateMachineExport(plan, id), ...hoopWarnings(plan, design.hoop)];
     },
     write(plan: StitchPlan, design: Design, opts: unknown) {
       assertValid(plan, id, short);

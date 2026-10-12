@@ -1,0 +1,499 @@
+{
+  "format": "lumastitch-project",
+  "schemaVersion": 1,
+  "app": "LumaStitch",
+  "savedAt": "2026-10-11T00:00:00.000Z",
+  "design": {
+    "schemaVersion": 1,
+    "name": "Satin botanical",
+    "fabric": "woven",
+    "threadChart": "exact",
+    "settings": {
+      "trimThreshold": 3,
+      "minStitchLength": 0.3,
+      "maxStitchLength": 12,
+      "tieLength": 0.8,
+      "machineSpm": 600,
+      "trimSeconds": 6,
+      "colorChangeSeconds": 30,
+      "defaultTie": "auto",
+      "scaleStrokeWidths": true
+    },
+    "threads": {
+      "28745b": {
+        "id": "28745b",
+        "name": "#28745B",
+        "color": "#28745b"
+      },
+      "5d9662": {
+        "id": "5d9662",
+        "name": "#5D9662",
+        "color": "#5d9662"
+      },
+      "bd4b69": {
+        "id": "bd4b69",
+        "name": "#BD4B69",
+        "color": "#bd4b69"
+      },
+      "d6a23b": {
+        "id": "d6a23b",
+        "name": "#D6A23B",
+        "color": "#d6a23b"
+      }
+    },
+    "shapes": {
+      "stems": {
+        "id": "stems",
+        "name": "Stems",
+        "geom": {
+          "fillRule": "evenodd",
+          "subpaths": [
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    40,
+                    76
+                  ],
+                  "out": [
+                    0,
+                    -18
+                  ]
+                },
+                {
+                  "p": [
+                    40,
+                    34
+                  ],
+                  "in": [
+                    0,
+                    14
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    39,
+                    61
+                  ],
+                  "out": [
+                    -12,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    24,
+                    47
+                  ],
+                  "in": [
+                    0,
+                    7
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    41,
+                    66
+                  ],
+                  "out": [
+                    13,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    57,
+                    49
+                  ],
+                  "in": [
+                    0,
+                    8
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": null,
+        "outline": {
+          "id": "stems-outline",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "28745b",
+          "params": {
+            "width": 3,
+            "underlay": "edgeZigzag",
+            "density": 0.4
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      },
+      "leaves": {
+        "id": "leaves",
+        "name": "Leaves",
+        "geom": {
+          "fillRule": "evenodd",
+          "subpaths": [
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    28,
+                    54
+                  ],
+                  "out": [
+                    -8,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    20,
+                    40
+                  ],
+                  "in": [
+                    0,
+                    8
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    52,
+                    59
+                  ],
+                  "out": [
+                    9,
+                    -1
+                  ]
+                },
+                {
+                  "p": [
+                    62,
+                    43
+                  ],
+                  "in": [
+                    0,
+                    8
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": null,
+        "outline": {
+          "id": "leaves-outline",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "5d9662",
+          "params": {
+            "width": 5,
+            "underlay": "edgeZigzag",
+            "density": 0.4
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      },
+      "petals": {
+        "id": "petals",
+        "name": "Petals",
+        "geom": {
+          "fillRule": "evenodd",
+          "subpaths": [
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    46,
+                    25
+                  ]
+                },
+                {
+                  "p": [
+                    57,
+                    25
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    44.242640687119284,
+                    29.242640687119284
+                  ]
+                },
+                {
+                  "p": [
+                    52.020815280171306,
+                    37.020815280171306
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    40,
+                    31
+                  ]
+                },
+                {
+                  "p": [
+                    40,
+                    42
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    35.757359312880716,
+                    29.242640687119284
+                  ]
+                },
+                {
+                  "p": [
+                    27.979184719828694,
+                    37.020815280171306
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    34,
+                    25
+                  ]
+                },
+                {
+                  "p": [
+                    23,
+                    25.000000000000004
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    35.757359312880716,
+                    20.757359312880716
+                  ]
+                },
+                {
+                  "p": [
+                    27.979184719828687,
+                    12.979184719828693
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    40,
+                    19
+                  ]
+                },
+                {
+                  "p": [
+                    40,
+                    8
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    44.242640687119284,
+                    20.757359312880716
+                  ]
+                },
+                {
+                  "p": [
+                    52.020815280171306,
+                    12.97918471982869
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": null,
+        "outline": {
+          "id": "petals-outline",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "bd4b69",
+          "params": {
+            "width": 6,
+            "underlay": "edgeZigzag",
+            "density": 0.4
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      },
+      "flower-centre": {
+        "id": "flower-centre",
+        "name": "Flower centre",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    45,
+                    25
+                  ],
+                  "in": [
+                    0,
+                    -2.2091389993231743
+                  ],
+                  "out": [
+                    0,
+                    2.2091389993231743
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    40,
+                    29
+                  ],
+                  "in": [
+                    2.761423749153968,
+                    0
+                  ],
+                  "out": [
+                    -2.761423749153968,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    35,
+                    25
+                  ],
+                  "in": [
+                    0,
+                    2.2091389993231743
+                  ],
+                  "out": [
+                    0,
+                    -2.2091389993231743
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    40,
+                    21
+                  ],
+                  "in": [
+                    -2.761423749153968,
+                    0
+                  ],
+                  "out": [
+                    2.761423749153968,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": {
+          "id": "flower-centre-fill",
+          "role": "fill",
+          "type": "satinFill",
+          "threadId": "d6a23b",
+          "params": {
+            "mode": "fixed",
+            "angle": 90,
+            "underlay": "edge",
+            "density": 0.4,
+            "splitAbove": 7
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      }
+    },
+    "zOrder": [
+      "stems",
+      "leaves",
+      "petals",
+      "flower-centre"
+    ],
+    "sequence": [
+      {
+        "kind": "element",
+        "elementId": "stems-outline"
+      },
+      {
+        "kind": "element",
+        "elementId": "leaves-outline"
+      },
+      {
+        "kind": "element",
+        "elementId": "petals-outline"
+      },
+      {
+        "kind": "element",
+        "elementId": "flower-centre-fill"
+      }
+    ]
+  }
+}

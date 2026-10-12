@@ -6,10 +6,14 @@ import { bool, num, str, type ParamDef } from '../../params/types';
 import { F } from '../../types';
 import { RunBuilder } from '../common';
 import { orderPaths, type PathItem } from '../running';
+import { exactRouteStates } from '../running/exactOrder';
+import { buildRunningNetwork, type RunningNetwork } from '../running/network';
+import { routeSatinBranches } from './branches';
 import {
   columnFromCenterline,
   resolveSatinUnderlay,
   satinPass,
+  satinPassCount,
   sewColumn,
   type UnderlayKind,
 } from './column';
@@ -131,6 +135,7 @@ export const satinCommonDefaults = {
 };
 
 export interface SatinColumnPrep {
+  network?: RunningNetwork;
   paths: PathItem[];
   halfWidth: number;
   width: number;
@@ -145,8 +150,43 @@ export interface SatinColumnPrep {
 }
 
 function routeColumns(prep: SatinColumnPrep, entry?: [number, number], exit?: [number, number]) {
+  if (prep.network) return routeSatinBranches(prep.network, prep.halfWidth, prep, entry, exit);
   const b = new RunBuilder();
-  const ordered = orderPaths(prep.paths, entry, 1, exit);
+  // Price the actual entry/exit needle points, including the underlay passes and rail offsets.
+  // Keep both directions intact: choosing a nearest entry again would undo the joint solution.
+  if (prep.paths.length <= 12 && prep.paths.every((p) => !p.closed && p.pts.length >= 4)) {
+    const runs = prep.paths.flatMap(({ pts }) => {
+      const col = columnFromCenterline(pts, false, prep.halfWidth);
+      return [true, false].map((forward) => {
+        const run = new RunBuilder();
+        if (col.length <= 0) return run.build();
+        if (prep.zigzag) satinPass(run, col, forward, { density: prep.density });
+        else sewColumn(run, col, prep, undefined, undefined, forward);
+        return run.build();
+      });
+    });
+    if (runs.every((r) => r.xy.length >= 4)) {
+      const order = exactRouteStates(
+        runs.map((r) => [r.xy[0], r.xy[1]]),
+        runs.map((r) => [r.xy[r.xy.length - 2], r.xy[r.xy.length - 1]]),
+        entry,
+        exit,
+      );
+      if (order) {
+        for (const state of order) {
+          const run = runs[state];
+          for (let i = 0; i < run.flags.length; i++)
+            b.push(
+              run.xy[i * 2],
+              run.xy[i * 2 + 1],
+              run.flags[i] | (i === 0 && b.length ? F.JUMP | F.TRIM : 0),
+            );
+        }
+        return b.build();
+      }
+    }
+  }
+  const ordered = orderPaths(prep.paths, entry, prep.zigzag ? 1 : satinPassCount(prep.underlay), exit);
   ordered.forEach(({ pts, closed }, i) => {
     // orderPaths already chose where closed paths start (between the previous and next path).
     const center = pts;
@@ -179,6 +219,7 @@ function routeColumns(prep: SatinColumnPrep, entry?: [number, number], exit?: [n
         },
         cur ?? undefined,
         i === ordered.length - 1 ? exit : undefined,
+        closed ? undefined : true,
       );
     }
     // Internal jump to the next column; nothing to travel through between separate paths.
@@ -206,8 +247,15 @@ export const satinDef: StitchTypeDef<SatinColumnPrep> = {
       allowAuto: true,
     },
     ...satinCommonParams,
+    {
+      key: 'connectBranches',
+      label: 'Connect satin branches',
+      help: 'Route intersecting centerlines continuously. Extra running underpaths are covered by the final satin pass. Junctions can be denser; inspect a sample.',
+      kind: 'boolean',
+      group: 'advanced',
+    },
   ],
-  defaults: { width: 'auto', ...satinCommonDefaults },
+  defaults: { width: 'auto', ...satinCommonDefaults, connectBranches: false },
   appliesTo: (s) => s.hasClosed || s.hasOpen,
   prepare(geom, params, _el, ctx) {
     const wParam = params.width;
@@ -217,8 +265,16 @@ export const satinDef: StitchTypeDef<SatinColumnPrep> = {
       ctx.diag('satin-wide', `Satin is ${width.toFixed(1)} mm wide; above 8 mm stitches may snag.`);
     if (width < 1)
       ctx.diag('satin-narrow', `Satin is only ${width.toFixed(1)} mm wide; consider a triple run.`);
+    const paths = flattenToPaths(geom, ctx.tolerance);
+    const network = bool(params, 'connectBranches') ? (buildRunningNetwork(paths) ?? undefined) : undefined;
+    if (bool(params, 'connectBranches') && !network)
+      ctx.diag(
+        'satin-network-limit',
+        'Satin branch routing exceeded the geometry limit or found no usable paths; using separate columns.',
+      );
     return {
-      paths: flattenToPaths(geom, ctx.tolerance),
+      paths,
+      network,
       width,
       halfWidth: width / 2 + pull,
       density: num(params, 'density', 0.4),

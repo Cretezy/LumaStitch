@@ -12,6 +12,8 @@ import type {
   DesignSettings,
   ElementRole,
   FabricId,
+  FabricProfile,
+  Hoop,
   Id,
   Matrix,
   ParamValue,
@@ -145,6 +147,12 @@ export function duplicateShapes(ids: Id[], offset: Vec2 = [2, 2]): Id[] {
 }
 
 function applyTransform(d: D, ids: Id[], m: Matrix) {
+  for (const [key, group] of Object.entries(d.lettering ?? {})) {
+    const hits = group.shapeIds.filter((id) => ids.includes(id));
+    if (!hits.length) continue;
+    if (hits.length === group.shapeIds.length) group.matrix = compose(m, group.matrix as Matrix);
+    else if (!(hits.length === 1 && hits[0] === group.baselineShapeId)) delete d.lettering![key];
+  }
   const scaleWidths = d.settings.scaleStrokeWidths;
   const s = Math.sqrt(Math.abs(m[0] * m[3] - m[1] * m[2]));
   for (const id of ids) {
@@ -154,7 +162,7 @@ function applyTransform(d: D, ids: Id[], m: Matrix) {
     for (const el of [sh.fill, sh.outline]) {
       if (!el) continue;
       const defAngle = hasStitchType(el.type)
-        ? (inheritedParams(el.type, d.fabric).angle as number | undefined)
+        ? (inheritedParams(el.type, d.fabric, d.fabricProfile).angle as number | undefined)
         : undefined;
       transformElement(el as StitchElement, m, scaleWidths, { angle: defAngle });
     }
@@ -348,7 +356,15 @@ export function setElementProps(
   props: Partial<
     Pick<
       StitchElement,
-      'tieIn' | 'tieOut' | 'trimAfter' | 'threadId' | 'entry' | 'exit' | 'guides' | 'railSplit'
+      | 'tieIn'
+      | 'tieOut'
+      | 'trimAfter'
+      | 'threadId'
+      | 'entry'
+      | 'exit'
+      | 'guides'
+      | 'railSplit'
+      | 'appliqueEdges'
     >
   >,
   label = 'Change element',
@@ -480,12 +496,33 @@ export function setDesignSettings(patch: Partial<DesignSettings>, label = 'Desig
 }
 
 export function setDesignProps(
-  props: { name?: string; fabric?: FabricId; fabricColor?: string; threadChart?: string },
+  props: {
+    name?: string;
+    fabric?: FabricId;
+    fabricColor?: string;
+    threadChart?: string;
+    hoop?: Hoop | null;
+    fabricProfile?: FabricProfile | null;
+  },
   label = 'Design settings',
 ): void {
   exec(label, (d) => {
+    if (props.hoop !== undefined) {
+      if (props.hoop === null) delete d.hoop;
+      else d.hoop = props.hoop;
+    }
     if (props.name !== undefined) d.name = props.name;
-    if (props.fabric !== undefined) d.fabric = props.fabric;
+    if (props.fabric !== undefined) {
+      d.fabric = props.fabric;
+      delete d.fabricProfile;
+    }
+    if (props.fabricProfile !== undefined) {
+      if (props.fabricProfile === null) delete d.fabricProfile;
+      else {
+        d.fabricProfile = props.fabricProfile;
+        d.fabric = props.fabricProfile.baseFabric;
+      }
+    }
     if (props.fabricColor !== undefined) d.fabricColor = props.fabricColor;
     if (props.threadChart !== undefined) d.threadChart = props.threadChart;
   });

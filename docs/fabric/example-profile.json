@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "name": "Example cotton calibration (unsewn)",
+      "baseFabric": "woven",
+      "fillSpacing": 0.5,
+      "satinSpacing": 0.45,
+      "pullComp": 0.2,
+      "fillUnderlay": "tatami",
+      "satinUnderlay": "auto",
+      "underlaySpacing": 3,
+      "stabilizer": "Tear-away or cut-away stabiliser",
+      "needle": "Record the needle used",
+      "thread": "Record thread brand and weight",
+      "notes": "Software example only. Sew this sampler and adjust before treating it as a calibrated fabric profile."
+    }
+  ]
+}

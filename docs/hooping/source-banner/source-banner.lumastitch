@@ -1,0 +1,625 @@
+{
+  "format": "lumastitch-project",
+  "schemaVersion": 1,
+  "app": "LumaStitch",
+  "savedAt": "2026-10-11T00:00:00.000Z",
+  "design": {
+    "schemaVersion": 1,
+    "name": "Three-hoop botanical border",
+    "fabric": "woven",
+    "threadChart": "exact",
+    "settings": {
+      "trimThreshold": 3,
+      "minStitchLength": 0.3,
+      "maxStitchLength": 12,
+      "tieLength": 0.8,
+      "machineSpm": 600,
+      "trimSeconds": 6,
+      "colorChangeSeconds": 30,
+      "defaultTie": "auto",
+      "scaleStrokeWidths": true
+    },
+    "threads": {
+      "green": {
+        "id": "green",
+        "name": "Forest green",
+        "color": "#296450"
+      },
+      "gold": {
+        "id": "gold",
+        "name": "Gold",
+        "color": "#cc9933"
+      }
+    },
+    "shapes": {
+      "panel": {
+        "id": "panel",
+        "name": "Tatami panel with two holes",
+        "geom": {
+          "fillRule": "evenodd",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    200,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    200,
+                    38
+                  ]
+                },
+                {
+                  "p": [
+                    0,
+                    38
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    33,
+                    19
+                  ],
+                  "in": [
+                    0,
+                    -4.4182779986463485
+                  ],
+                  "out": [
+                    0,
+                    4.4182779986463485
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    25,
+                    27
+                  ],
+                  "in": [
+                    4.4182779986463485,
+                    0
+                  ],
+                  "out": [
+                    -4.4182779986463485,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    17,
+                    19
+                  ],
+                  "in": [
+                    0,
+                    4.4182779986463485
+                  ],
+                  "out": [
+                    0,
+                    -4.4182779986463485
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    25,
+                    11
+                  ],
+                  "in": [
+                    -4.4182779986463485,
+                    0
+                  ],
+                  "out": [
+                    4.4182779986463485,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            },
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    183,
+                    19
+                  ],
+                  "in": [
+                    0,
+                    -4.4182779986463485
+                  ],
+                  "out": [
+                    0,
+                    4.4182779986463485
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    175,
+                    27
+                  ],
+                  "in": [
+                    4.4182779986463485,
+                    0
+                  ],
+                  "out": [
+                    -4.4182779986463485,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    167,
+                    19
+                  ],
+                  "in": [
+                    0,
+                    4.4182779986463485
+                  ],
+                  "out": [
+                    0,
+                    -4.4182779986463485
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    175,
+                    11
+                  ],
+                  "in": [
+                    -4.4182779986463485,
+                    0
+                  ],
+                  "out": [
+                    4.4182779986463485,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            }
+          ]
+        },
+        "art": {},
+        "fill": {
+          "id": "panel-fill",
+          "role": "fill",
+          "type": "tatami",
+          "threadId": "green",
+          "params": {
+            "density": 0.6,
+            "stitchLength": 3,
+            "underlay": "edge",
+            "pullComp": 0,
+            "angle": 35
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      },
+      "flower-0": {
+        "id": "flower-0",
+        "name": "Gold flower 1",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    36,
+                    19
+                  ],
+                  "in": [
+                    0,
+                    -6.075132248138729
+                  ],
+                  "out": [
+                    0,
+                    6.075132248138729
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    25,
+                    30
+                  ],
+                  "in": [
+                    6.075132248138729,
+                    0
+                  ],
+                  "out": [
+                    -6.075132248138729,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    14,
+                    19
+                  ],
+                  "in": [
+                    0,
+                    6.075132248138729
+                  ],
+                  "out": [
+                    0,
+                    -6.075132248138729
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    25,
+                    8
+                  ],
+                  "in": [
+                    -6.075132248138729,
+                    0
+                  ],
+                  "out": [
+                    6.075132248138729,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "strokeWidth": 2
+        },
+        "fill": null,
+        "outline": {
+          "id": "flower-outline-0",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "gold",
+          "params": {
+            "width": 2,
+            "density": 0.4,
+            "pullComp": 0.1
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      },
+      "flower-1": {
+        "id": "flower-1",
+        "name": "Gold flower 2",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    111,
+                    19
+                  ],
+                  "in": [
+                    0,
+                    -6.075132248138729
+                  ],
+                  "out": [
+                    0,
+                    6.075132248138729
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    100,
+                    30
+                  ],
+                  "in": [
+                    6.075132248138729,
+                    0
+                  ],
+                  "out": [
+                    -6.075132248138729,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    89,
+                    19
+                  ],
+                  "in": [
+                    0,
+                    6.075132248138729
+                  ],
+                  "out": [
+                    0,
+                    -6.075132248138729
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    100,
+                    8
+                  ],
+                  "in": [
+                    -6.075132248138729,
+                    0
+                  ],
+                  "out": [
+                    6.075132248138729,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "strokeWidth": 2
+        },
+        "fill": null,
+        "outline": {
+          "id": "flower-outline-1",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "gold",
+          "params": {
+            "width": 2,
+            "density": 0.4,
+            "pullComp": 0.1
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      },
+      "flower-2": {
+        "id": "flower-2",
+        "name": "Gold flower 3",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    186,
+                    19
+                  ],
+                  "in": [
+                    0,
+                    -6.075132248138729
+                  ],
+                  "out": [
+                    0,
+                    6.075132248138729
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    175,
+                    30
+                  ],
+                  "in": [
+                    6.075132248138729,
+                    0
+                  ],
+                  "out": [
+                    -6.075132248138729,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    164,
+                    19
+                  ],
+                  "in": [
+                    0,
+                    6.075132248138729
+                  ],
+                  "out": [
+                    0,
+                    -6.075132248138729
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    175,
+                    8
+                  ],
+                  "in": [
+                    -6.075132248138729,
+                    0
+                  ],
+                  "out": [
+                    6.075132248138729,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "strokeWidth": 2
+        },
+        "fill": null,
+        "outline": {
+          "id": "flower-outline-2",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "gold",
+          "params": {
+            "width": 2,
+            "density": 0.4,
+            "pullComp": 0.1
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      },
+      "border-0": {
+        "id": "border-0",
+        "name": "Gold border",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    -5
+                  ]
+                },
+                {
+                  "p": [
+                    200,
+                    -5
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "strokeWidth": 2
+        },
+        "fill": null,
+        "outline": {
+          "id": "border-outline-0",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "gold",
+          "params": {
+            "width": 2,
+            "density": 0.4
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      },
+      "border-1": {
+        "id": "border-1",
+        "name": "Gold border",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    43
+                  ]
+                },
+                {
+                  "p": [
+                    200,
+                    43
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "strokeWidth": 2
+        },
+        "fill": null,
+        "outline": {
+          "id": "border-outline-1",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "gold",
+          "params": {
+            "width": 2,
+            "density": 0.4
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      }
+    },
+    "zOrder": [
+      "panel",
+      "flower-0",
+      "flower-1",
+      "flower-2",
+      "border-0",
+      "border-1"
+    ],
+    "sequence": [
+      {
+        "kind": "element",
+        "elementId": "panel-fill"
+      },
+      {
+        "kind": "element",
+        "elementId": "flower-outline-0"
+      },
+      {
+        "kind": "element",
+        "elementId": "flower-outline-1"
+      },
+      {
+        "kind": "element",
+        "elementId": "flower-outline-2"
+      },
+      {
+        "kind": "element",
+        "elementId": "border-outline-0"
+      },
+      {
+        "kind": "element",
+        "elementId": "border-outline-1"
+      }
+    ],
+    "multiHoop": {
+      "width": 100,
+      "height": 100,
+      "margin": 3,
+      "overlap": 12
+    }
+  }
+}

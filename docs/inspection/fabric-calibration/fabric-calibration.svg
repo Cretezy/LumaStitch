@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="84mm" height="57mm" viewBox="-2 -5 84 57">
+  <title>Fabric calibration sampler</title>
+  <path id="Tatami_0.3_mm_spacing" data-name="Tatami 0.3 mm spacing" d="M0 0L20 0L20 20L0 20L0 0Z" fill="#234a73" fill-rule="nonzero" stroke="none"/>
+  <path id="Tatami_0.4_mm_spacing" data-name="Tatami 0.4 mm spacing" d="M27 0L47 0L47 20L27 20L27 0Z" fill="#234a73" fill-rule="nonzero" stroke="none"/>
+  <path id="Tatami_0.5_mm_spacing" data-name="Tatami 0.5 mm spacing" d="M0 27L20 27L20 47L0 47L0 27Z" fill="#234a73" fill-rule="nonzero" stroke="none"/>
+  <path id="Tatami_0.6_mm_spacing" data-name="Tatami 0.6 mm spacing" d="M27 27L47 27L47 47L27 47L27 27Z" fill="#234a73" fill-rule="nonzero" stroke="none"/>
+  <path id="Satin_2_mm_width" data-name="Satin 2 mm width" d="M57 0L57 47" fill="none" fill-rule="nonzero" stroke="#234a73" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path id="Satin_4_mm_width" data-name="Satin 4 mm width" d="M67 0L67 47" fill="none" fill-rule="nonzero" stroke="#234a73" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path id="Satin_6_mm_width" data-name="Satin 6 mm width" d="M77 0L77 47" fill="none" fill-rule="nonzero" stroke="#234a73" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

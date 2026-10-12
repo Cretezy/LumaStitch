@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-/** New design: name + fabric preset (SPEC §4 step 1). There is deliberately no hoop to pick (SPEC §7). */
+/** New design: name + fabric preset (SPEC §4 step 1). Optional sewing-field checks are configured in Design settings (SPEC §7). */
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { Feather, Grid3x3, Info, LoaderCircle, Shirt, WavesHorizontal, type LucideIcon } from 'lucide-react';
 import type { DialogProps } from '@/components/DialogHost';
@@ -136,8 +136,8 @@ export default function NewDesignDialog({ open, onClose, data }: DialogProps) {
           <p className="flex gap-2 rounded-md bg-muted px-2.5 py-2 text-xs text-muted-foreground">
             <Info className="mt-px size-3.5 shrink-0" aria-hidden />
             <span>
-              There is no hoop to pick. Size the design to the hoop you'll use; machines centre the design in
-              whichever hoop is attached.
+              You can enable a sewing-field overlay and fit warnings in Design settings. Enter the usable
+              embroidery area of the hoop you will use.
             </span>
           </p>
 

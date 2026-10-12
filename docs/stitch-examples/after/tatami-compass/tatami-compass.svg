@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="82mm" height="82mm" viewBox="4 4 82 82">
+  <title>Tatami compass</title>
+  <path id="Outer_ring" data-name="Outer ring" d="M84 45C84 66.539 66.539 84 45 84C23.461 84 6 66.539 6 45C6 23.461 23.461 6 45 6C66.539 6 84 23.461 84 45ZM79 45C79 63.778 63.778 79 45 79C26.222 79 11 63.778 11 45C11 26.222 26.222 11 45 11C63.778 11 79 26.222 79 45Z" fill="#285d78" fill-rule="evenodd" stroke="none"/>
+  <path id="Cardinal_points" data-name="Cardinal points" d="M45 12L37 37L45 32L45 12ZM78 45L53 37L58 45L78 45ZM45 78L53 53L45 58L45 78ZM12 45L37 53L32 45L12 45Z" fill="#d59b34" fill-rule="evenodd" stroke="none"/>
+  <path id="Cardinal_shadows" data-name="Cardinal shadows" d="M45 12L45 32L53 37L45 12ZM78 45L58 45L53 53L78 45ZM45 78L45 58L37 53L45 78ZM12 45L32 45L37 37L12 45Z" fill="#a65b37" fill-rule="evenodd" stroke="none"/>
+  <path id="Compass_hub" data-name="Compass hub" d="M55 45C55 50.523 50.523 55 45 55C39.477 55 35 50.523 35 45C35 39.477 39.477 35 45 35C50.523 35 55 39.477 55 45ZM49 45C49 47.209 47.209 49 45 49C42.791 49 41 47.209 41 45C41 42.791 42.791 41 45 41C47.209 41 49 42.791 49 45Z" fill="#285d78" fill-rule="evenodd" stroke="none"/>
+  <path id="Diagonal_markers" data-name="Diagonal markers" d="M27.5 25C27.5 26.381 26.381 27.5 25 27.5C23.619 27.5 22.5 26.381 22.5 25C22.5 23.619 23.619 22.5 25 22.5C26.381 22.5 27.5 23.619 27.5 25ZM67.5 25C67.5 26.381 66.381 27.5 65 27.5C63.619 27.5 62.5 26.381 62.5 25C62.5 23.619 63.619 22.5 65 22.5C66.381 22.5 67.5 23.619 67.5 25ZM67.5 65C67.5 66.381 66.381 67.5 65 67.5C63.619 67.5 62.5 66.381 62.5 65C62.5 63.619 63.619 62.5 65 62.5C66.381 62.5 67.5 63.619 67.5 65ZM27.5 65C27.5 66.381 26.381 67.5 25 67.5C23.619 67.5 22.5 66.381 22.5 65C22.5 63.619 23.619 62.5 25 62.5C26.381 62.5 27.5 63.619 27.5 65Z" fill="#d59b34" fill-rule="evenodd" stroke="none"/>
+</svg>

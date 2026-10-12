@@ -1,0 +1,337 @@
+{
+  "format": "lumastitch-project",
+  "schemaVersion": 1,
+  "app": "LumaStitch",
+  "savedAt": "2026-10-11T00:00:00.000Z",
+  "design": {
+    "schemaVersion": 1,
+    "name": "Satin fern — separate branches",
+    "fabric": "woven",
+    "threadChart": "exact",
+    "settings": {
+      "trimThreshold": 3,
+      "minStitchLength": 0.3,
+      "maxStitchLength": 12,
+      "tieLength": 0.8,
+      "machineSpm": 600,
+      "trimSeconds": 6,
+      "colorChangeSeconds": 30,
+      "defaultTie": "auto",
+      "scaleStrokeWidths": true
+    },
+    "threads": {
+      "green": {
+        "id": "green",
+        "name": "Fern green",
+        "color": "#427751"
+      }
+    },
+    "shapes": {
+      "fern": {
+        "id": "fern",
+        "name": "Connected fern centerlines",
+        "geom": {
+          "fillRule": "evenodd",
+          "subpaths": [
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    0,
+                    64
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    14
+                  ],
+                  "out": [
+                    -4.5,
+                    -2
+                  ]
+                },
+                {
+                  "p": [
+                    -10,
+                    3
+                  ],
+                  "in": [
+                    2,
+                    6
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    14
+                  ],
+                  "out": [
+                    4.5,
+                    -2
+                  ]
+                },
+                {
+                  "p": [
+                    10,
+                    3
+                  ],
+                  "in": [
+                    -2,
+                    6
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    24
+                  ],
+                  "out": [
+                    -5.4,
+                    -2
+                  ]
+                },
+                {
+                  "p": [
+                    -12,
+                    13
+                  ],
+                  "in": [
+                    2.4000000000000004,
+                    6
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    24
+                  ],
+                  "out": [
+                    5.4,
+                    -2
+                  ]
+                },
+                {
+                  "p": [
+                    12,
+                    13
+                  ],
+                  "in": [
+                    -2.4000000000000004,
+                    6
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    34
+                  ],
+                  "out": [
+                    -6.3,
+                    -2
+                  ]
+                },
+                {
+                  "p": [
+                    -14,
+                    23
+                  ],
+                  "in": [
+                    2.8000000000000003,
+                    6
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    34
+                  ],
+                  "out": [
+                    6.3,
+                    -2
+                  ]
+                },
+                {
+                  "p": [
+                    14,
+                    23
+                  ],
+                  "in": [
+                    -2.8000000000000003,
+                    6
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    44
+                  ],
+                  "out": [
+                    -7.2,
+                    -2
+                  ]
+                },
+                {
+                  "p": [
+                    -16,
+                    33
+                  ],
+                  "in": [
+                    3.2,
+                    6
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    44
+                  ],
+                  "out": [
+                    7.2,
+                    -2
+                  ]
+                },
+                {
+                  "p": [
+                    16,
+                    33
+                  ],
+                  "in": [
+                    -3.2,
+                    6
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    54
+                  ],
+                  "out": [
+                    -8.1,
+                    -2
+                  ]
+                },
+                {
+                  "p": [
+                    -18,
+                    43
+                  ],
+                  "in": [
+                    3.6,
+                    6
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    54
+                  ],
+                  "out": [
+                    8.1,
+                    -2
+                  ]
+                },
+                {
+                  "p": [
+                    18,
+                    43
+                  ],
+                  "in": [
+                    -3.6,
+                    6
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "strokeWidth": 2
+        },
+        "fill": null,
+        "outline": {
+          "id": "fern-satin",
+          "role": "outline",
+          "type": "satin",
+          "threadId": "green",
+          "params": {
+            "width": 2,
+            "density": 0.4,
+            "underlay": "edge",
+            "pullComp": 0.1,
+            "connectBranches": false
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      }
+    },
+    "zOrder": [
+      "fern"
+    ],
+    "sequence": [
+      {
+        "kind": "element",
+        "elementId": "fern-satin"
+      }
+    ]
+  }
+}

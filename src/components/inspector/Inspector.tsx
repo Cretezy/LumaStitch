@@ -48,6 +48,7 @@ import { cn, fmtInt } from '@/lib/utils';
 import { ThreadPicker } from '@/components/threads/ThreadPicker';
 import { FabricColorInput } from './FabricColorInput';
 import { NumberField } from './NumberField';
+import { ManualCommandSettings } from './ManualCommandSettings';
 import { LiveSlider, ParamRow, type ParamState } from './ParamControls';
 
 const GROUP_LABEL: Record<ParamGroup, string> = {
@@ -190,7 +191,7 @@ function mergeState(els: StitchElement[], fabric: FabricId, key: string, design:
   let value: ParamValue | null | undefined;
   let overridden = false;
   for (const el of els) {
-    const eff = resolveParams(el, fabric);
+    const eff = resolveParams(el, fabric, design.fabricProfile);
     let v = eff[key];
     // Satin width 'auto' resolves to the stroke width.
     if (key === 'width' && v === 'auto' && el.type === 'satin') {
@@ -239,7 +240,7 @@ function ElementSection({ design, role, shapes }: { design: Design; role: Elemen
         .map((g) => ({ g, defs: def.params.filter((p) => p.group === g && !p.hidden) }))
         .filter((x) => x.defs.length)
     : [];
-  const effectiveFirst = els[0] ? resolveParams(els[0], design.fabric) : {};
+  const effectiveFirst = els[0] ? resolveParams(els[0], design.fabric, design.fabricProfile) : {};
   const visible = (p: ParamDef) => !p.visibleIf || p.visibleIf(effectiveFirst);
 
   return (
@@ -566,6 +567,7 @@ export function Inspector() {
   if (!shapes.length) return <DesignPanel design={design} />;
   return (
     <div>
+      <ManualCommandSettings />
       <ShapeSection design={design} shapes={shapes} />
       <ElementSection design={design} role="fill" shapes={shapes} />
       <ElementSection design={design} role="outline" shapes={shapes} />

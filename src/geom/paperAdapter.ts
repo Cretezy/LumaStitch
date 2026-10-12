@@ -81,6 +81,7 @@ const isZero = (v: Vec2 | undefined) => !v || (Math.abs(v[0]) < EPS && Math.abs(
 
 function cloneNode(n: Node): Node {
   const c: Node = { p: [n.p[0], n.p[1]] };
+  if (n.command) c.command = n.command;
   if (n.in) c.in = [n.in[0], n.in[1]];
   if (n.out) c.out = [n.out[0], n.out[1]];
   if (n.smooth) c.smooth = true;
@@ -407,6 +408,7 @@ export function insertNodeAt(
     if (i === ci + 1) return node;
     const orig = sp.nodes[i <= ci ? i : i - 1];
     const c = { ...node };
+    if (orig.command) c.command = orig.command;
     if (orig.smooth) c.smooth = true;
     else delete c.smooth;
     return c;
@@ -466,6 +468,7 @@ export function toggleSmooth(geom: PathGeom, refs: NodeRef[]): PathGeom {
 function reverseSubpath(sp: Subpath): Subpath {
   const flip = (n: Node): Node => {
     const c: Node = { p: [n.p[0], n.p[1]] };
+    if (n.command) c.command = n.command;
     if (n.out) c.in = [n.out[0], n.out[1]];
     if (n.in) c.out = [n.in[0], n.in[1]];
     if (n.smooth) c.smooth = true;

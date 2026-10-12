@@ -216,6 +216,10 @@ function passPlan(u: UnderlayKind): ('center' | 'edgeA' | 'edgeB' | 'zigzag' | '
   return out;
 }
 
+export function satinPassCount(u: UnderlayKind): number {
+  return passPlan(u).length;
+}
+
 /**
  * Sews a full column: underlay passes then the satin top, alternating direction.
  * For open columns, the starting end is chosen so entry is near `entry` and the exit near `exit`.
@@ -226,6 +230,7 @@ export function sewColumn(
   o: ColumnSewOpts,
   entry?: [number, number],
   exit?: [number, number],
+  direction?: boolean,
 ): void {
   const plan = passPlan(o.underlay);
   let forward = true;
@@ -243,6 +248,7 @@ export function sewColumn(
     };
     forward = cost(true) <= cost(false);
   }
+  if (direction !== undefined) forward = direction;
   let dir = forward;
   for (const pass of plan) {
     const before = b.length;

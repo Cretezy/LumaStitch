@@ -1,0 +1,59 @@
+[
+  {
+    "name": "lettering-multiline",
+    "stitches": 3047,
+    "jumps": 47,
+    "trims": 46,
+    "colorChanges": 0,
+    "stops": 0,
+    "threadLengthMm": 5239.818666720022,
+    "estSeconds": 580.7,
+    "jumpMm": 352.1052708768065,
+    "travelMm": 0,
+    "bounds": {
+      "minX": -59.09430694580078,
+      "minY": -10.932191848754883,
+      "maxX": 57.23923873901367,
+      "maxY": 20.523624420166016
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "lettering-arc",
+    "stitches": 1759,
+    "jumps": 20,
+    "trims": 19,
+    "colorChanges": 0,
+    "stops": 0,
+    "threadLengthMm": 3579.84826219985,
+    "estSeconds": 289.9,
+    "jumpMm": 166.76975159565097,
+    "travelMm": 0,
+    "bounds": {
+      "minX": -57.71187973022461,
+      "minY": -12.070045471191406,
+      "maxX": 56.65856170654297,
+      "maxY": 21.971952438354492
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "lettering-monogram",
+    "stitches": 862,
+    "jumps": 7,
+    "trims": 6,
+    "colorChanges": 0,
+    "stops": 0,
+    "threadLengthMm": 2233.7165301327655,
+    "estSeconds": 122.2,
+    "jumpMm": 50.48930862531887,
+    "travelMm": 0,
+    "bounds": {
+      "minX": -0.20000000298023224,
+      "minY": -18.744304656982422,
+      "maxX": 43.99335479736328,
+      "maxY": 0.3451726734638214
+    },
+    "diagnostics": []
+  }
+]

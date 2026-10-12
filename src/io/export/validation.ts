@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Pre-export validation (ARCHITECTURE §15.5, SPEC FR-6.2) for PES and the other machine
 // formats. Errors block export; warnings don't.
-// There are deliberately no hoop or size warnings (SPEC §7), except that JEF stores a hoop
-// code and warns when no Janome hoop it knows fits.
+// Format validation is independent of the optional user sewing field; format adapters and the
+// export dialog append hoopWarnings. JEF also checks its supported hoop codes.
 import { COMMAND_MASK, F, NO_ELEMENT, type Diagnostic, type StitchPlan } from '@/engine/types';
 import {
   MC,

@@ -90,7 +90,7 @@ Best results come from flat-colour artwork: logos, clip art, cartoons, icons. Ph
 
 ## 4. Core workflow
 
-1. **New design.** Choose the fabric type (default: the last one used, initially woven). There is no hoop to pick (§7).
+1. **New design.** Choose the fabric type (default: the last one used, initially woven). An optional sewing-field check can be enabled later (§7).
 2. **Import an SVG or image** and set the size you want: keep the SVG's own size, or type a target width or height in mm. SVG shapes become selectable objects. Images go through the image digitizer first, with a live preview of the traced colour regions. Everything is centred on the canvas origin. The import dialog has an "Auto-digitize after import" option, on by default.
 3. **Auto-digitize** (optional, repeatable). Assigns stitch types, settings, threads and order to everything (or to the selection).
 4. **Edit shapes and paths** with vector tools as needed.
@@ -207,7 +207,7 @@ Numbering extends the original requirements (FR-1 to FR-6). FR-7 onward are new.
 | ID     | Pri | Requirement                                                                                                                                                                                                                                           |
 | ------ | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | FR-6.1 | P0  | Export a valid `.pes` containing the full stitch data, sequence, colour changes, stops, trims and thread colours, plus thumbnails.                                                                                                                    |
-| FR-6.2 | P0  | Validation before export. **Errors** block export: no stitches, or out of format range. **Warnings** allow export: very long stitches, many trims, and similar. There is no hoop check (§7). Machines centre the design in whatever hoop is attached. |
+| FR-6.2 | P0  | Validation before export. **Errors** block export: no stitches, or out of format range. **Warnings** allow export: very long stitches, many trims, and similar. Optional sewing-field fit warnings are available (§7). Machines centre the design in whatever hoop is attached. |
 | FR-6.3 | P0  | PES version choice: **v1** (default; colours mapped to Brother's 64-colour PEC palette, previewed in the dialog) or **v6** (exact RGB plus thread brand and code).                                                                                    |
 | FR-6.4 | P0  | The file name defaults to the design name. The design name is embedded as the machine label (keep it to 8 characters or fewer for reliable display).                                                                                                  |
 | FR-6.5 | P1  | Export a PNG preview (realistic or flat, a "Made with LumaStitch" watermark with the app icon, on by default, in a strip added below the design) and an SVG of the geometry.                                                                                                                                                                                                      |
@@ -252,13 +252,13 @@ Numbering extends the original requirements (FR-1 to FR-6). FR-7 onward are new.
 | FR-10.6 | P1  | **Line-art mode**: thin dark lines are traced to centrelines and become running or satin outlines, instead of being outlined as thin filled shapes.                 |
 | FR-10.7 | P1  | Re-trace from the backdrop with different settings, replacing the previously traced shapes as one undoable step.                                                    |
 
-## 7. Design size (no hoop selection)
+## 7. Design size and optional sewing-field checks
 
-LumaStitch has no hoop setting. Users already know the hoops they own and size the design accordingly.
+The canvas is unbounded by default. Design settings can enable a rectangular or elliptical usable sewing field (width, height and inset margin), centered on the generated stitch bounds. This is a fit check, not a machine hoop selection command.
 
 - The canvas is unbounded. The design's size is its bounding box, always visible in the Design size field and as a dimension label.
-- Sizes are set on import (FR-1.1a, FR-10.1) and can be changed at any time (FR-1.8). Stitches are regenerated rather than scaled, so density stays constant.
-- There is no hoop warning at export. Only PES format limits are checked.
+- Sizes are set on import (FR-1.1a, FR-10.1) and can be changed at any time (FR-1.8). Generated stitches are regenerated rather than scaled, so density stays constant. Imported command-preserving manual stitches scale their existing needle positions.
+- All five machine export formats warn when a needle or jump position falls outside the selected field. Warnings do not block export or change coordinates. Format limits are checked independently.
 - Machines centre the design in whichever hoop is attached, so the design's position on the canvas doesn't matter.
 
 ## 8. Stitch type reference
@@ -294,6 +294,8 @@ Fill rows line up to a global grid, so adjacent shapes with the same angle and d
 
 ### 8.3 Satin: outline (column) and fill (shape)
 
+Satin outline routing accounts for underlay passes when choosing the order and direction of columns. Up to 12 open columns use the actual first and last needle points of both directions; larger or closed/mixed sets use bounded centreline routing. Complete editable satin and tatami examples, machine exports and animated before/after stitch-outs are provided in [the examples gallery](docs/stitch-examples/README.md).
+
 | Parameter                      | Default       | Range                                                  | Notes                                                                                                                                                 |
 | ------------------------------ | ------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Width (outline only)           | stroke width  | 0.8–12                                                 | Warning above 8 mm (snag risk).                                                                                                                       |
@@ -314,6 +316,7 @@ Fill rows line up to a global grid, so adjacent shapes with the same angle and d
 | Stitch length | 2.5 / 3.0                  | 0.5–6.0 | Stitches are spaced evenly between corners. Sharp corners always get a penetration. |
 | Bean repeats  | 0 / 1                      | 0–3     | 1 = triple, 2 = quintuple.                                                          |
 | Passes        | 1                          | 1–5     | Sews the path there and back multiple times.                                        |
+| Connect intersecting paths | off | on/off | One-pass running/bean only. Routes through crossings and shared endpoints within an element, adding single underpaths where needed. Keeps separate components separated by jumps; oversized networks fall back with a warning. |
 
 ### 8.5 Zigzag
 
@@ -375,9 +378,10 @@ The aim is a sensible, sewable first pass that matches what an experienced digit
 6. **Settings.** Density, pull compensation and underlay come from the fabric preset. Satin underlay follows the width rule in §8.3. Fills narrower than 3 mm get no underlay.
 7. **Sequence.**
    - Constraints: if element A is below B in stacking order and they overlap, A is sewn before B, whatever their roles. A shape's outline comes after its own fill. So a shape is finished, fill and outline, before the shape stacked above it.
-   - Objective: fewest colour changes first, then shortest travel and fewest trims. Sewing starts at the top-left of the design, and the next colour is the nearest one whose remaining elements can all be sewn now.
+   - Objective: fewest colour changes first, then shortest travel and fewest trims. A seed starts near the top-left; refinement can choose another start when it reduces actual machine travel. Colour changes have priority over a weighted combination of jump length, internal travel and trims. Manual stops are hard boundaries, including pauses inside imported stitch programs; a block containing an imported pause stays fixed between separately optimized segments. Unselected elements keep their relative order. Contradictory fixed-order/stacking constraints leave that segment unchanged.
    - Each element's entry and exit points are chosen from its neighbours: it starts at its edge point nearest to where the previous element finished, and it finishes next to the following element when that one uses the same thread.
-   - **A fill with several separate parts** (for example a word set as one SVG path) is sewn one part at a time, each part completely (underlay and top layer), in the shortest order. The jump between parts goes edge to edge, so it is as short as possible and isn't sewn over by the part it lands in.
+   - **A fill with several separate parts** (for example a word set as one SVG path) is sewn one part at a time, each part completely (underlay and top layer), in an optimized order (exact for the geometric gap model up to 14 parts, bounded search above it). The jump between parts goes edge to edge, so it is as short as possible and isn't sewn over by the part it lands in.
+   - Small groups of up to 12 open running paths jointly optimize path order and direction, accounting for pass parity. Closed loops retain seam refinement.
    - Within a part, the order of row sections minimises travel, and travel runs under areas still to be sewn rather than on top of finished rows.
    - **An outline with several separate loops** (a word's letters, a letter's counters) is sewn loop by loop in the order with the shortest jumps, each loop starting where the move in and the move out to the next loop are shortest. Moves between loops are jumps, never stitches across the gap (hops of 1 mm or less excepted).
 8. **Connections.** Trims and ties follow the design settings.
@@ -413,17 +417,19 @@ The image digitizer turns pixels into the same kind of shapes an SVG import prod
 | Accessibility     | Every common action has a keyboard shortcut. UI controls use accessible Radix/shadcn primitives.                                                                                                                                                                                                                                               |
 | Licensing         | **GPL-3.0-or-later**, open source. Ink/Stitch (GPL-3.0) algorithms, code and thread palettes may be ported, and potrace (GPL-2.0-or-later) may be used, keeping their copyright notices and attribution. pyembroidery (MIT) is the reference for PES.                                                                                          |
 
-## 11. Out of scope for v1
+## 11. Expanded scope and remaining work
+
+The capability expansion supersedes the original v1 exclusions. Track acceptance and gaps in [docs/capabilities.md](docs/capabilities.md).
+
+Implemented beyond the initial scope: editable digitized lettering (three authored satin fonts with per-font size ranges, kerning, multiline spacing, circular baselines, three-letter monograms and batch project/PES output); DST/JEF/EXP/VP3 export; appliqué, motifs, patterns, gradients, meander, ripple and cross-stitch; manual needle editing; PDF worksheets. Lettering is added/edited from the Object menu. Full-block transforms preserve its editable text; direct path edits detach it into ordinary digitized paths. Unsupported characters are reported, never silently substituted.
+
+Still outside the completed implementation:
 
 - Photo-realistic image digitizing ("photo stitch"). Photos are posterised into flat colour regions instead.
-- Lettering and fonts. SVG text must be converted to outlines first.
-- Export formats other than PES (DST for commercial machines, JEF for Janome, EXP for Bernina, VP3 for Husqvarna/Pfaff, and others). The architecture supports adding them, and pyembroidery has writers to port.
-- Appliqué wizard, motif and pattern fills, gradient fills, meander, ripple, 3D puff, sequins, cross-stitch.
-- Editing individual stitches by hand.
-- Hoop selection and hoop-size checks (by design, §7); splitting across multiple hoopings.
+- Advanced satin branching (now planned).
+- 3D puff, sequins, beads and cording with validated hardware workflows.
 - Sending directly to a machine (USB or Wi-Fi), cloud storage, accounts, collaboration.
 - Mobile and touch layouts.
-- PDF production worksheets (P2).
 
 ## 12. v1 acceptance criteria
 
@@ -447,7 +453,7 @@ The image digitizer turns pixels into the same kind of shapes an SVG import prod
 | Name          | **LumaStitch**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | Licence       | GPL-3.0-or-later, open source. Ink/Stitch code and palettes and potrace may be reused.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | Hosting       | Static assets on Cloudflare Workers, deployed from the Git repo.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| Hoops         | No hoop setting. Users size the design themselves (§7).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Hoops         | Optional sewing-field fit checks; users specify the usable embroidery area (§7).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Machines      | Any machine that reads `.pes`: Brother and Baby Lock home machines (Baby Lock's are made by Brother). What matters is the file format, not the model. The reference machine for sew tests is a **Brother SE600** (100×100 mm field, reads PES from USB). It doesn't trim jumps automatically (confirmed by a user): every jump leaves a thread that is cut by hand afterwards, and a jump thread that later stitching covers gets locked into the design. So jumps should be few, short, and never sewn over; tiny internal hops (≤ 1 mm) are sewn as a stitch instead. |
 | Thread brands | The brand never reaches the machine. A thread is just a colour for the preview and a name/code for the colour sequence. Exact colours are the default. Brand charts are optional, and My threads (P1) covers generic kits.                                                                                                                                                                                                                                                                                                                                              |
 | Raster images | In v1 (FR-10).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
@@ -457,3 +463,91 @@ The image digitizer turns pixels into the same kind of shapes an SVG import prod
 
 1. **Other formats.** Do any intended users have non-Brother machines? Janome (JEF), Bernina (EXP), Husqvarna/Pfaff (VP3) or commercial machines (DST) would each need a writer. These are cheap to port from pyembroidery, so they could move from P2 to P1.
 2. **Thread kit.** Does the Amazon kit come with a numbered colour chart? Many "for Brother" kits are numbered to match Brother's colours. If so, it could ship as a ready-made My threads preset.
+
+
+## Stitch density inspection
+
+View → Needle density map shows the exact number of needle penetrations in a selectable circular radius (0.5, 1, 2 or 3 mm), normalized by circle area. Counts include the central penetration, ties, underlay and travel stitches; jumps and machine controls are excluded. Fixed bands are below 5, 5–10 and at least 10 penetrations/mm². These are concentration bins, not fabric-specific safety limits. The legend reports the peak count and density. A dedicated worker performs counting; the overlay is hidden during simulation.
+
+## Editable machine-file import
+
+PES/DST/JEF/EXP/VP3 import runs in a worker and creates a manual element per explicit color block. Needle coordinates, duplicate penetrations and explicit jump/trim/stop commands survive project saving and plan regeneration. The node inspector edits command kinds with undo. Moving/scaling changes existing stitch coordinates; density is not regenerated. Path reconstruction operations require disabling Preserve commands first; automatic sequence optimization retains imported block order and keeps other objects on their original side of blocks containing pauses.
+
+Machine files do not retain original vector boundaries, satin rails, fill parameters or editable text. DST/EXP without embedded thread data require assigning placeholder colors. DST/JEF trim-like jump sequences remain jumps; machine interpretation varies and no heuristic trim inference is applied. PES imported needles re-export without added jump-ending penetrations; coordinates quantize to 0.1 mm. Other output formats apply their documented command/length limitations. Import limits are 50 MB and one million commands; unsupported accessory commands produce errors.
+
+## Arbitrary guide-path fills
+
+Object → Make guided fill combines one closed fill shape with selected open guide paths in one undo step. Open subpaths remain editable guides, rendered separately from filled artwork. Strategies are translated copies (user-selected translation angle), parallel offsets with tangent extension, and buffers around finite guides. Closed subpaths define the fill and holes; clipped guide rows and needle chords stay within the compensated fill, with inset inside travel or jumps. Density, stitch length, compensation and straight edge/tatami underlay are editable. Projects retain guides; SVG export separates guide paths from fill artwork. Excessive work or missing guides produces explicit errors.
+
+## Reusable fabric calibration profiles
+
+Design settings supports named custom profiles containing a base fabric, tatami/pattern/guided-fill spacing, satin/appliqué spacing, compensation, fill/satin underlay, fill-underlay spacing and stabilizer/needle/thread/sew-out notes. Profile defaults apply between the starter preset and explicit element overrides; new shapes inherit the active profile. Apply/remove is undoable. Changing the starter fabric removes the custom profile. The current project embeds a snapshot independent of library edits. Browser library profiles support save/select/delete and versioned JSON import/export with validation, a 1 MB import limit and 100-profile limit. Import replaces same-name library entries. Worksheets show the custom name and stabilizer; full metadata remains in project/JSON. Physical validation is recorded by the user, not inferred.
+
+## Multi-hooping export
+
+File → Multi-hooping export offers rectangular field dimensions, margin, overlap, an optional nearby-seam joining policy, and PES/DST/JEF/EXP/VP3 output. Calculation runs in a cancellable worker. A centered grid partitions stitch segments at ownership seams inside the field overlaps, retains original penetrations, and adds seam locks and registration commands. Source-stage stops propagate to every participating hoop. Optional same-seam connections are at most 1 mm; source jumps/trims/stops terminate sections.
+
+Each numbered file starts with temporary basting and registration crosses, then stops before design stitching. A symmetric frame fixes centering and reserves 0.5 mm for trim-encoding movement. Shared pairs align neighboring fields. Output is validated by decoding the selected machine format and checking all needle/jump positions against the usable field. The ZIP includes machine files, editable stitch projects, the original project, a dimensioned SVG placement diagram and a JSON manifest. Layout settings persist in the source project and are undoable. Limits are 64 hoopings and 500,000 source commands. Physical registration remains unverified; general layered-object packing and machine-specific multi-position hoops are not implemented by this workflow.
+
+## Connected satin branches
+
+Satin outlines offer opt-in **Connect satin branches** for intersecting centerlines within one compound path. Routing splits at junctions, preserves curved spans between junctions, and sews repeated visits as running underpaths before the final satin coverage. All seven underlay combinations retain a continuous branch walk. Disconnected components still jump/trim. Entry/exit hints select graph vertices. Combine same-width paths before enabling; explicit variable-width rail columns are not part of this option. Junction overlaps and added underpaths increase local density. The option defaults off and oversized networks fall back to separate columns with a diagnostic.
+
+## Satin column splitting
+
+Object → Split satin column accepts one unlocked open satin outline or explicit rail column without a fill. A percentage along centerline arc length previews the cut and creates two adjacent editable Satin rails objects in one undo step. Curves flatten at 0.03 mm and the column's sampled rails/direction correspondence are retained through paired guides. Both pieces snapshot the effective spacing, underlay and compensation settings; compensation is applied during regeneration, not baked into the rails. Entry/exit hints are cleared, ties and trim settings are retained, and existing editable lettering detaches if one of its columns is split. The original geometry returns on undo. Closed columns, compound centerlines, fill/outline mixtures and columns above 2,000 samples are rejected; each resulting section must be at least 0.1 mm long.
+
+## Partial appliqué and cutting exports
+
+Appliqué's **Pre-cut fabric** option retains the placement stop and omits the trimming stop after tack-down. **Omit covered satin** removes only cover sections fully inside later visible appliqué fabric footprints, with a cover-half-width plus 0.1 mm inset. Later holes remain uncovered. Placement/tack-down stay complete; the default trim-in-place workflow still has its trimming stop, including when the cover is completely hidden. Sequence, later geometry and later cover-width edits invalidate the partial-cover cache.
+
+File → Appliqué cutting export generates numbered closed SVG/DXF fabric contours in sewing order, including holes. The nominal cut is the placement centerline (half the cover width inside the artwork). Allowance enlarges/shrinks fabric independently of pull compensation and must be less than half each cover width. Optional local horizontal mirroring supports backing-side cutting. The worker-generated ZIP contains individual pieces, an unlabeled sheet, numbered reference layout, manifest, instructions and source project. SVG/DXF coordinates are millimetres; these are cutter geometry, not device-specific commands. Sheet packing uses rows with 10 mm gaps; a piece wider than the requested sheet expands its width. Settings persist with undo. Limits are 250 pieces, ±2 mm allowance and 20–1,000 mm requested sheet width. Physical cutting/registration remains unverified.
+
+## Editable lettering on paths
+
+Select one unlocked open vector path and choose Object → Add lettering on path. The original path becomes a non-sewing baseline guide in the lettering block. Letters retain their digitized geometry and follow the local tangent; left/center/right alignment uses the available baseline length. Offset and reversed direction are supported. Text must fit the path at a supported font size; multiline/circular-arc combinations are rejected. The baseline accepts at most 2,000 nodes and flattens at 0.03 mm.
+
+Object → Edit lettering baseline selects its nodes. A valid baseline edit regenerates letter geometry in the same undo step while retaining stitch settings and clearing positional entry/exit/direction hints. An edit that cannot fit the text is rejected with an explanation. Whole-block transforms include the guide and retain the editable text matrix. Direct letter-geometry edits still detach the block. Projects and batch exports retain baseline geometry, guide links and options; guides add no stitches. Baseline-node reflow occurs when the edit commits, not on every drag-preview frame.
+
+## OpenType font import and shaping
+
+Object → Add/Edit lettering offers three digitized satin fonts and four bundled outline fonts: Noto Sans, Noto Serif, Noto Sans Arabic and Noto Sans Hebrew. Individual TTF/OTF files can be imported locally (up to 10 MB); projects retain original font bytes, license metadata, text settings and shaped outlines for portable re-editing. Variable axes, language and auto/LTR/RTL direction are configurable. HarfBuzz provides kerning, ligatures, contextual forms and mark positioning. Outline text uses tatami or automatic satin fill, one nonzero shape per line to retain connected-script joins and holes. Font size means millimetres per em (5–100), unlike the digitized fonts' per-font nominal capital heights. Outline fonts need suitable weight, size and stitch settings; they are not authored embroidery fonts.
+
+OpenType outlines bend continuously along circular or editable open-path baselines; digitized glyphs retain rigid tangent placement. Fill lettering participates in sequence generation, baseline reflow, undo, whole-block transforms, saved projects and independently shaped batch names. Three-initial monograms retain the digitized-font requirement. Missing glyphs and unsupported font data produce errors. Collections, web fonts and bitmap/color-only fonts are not supported. Unicode 17 bidi resolution and script itemization support mixed-direction paragraphs, including Latin text, numbers, paired brackets, joining scripts and bidi controls. Auto/LTR/RTL sets the paragraph base direction. Connected RTL lettering requires zero extra letter spacing; each text block uses one font with sufficient script coverage. Tabs and non-newline paragraph separators are rejected. Limits are 1,000 characters, 4,000 shaped glyphs, 5 MB of outline data and 100 MB embedded-font data per batch. Four complete examples with machine files and GIFs are in `docs/opentype`.
+
+## Selective appliqué edges and open borders
+
+Object → Appliqué edge coverage edits one unlocked appliqué fill or border. Select individual source Bézier edges in a clickable preview or checkbox list; green shows retained satin and red shows omitted source edges. Placement/tack-down remain complete, while manual cover omission combines with automatic covered-fabric omission for closed fills. Selection is saved on the element, supports undo/redo and follows transforms and width changes. Node-count or open/closed topology changes require explicit review/reset. Add nodes before selection for finer subdivisions. Explicit manual cover gaps remain trim/jumps even at sub-millimetre distances.
+
+Outline → Appliqué border supports open or closed drawn paths, with centered cover width, all three tack-down styles, two fabric-handling stops or one in pre-cut mode. Open double-running tack-down returns along the path; disconnected paths use trim/jumps between phases' pieces. These borders do not define fabric cutting contours or fabric occlusion footprints. Closed appliqué fills retain their existing inward inset and cutting workflow. Examples, machine files and GIFs are in `docs/applique-edges`.
+
+## Grouped variable-width satin routing
+
+Object → Group satin rails for routing combines 2–50 unlocked, visible Satin rails objects without fills. They must share thread, effective stitch parameters and tie/trim policy and occupy a contiguous sewing interval without stops or other elements between them. Original rails and direction guides remain editable; settings are snapshotted and individual entry/exit hints are cleared. A connected centerline graph routes underpaths and one final satin pass per source interval without replacing variable widths. Earlier center underpaths can satisfy center underlay, avoiding redundant walks. The graph can change junction stacking within the explicitly grouped columns.
+
+Object → Ungroup satin rails restores separate current columns; undo restores the original grouping operation. Group before/after projects, machine files and GIFs are in `docs/satin-rails`. Whole-object transforms and saved projects retain group membership. Ungroup before splitting an individual column. Topology-changing subpath edits are validated. Groups above the graph work bounds fall back to separate-column sewing with a diagnostic. This complements the existing constant-width centerline branch router.
+
+
+### Rotated multi-hooping placements
+
+After calculating a grid, **Edit calculated placements** opens a live artwork overlay with editable field center X/Y and clockwise angle, add/remove controls, and a return to the automatic grid. **Optimize field angle** searches regular grids in 5° increments and chooses the fewest fields, then the smallest rotated design bounding area. This bounded search is not a global optimum for arbitrary placements. All fields share the chosen rectangular dimensions; overlap is a grid-generation parameter, while custom overlap is determined by the actual placements.
+
+Custom layouts require connected overlaps large enough for two registration crosses at least 5 mm apart. Every stitch chord, including its interior, must be covered by a basting frame; calculation reports the location of an uncovered interval. Overlapping coverage chooses the nearest eligible field center. The sewing order follows a registration spanning tree; each hoop identifies its earlier registration parent. Stitches are transformed into field-local coordinates and quantized to 0.1 mm. Reconstructed world positions differ by at most 0.08 mm from the quantized source needles. The SVG template marks each field's top and angle; the manifest records placement index, angle and registration parent. Custom geometry work is capped at 30 million comparison units. The last successful calculation remains undoable and portable in projects; invalid edits cannot be downloaded.
+
+
+### Whole objects at hoop seams
+
+**Keep whole objects when they fit** is an optional multi-hooping policy, off for existing projects. A source shape's fill and outline stay in the same field when the full sewn program, including incoming sewn connector endpoints, fits within its basting frame. To protect layering across successive hoopings, source shapes whose sewn chord bounds touch within a 0.5 mm band form connected layer groups. All members must fit a shared field; they move together there and retain their source sewing order. The nearest eligible center to the group bounds is used with stable field-index ties. Groups with no common field, including oversized backgrounds and every touching foreground, keep their ordinary seam assignments. The manifest identifies each touching group by its first source shape ID in layerGroup; wholeObjects entries sharing that ID moved together. The conservative test can decline otherwise possible moves; it assigns groups to existing fields rather than searching unrestricted placements.
+
+The result reports how many objects were kept whole; each manifest field lists their source shape IDs, names and element IDs. The source project retains editable vectors, while numbered machine projects still contain editable stitches. This policy is saved and undoable with the layout. Object analysis is bounded at one million spatial-index entries and 30 million comparison units.
+
+## Machine stitch recognition
+
+- Explicit Object → Recognize stitches workflow on unlocked visible imported manual blocks. A geometry overlay and individual candidate checkboxes precede conversion; one undo restores source blocks. Source import remains command preserving by default.
+- Infer variable-width satin rails/direction guides from alternating penetrations, and simple regular serpentine tatami boundaries, angles, spacing and stitch length. Recovered objects support ordinary geometry and parameter editing. Small entry/tie leftovers, unselected candidates and unsupported stitches remain manual; source controls and thread order are retained. Object boundaries may add trims/jumps.
+- Recognition estimates geometry, not original objects or lettering metadata. New objects start with no underlay/pull compensation; any retained source underlay remains manual. Stitch phasing and needle positions can change. Complex fill holes, mixed-angle fills, split satin and tight turns may remain manual.
+- Bound work to 50,000 commands and 100 candidates per selection. Include independent five-format fixtures, command preservation tests, undo/persistence browser checks and full before/after/edit projects, machine files, PNGs and GIFs in `docs/recognition`.
+
+## Digitized font catalog
+
+The lettering workflow supports Geneva Simple Sans (118 glyphs, 10–20 mm nominal capital height), Geneva Simple Sans Rounded (120 glyphs, 10.5–21 mm), and Chopin Script (116 glyphs, 30.64–45.96 mm). Font IDs persist in projects. Layout uses each font's advances, kerning, baseline and capital guides; all existing text layouts remain available. Missing glyphs and out-of-range sizes are explicit errors; monograms keep their 75% outer initials within the selected font's range. The selector shows the range and source/license link. Batch ZIPs include per-font license notices and attribution. All new glyphs generate at both size limits; complete examples live in `docs/digitized-fonts`.

@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /** Running and triple (bean) run along every subpath of a shape. */
 import { flattenToPaths } from '@/geom/flatten';
+import { exactOpenOrder } from './exactOrder';
+import { buildRunningNetwork, routeRunningNetwork, type RunningNetwork } from './network';
 import { reversePolyline, rotateClosedTo } from '@/geom/polyline';
 import type { Polyline } from '@/geom/types';
 import type { StitchTypeDef } from '../../def';
-import { num, type ParamDef } from '../../params/types';
+import { bool, num, type ParamDef } from '../../params/types';
 import { F } from '../../types';
 import { RunBuilder, beanify, dist, runningPoints } from '../common';
 
@@ -18,6 +20,7 @@ export interface RunningPrep {
   stitchLength: number;
   bean: number;
   passes: number;
+  network?: RunningNetwork;
 }
 
 export const runningParams = (defLen: number, defBean: number): ParamDef[] =>
@@ -44,6 +47,14 @@ export const runningParams = (defLen: number, defBean: number): ParamDef[] =>
       group: 'basic',
     },
     {
+      key: 'connectBranches',
+      label: 'Connect intersecting paths',
+      help: 'Route through shared endpoints and intersections to avoid jumps. Adds single running underpaths where needed, covered by the final pass. Applies to one-pass running and bean stitches.',
+      kind: 'boolean',
+      group: 'advanced',
+      visibleIf: (p: Record<string, unknown>) => p.passes === undefined || p.passes === 1,
+    },
+    {
       key: 'passes',
       label: 'Passes',
       help: 'Sew the path there and back this many times.',
@@ -62,12 +73,15 @@ export function prepareRunning(
   stitchLength: number,
   bean: number,
   passes: number,
+  connectBranches = false,
 ): RunningPrep {
   return {
     paths,
     stitchLength,
     bean: Math.max(0, Math.round(bean)),
     passes: Math.max(1, Math.round(passes)),
+    network:
+      connectBranches && Math.round(passes) <= 1 ? (buildRunningNetwork(paths) ?? undefined) : undefined,
   };
 }
 
@@ -198,6 +212,8 @@ export function orderPaths(
   passes: number,
   exit?: [number, number],
 ): PathItem[] {
+  const exact = exactOpenOrder(paths, start, passes, exit);
+  if (exact) return exact;
   let best = greedyOrder(paths, start, passes, exit);
   if (paths.length > 1 && paths.length <= 40) {
     let bc = orderCost(best, start, passes, exit);
@@ -252,6 +268,15 @@ export function routeRunning(
   exit?: [number, number],
 ): RunBuilder {
   const b = new RunBuilder();
+  if (prep.network) {
+    for (const step of routeRunningNetwork(prep.network, entry, exit)) {
+      if (step.jump) b.jumpTo(step.from[0], step.from[1], F.TRIM);
+      const pts = Float64Array.of(...step.from, ...step.to);
+      const run = beanify(runningPoints(pts, prep.stitchLength), step.underpath ? 0 : prep.bean);
+      b.pushPolyline(run, step.underpath ? F.TRAVEL : F.STITCH, b.length > 0);
+    }
+    return b;
+  }
   const ordered = orderPaths(prep.paths, entry, prep.passes, exit);
   ordered.forEach(({ pts }, i) => {
     // Separate paths have nothing inside to travel through: the jump between them is trimmed
@@ -283,17 +308,24 @@ function makeDef(
         : 'Each stitch sewn forward, back and forward again for a bold line.',
     role: 'outline',
     params: runningParams(defLen, defBean),
-    defaults: { stitchLength: defLen, bean: defBean, passes: 1 },
+    defaults: { stitchLength: defLen, bean: defBean, passes: 1, connectBranches: false },
     aliasOf: id === 'triple' ? 'running' : undefined,
     appliesTo: (s) => s.hasClosed || s.hasOpen,
     prepare(geom, params, _el, ctx) {
       const paths = flattenToPaths(geom, ctx.tolerance);
-      return prepareRunning(
+      const prep = prepareRunning(
         paths,
         num(params, 'stitchLength', defLen),
         num(params, 'bean', defBean),
         num(params, 'passes', 1),
+        bool(params, 'connectBranches'),
       );
+      if (bool(params, 'connectBranches') && prep.passes === 1 && !prep.network)
+        ctx.diag(
+          'running-network-limit',
+          'Intersection routing exceeded its geometry limit; using path ordering instead.',
+        );
+      return prep;
     },
     route(prep, hints) {
       return routeRunning(prep, hints.entry, hints.exit).build();

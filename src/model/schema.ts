@@ -6,23 +6,38 @@ import { repairDesign } from './invariants';
 import { CURRENT_SCHEMA_VERSION, type Design } from './types';
 
 const vec2 = z.tuple([z.number(), z.number()]);
-const node = z.object({ p: vec2, in: vec2.optional(), out: vec2.optional(), smooth: z.boolean().optional() });
+const node = z.object({
+  p: vec2,
+  command: z.enum(['jump', 'trim', 'stop']).optional(),
+  in: vec2.optional(),
+  out: vec2.optional(),
+  smooth: z.boolean().optional(),
+});
 const subpath = z.object({ closed: z.boolean(), nodes: z.array(node) });
 const pathGeom = z.object({ subpaths: z.array(subpath), fillRule: z.enum(['nonzero', 'evenodd']) });
 const tie = z.enum(['auto', 'on', 'off']);
 const element = z.object({
   id: z.string(),
   role: z.enum(['fill', 'outline']),
+  satinGroups: z.array(z.number().int().min(2).max(2002)).min(2).max(50).optional(),
+  appliqueEdges: z
+    .object({
+      topology: z.string().max(10000),
+      omit: z.array(z.tuple([z.number().int().nonnegative(), z.number().int().nonnegative()])).max(500),
+    })
+    .optional(),
   type: z.enum([
     'tatami',
     'satinFill',
     'contour',
     'meander',
     'ripple',
+    'guidedFill',
     'gradientFill',
     'patternFill',
     'crossStitch',
     'applique',
+    'appliqueBorder',
     'running',
     'triple',
     'satin',
@@ -30,6 +45,7 @@ const element = z.object({
     'motifRun',
     'blanket',
     'manual',
+    'satinColumn',
   ]),
   threadId: z.string(),
   params: z.record(z.string(), z.union([z.number(), z.boolean(), z.string()])),
@@ -93,10 +109,70 @@ const artwork = z.union([
   }),
 ]);
 
+export const fabricProfileSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  baseFabric: z.enum(['woven', 'knit', 'pile', 'lightweight']),
+  fillSpacing: z.number().min(0.15).max(2),
+  satinSpacing: z.number().min(0.15).max(2),
+  pullComp: z.number().min(0).max(2),
+  fillUnderlay: z.enum(['none', 'edge', 'tatami', 'edgeTatami']),
+  satinUnderlay: z.enum([
+    'auto',
+    'none',
+    'center',
+    'edge',
+    'zigzag',
+    'centerZigzag',
+    'edgeZigzag',
+    'centerEdge',
+  ]),
+  underlaySpacing: z.number().min(0.5).max(10),
+  stabilizer: z.string().max(500),
+  needle: z.string().max(100),
+  thread: z.string().max(100),
+  notes: z.string().max(4000),
+});
+
+export const appliqueCutSchema = z.object({
+  allowance: z.number().finite().min(-2).max(2),
+  mirror: z.boolean(),
+  sheetWidth: z.number().finite().min(20).max(1000),
+});
+
+export const multiHoopSchema = z
+  .object({
+    width: z.number().min(30).max(1000),
+    height: z.number().min(30).max(1000),
+    margin: z.number().min(1).max(20),
+    overlap: z.number().min(6).max(100),
+    joinSeams: z.boolean().optional(),
+    keepObjects: z.boolean().optional(),
+    placements: z
+      .array(
+        z.object({
+          center: z.tuple([
+            z.number().finite().min(-100000).max(100000),
+            z.number().finite().min(-100000).max(100000),
+          ]),
+          angle: z.number().finite().min(-180).max(180),
+        }),
+      )
+      .min(1)
+      .max(64)
+      .optional(),
+  })
+  .refine(
+    (v) => Math.min(v.width, v.height) - 2 * v.margin - v.overlap >= 10,
+    'The field must leave at least 10 mm between hoop centers after margin and overlap.',
+  );
+
 export const designSchema = z.object({
   schemaVersion: z.literal(1),
   name: z.string(),
   fabric: z.enum(['woven', 'knit', 'pile', 'lightweight']),
+  fabricProfile: fabricProfileSchema.optional(),
+  multiHoop: multiHoopSchema.optional(),
+  appliqueCut: appliqueCutSchema.optional(),
   fabricColor: z
     .string()
     .regex(/^#[0-9a-f]{6}$/i)
@@ -123,6 +199,85 @@ export const designSchema = z.object({
     ]),
   ),
   artwork: artwork.optional(),
+  hoop: z
+    .object({
+      width: z.number().min(10).max(1000),
+      height: z.number().min(10).max(1000),
+      margin: z.number().min(0).max(20),
+      shape: z.enum(['rectangle', 'ellipse']),
+    })
+    .optional(),
+  lettering: z
+    .record(
+      z.string(),
+      z.object({
+        options: z.object({
+          font: z.enum(['geneva-simple', 'geneva-rounded', 'chopin', 'opentype']),
+          openType: z
+            .object({
+              license: z.string().max(100000).optional(),
+              axes: z
+                .array(
+                  z.object({
+                    tag: z.string().length(4),
+                    min: z.number().finite(),
+                    max: z.number().finite(),
+                    default: z.number().finite(),
+                  }),
+                )
+                .max(64)
+                .optional(),
+              name: z.string().max(200),
+              data: z.string().max(14_000_000),
+              direction: z.enum(['auto', 'ltr', 'rtl']),
+              language: z.string().max(50),
+              variations: z.record(z.string().length(4), z.number().finite()),
+              stitch: z.enum(['tatami', 'satinFill']),
+              prepared: z
+                .object({
+                  key: z.string().max(10000),
+                  upem: z.number().positive(),
+                  leading: z.number().positive(),
+                  lines: z
+                    .array(
+                      z.object({
+                        advance: z.number().finite(),
+                        glyphs: z
+                          .array(
+                            z.object({
+                              id: z.number().int().nonnegative(),
+                              cluster: z.number().int().nonnegative(),
+                              x: z.number().finite(),
+                              y: z.number().finite(),
+                              path: z.string().max(1_000_000),
+                            }),
+                          )
+                          .max(4000),
+                      }),
+                    )
+                    .max(1000),
+                })
+                .optional(),
+            })
+            .optional(),
+          text: z.string().max(1000),
+          height: z.number().min(5).max(100),
+          letterSpacing: z.number().min(-5).max(20),
+          wordSpacing: z.number().min(0).max(30),
+          lineSpacing: z.number().min(1).max(4),
+          align: z.enum(['left', 'center', 'right']),
+          arcAngle: z.number().min(-300).max(300),
+          baseline: pathGeom.optional(),
+          baselineOffset: z.number().min(-100).max(100).optional(),
+          baselineReverse: z.boolean().optional(),
+          monogram: z.boolean(),
+        }),
+        shapeIds: z.array(z.string()),
+        baselineShapeId: z.string().optional(),
+        matrix,
+      }),
+    )
+    .optional(),
 });
 
 export const PROJECT_FORMAT = 'lumastitch-project';

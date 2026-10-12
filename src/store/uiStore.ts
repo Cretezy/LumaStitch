@@ -17,6 +17,11 @@ export type ToolId =
 export type ViewMode = 'artwork' | 'stitches' | 'realistic';
 export type SidebarTab = 'inspector' | 'sequence' | 'threads' | 'issues';
 export type DialogId =
+  | 'appliqueEdges'
+  | 'appliqueCut'
+  | 'recognize'
+  | 'satinSplit'
+  | 'hooping'
   | 'import'
   | 'imageImport'
   | 'autoDigitize'
@@ -26,6 +31,8 @@ export type DialogId =
   | 'myThreads'
   | 'newDesign'
   | 'about'
+  | 'lettering'
+  | 'machineImport'
   | null;
 
 export interface NodeRef {
@@ -53,6 +60,7 @@ export interface Viewport {
 export interface ViewOptions {
   jumps: boolean;
   needlePoints: boolean;
+  density: boolean;
   grid: boolean;
   dimensions: boolean;
   backdrop: boolean;
@@ -114,6 +122,7 @@ function loadView(): { view: ViewOptions; viewMode: ViewMode } {
   const def: ViewOptions = {
     jumps: true,
     needlePoints: false,
+    density: false,
     grid: true,
     dimensions: true,
     backdrop: true,

@@ -1,0 +1,239 @@
+{
+  "format": "lumastitch-project",
+  "schemaVersion": 1,
+  "app": "LumaStitch",
+  "savedAt": "2026-10-11T00:00:00.000Z",
+  "design": {
+    "schemaVersion": 1,
+    "name": "Guided fill: buffer",
+    "fabric": "woven",
+    "threadChart": "exact",
+    "settings": {
+      "trimThreshold": 3,
+      "minStitchLength": 0.3,
+      "maxStitchLength": 3,
+      "tieLength": 0.8,
+      "machineSpm": 600,
+      "trimSeconds": 6,
+      "colorChangeSeconds": 30,
+      "defaultTie": "auto",
+      "scaleStrokeWidths": true
+    },
+    "threads": {
+      "blue": {
+        "id": "blue",
+        "name": "Blue",
+        "color": "#286e86"
+      }
+    },
+    "shapes": {
+      "guided": {
+        "id": "guided",
+        "name": "Curved fill with a hole",
+        "geom": {
+          "fillRule": "evenodd",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    30,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    -13.80711874576984
+                  ],
+                  "out": [
+                    0,
+                    13.80711874576984
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    0,
+                    25
+                  ],
+                  "in": [
+                    16.568542494923808,
+                    0
+                  ],
+                  "out": [
+                    -16.568542494923808,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    -30,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    13.80711874576984
+                  ],
+                  "out": [
+                    0,
+                    -13.80711874576984
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    0,
+                    -25
+                  ],
+                  "in": [
+                    -16.568542494923808,
+                    0
+                  ],
+                  "out": [
+                    16.568542494923808,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            },
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    7,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    -3.313708498984761
+                  ],
+                  "out": [
+                    0,
+                    3.313708498984761
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    0,
+                    6
+                  ],
+                  "in": [
+                    3.865993248815555,
+                    0
+                  ],
+                  "out": [
+                    -3.865993248815555,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    -7,
+                    0
+                  ],
+                  "in": [
+                    0,
+                    3.313708498984761
+                  ],
+                  "out": [
+                    0,
+                    -3.313708498984761
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    0,
+                    -6
+                  ],
+                  "in": [
+                    -3.865993248815555,
+                    0
+                  ],
+                  "out": [
+                    3.865993248815555,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    -23,
+                    -8
+                  ],
+                  "out": [
+                    14,
+                    -4
+                  ]
+                },
+                {
+                  "p": [
+                    0,
+                    0
+                  ],
+                  "in": [
+                    -10,
+                    -2
+                  ],
+                  "out": [
+                    10,
+                    2
+                  ]
+                },
+                {
+                  "p": [
+                    23,
+                    8
+                  ],
+                  "in": [
+                    -14,
+                    4
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "fill": "#286e86"
+        },
+        "fill": {
+          "id": "guided-fill",
+          "role": "fill",
+          "type": "guidedFill",
+          "threadId": "blue",
+          "params": {
+            "guideMode": "buffer",
+            "density": 0.65,
+            "stitchLength": 3,
+            "pullComp": 0,
+            "underlay": "edgeTatami"
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      }
+    },
+    "zOrder": [
+      "guided"
+    ],
+    "sequence": [
+      {
+        "kind": "element",
+        "elementId": "guided-fill"
+      }
+    ]
+  }
+}

@@ -1,0 +1,59 @@
+[
+  {
+    "name": "rounded",
+    "stitches": 1485,
+    "jumps": 20,
+    "trims": 19,
+    "colorChanges": 0,
+    "stops": 0,
+    "threadLengthMm": 2933.258527478196,
+    "estSeconds": 262.5,
+    "jumpMm": 139.09830796866137,
+    "travelMm": 0,
+    "bounds": {
+      "minX": 0.3933608829975128,
+      "minY": -12.812129974365234,
+      "maxX": 95.9945297241211,
+      "maxY": 0.17690719664096832
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "script",
+    "stitches": 2028,
+    "jumps": 16,
+    "trims": 15,
+    "colorChanges": 0,
+    "stops": 0,
+    "threadLengthMm": 3702.11445204024,
+    "estSeconds": 292.8,
+    "jumpMm": 124.49221635401271,
+    "travelMm": 0,
+    "bounds": {
+      "minX": 0.7574779391288757,
+      "minY": -29.77960777282715,
+      "maxX": 87.6051254272461,
+      "maxY": 0.1307065635919571
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "script-monogram",
+    "stitches": 4703,
+    "jumps": 18,
+    "trims": 17,
+    "colorChanges": 0,
+    "stops": 0,
+    "threadLengthMm": 7297.07655268327,
+    "estSeconds": 572.3,
+    "jumpMm": 236.31937741077851,
+    "travelMm": 0,
+    "bounds": {
+      "minX": 1.2145013809204102,
+      "minY": -32.67008590698242,
+      "maxX": 128.04969787597656,
+      "maxY": 10.461525917053223
+    },
+    "diagnostics": []
+  }
+]

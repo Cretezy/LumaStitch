@@ -1,0 +1,165 @@
+{
+  "format": "lumastitch-project",
+  "schemaVersion": 1,
+  "app": "LumaStitch",
+  "savedAt": "2026-10-11T00:00:00.000Z",
+  "design": {
+    "schemaVersion": 1,
+    "name": "Curved satin ribbon",
+    "fabric": "woven",
+    "threadChart": "exact",
+    "settings": {
+      "trimThreshold": 3,
+      "minStitchLength": 0.3,
+      "maxStitchLength": 12,
+      "tieLength": 0.8,
+      "machineSpm": 600,
+      "trimSeconds": 6,
+      "colorChangeSeconds": 30,
+      "defaultTie": "auto",
+      "scaleStrokeWidths": true
+    },
+    "threads": {
+      "blue": {
+        "id": "blue",
+        "name": "Ribbon blue",
+        "color": "#356c9b"
+      }
+    },
+    "shapes": {
+      "ribbon-0": {
+        "id": "ribbon-0",
+        "name": "Curved ribbon",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    0
+                  ],
+                  "out": [
+                    -5,
+                    14
+                  ]
+                },
+                {
+                  "p": [
+                    8,
+                    40
+                  ],
+                  "in": [
+                    -14,
+                    -6
+                  ],
+                  "out": [
+                    14,
+                    6
+                  ]
+                },
+                {
+                  "p": [
+                    28,
+                    76
+                  ],
+                  "in": [
+                    7,
+                    -16
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    4,
+                    0
+                  ],
+                  "out": [
+                    -4,
+                    12
+                  ]
+                },
+                {
+                  "p": [
+                    13,
+                    34
+                  ],
+                  "in": [
+                    -13,
+                    -4
+                  ],
+                  "out": [
+                    16,
+                    8
+                  ]
+                },
+                {
+                  "p": [
+                    32,
+                    76
+                  ],
+                  "in": [
+                    9,
+                    -16
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    5,
+                    42
+                  ]
+                },
+                {
+                  "p": [
+                    15,
+                    32
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "stroke": "#356c9b",
+          "strokeWidth": 0.3
+        },
+        "fill": null,
+        "outline": {
+          "id": "ribbon-satin-0",
+          "role": "outline",
+          "type": "satinColumn",
+          "threadId": "blue",
+          "params": {
+            "density": 0.45,
+            "pullComp": 0.15,
+            "underlay": "edgeZigzag",
+            "splitAbove": 7
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      }
+    },
+    "zOrder": [
+      "ribbon-0"
+    ],
+    "sequence": [
+      {
+        "kind": "element",
+        "elementId": "ribbon-satin-0"
+      }
+    ]
+  }
+}

@@ -1,0 +1,78 @@
+[
+  {
+    "name": "source-banner",
+    "stitches": 8608,
+    "jumps": 6,
+    "trims": 5,
+    "colorChanges": 1,
+    "stops": 0,
+    "threadLengthMm": 21581.943114002694,
+    "estSeconds": 920.8,
+    "jumpMm": 252.2946766776398,
+    "travelMm": 365.7636022498853,
+    "bounds": {
+      "minX": -2.886579864025407e-15,
+      "minY": -6.199999809265137,
+      "maxX": 200,
+      "maxY": 44.20000076293945
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "hoop-01",
+    "stitches": 2806,
+    "jumps": 15,
+    "trims": 15,
+    "colorChanges": 2,
+    "stops": 1,
+    "threadLengthMm": 6774.464703087832,
+    "estSeconds": 460.6,
+    "jumpMm": 292.1618319249562,
+    "travelMm": 0,
+    "bounds": {
+      "minX": -46.5,
+      "minY": -46.5,
+      "maxX": 46.5,
+      "maxY": 46.5
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "hoop-02",
+    "stitches": 3743,
+    "jumps": 24,
+    "trims": 24,
+    "colorChanges": 2,
+    "stops": 1,
+    "threadLengthMm": 9261.329274357606,
+    "estSeconds": 608.3,
+    "jumpMm": 456.78303117134976,
+    "travelMm": 0,
+    "bounds": {
+      "minX": -46.5,
+      "minY": -46.5,
+      "maxX": 46.5,
+      "maxY": 46.5
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "hoop-03",
+    "stitches": 2831,
+    "jumps": 15,
+    "trims": 15,
+    "colorChanges": 2,
+    "stops": 1,
+    "threadLengthMm": 6811.25463398007,
+    "estSeconds": 463.1,
+    "jumpMm": 299.17211999269773,
+    "travelMm": 0,
+    "bounds": {
+      "minX": -46.5,
+      "minY": -46.5,
+      "maxX": 46.5,
+      "maxY": 46.5
+    },
+    "diagnostics": []
+  }
+]
