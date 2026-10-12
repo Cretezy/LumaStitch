@@ -15,6 +15,7 @@ import {
   type BooleanOp,
 } from '@/geom/paperAdapter';
 import { newId } from '@/lib/ids';
+import { recognitionCandidates, recognizedShapes } from '@/recognition/recognize';
 import { createDesign, createElement, hasClosedSubpath, shapeElements } from '@/model/factories';
 import { polyShapeToGeom, transformGeomM } from '@/model/geomOps';
 import { shapeSchema, threadSchema } from '@/model/schema';
@@ -491,6 +492,25 @@ export function ungroupSelectedSatinRails(): void {
   } catch (error) {
     toast(error instanceof Error ? error.message : String(error), 'error');
   }
+}
+
+export function recognizeSelectedStitches(keys: string[]): void {
+  const d = useDoc.getState().design;
+  if (!d) throw new Error('No design is open.');
+  const ids = useUi.getState().selection.shapeIds;
+  const candidates = recognitionCandidates(d, ids);
+  if (!keys.length || keys.some((key) => !candidates.some((c) => c.key === key)))
+    throw new Error('Select current recognition candidates.');
+  const selected = candidates.filter((c) => keys.includes(c.key));
+  replaceShapeGroups(
+    'Recognize stitches',
+    ids.flatMap((id) => {
+      const matches = selected.filter((c) => c.shapeId === id);
+      return matches.length
+        ? [{ inputIds: [id], results: recognizedShapes(d.shapes[id], matches), zSlotOf: id }]
+        : [];
+    }),
+  );
 }
 
 export function splitSelectedSatin(fraction: number): void {

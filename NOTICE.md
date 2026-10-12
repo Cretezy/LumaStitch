@@ -78,3 +78,7 @@ It includes, ports or is derived from the following works. Their copyright notic
 
 - `src/lettering/vendor/bidi` derives from [bidi-js](https://github.com/lojjic/bidi-js), npm version 1.1.0, Copyright 2021 Jason Johnston, MIT. The full license is retained as `LICENSE.txt` in that directory. LumaStitch updates the data to Unicode 17, indexes complete Unicode scalars, and corrects local-line indexing during whitespace reordering. Original source formatting is retained.
 - Unicode 17.0.0 bidi classes, paired brackets, mirroring, Scripts and Script_Extensions are generated from the [official Unicode Character Database](https://www.unicode.org/Public/17.0.0/ucd/). Copyright © 1991–2025 Unicode, Inc.; covered by the Unicode License V3, reproduced as `src/lettering/vendor/bidi/UNICODE-LICENSE.txt`. `src/lettering/unicode17.json` and the representative conformance fixtures derive from the same data. `scripts/generate-lettering-unicode.py` reproduces the tables; the complete official bidi tests can be checked with `tests/tools/check_bidi.mjs`.
+
+### Recognition reference files
+
+`tests/fixtures/recognition` contains independently constructed synthetic patterns encoded by pyembroidery 1.5.1 (MIT, Copyright (c) 2018 Tatarize; license reproduced above). `tests/tools/make_recognition_references.py` reproduces all 30 files. No competitor recognition code or design artwork is included.

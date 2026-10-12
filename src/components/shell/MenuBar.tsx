@@ -164,6 +164,9 @@ export function MenuBar() {
           <MenubarItem disabled={!has} onSelect={() => A.ungroupSelectedSatinRails()}>
             Ungroup satin rails
           </MenubarItem>
+          <MenubarItem disabled={!has} onSelect={() => ui.openDialog('recognize')}>
+            Recognize stitches…
+          </MenubarItem>
           <MenubarItem disabled={!has} onSelect={() => ui.openDialog('satinSplit')}>
             Split satin column…
           </MenubarItem>

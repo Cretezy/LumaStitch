@@ -113,7 +113,7 @@ LumaStitch is free software under the [GNU General Public License v3.0 or later]
 
 ### Editable machine files
 
-Open or import PES, DST, JEF, EXP and VP3 as editable stitch nodes. Select a node to change needle/jump/trim/stop commands, move needles, or resize the existing stitch program. Imported programs preserve duplicate penetrations and short jumps; they do not regenerate density or recover original lettering/vector objects. [Complete import example and GIF](docs/machine-import/README.md).
+Open or import PES, DST, JEF, EXP and VP3 as editable stitch nodes. Select a node to change needle/jump/trim/stop commands, move needles, or resize the existing stitch program. Imported programs preserve duplicate penetrations and short jumps; they do not regenerate density or recover original lettering/vector objects. [Complete import example and GIF](docs/machine-import/README.md). Use **Object → Recognize stitches…** to review inferred satin rails and simple tatami fills, then regenerate their stitches by editing geometry or spacing. Unsupported needles and commands remain manual. [Before/after, density edit and rendered GIFs](docs/recognition/README.md).
 
 ### Arbitrary guided fills
 

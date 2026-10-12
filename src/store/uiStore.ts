@@ -19,6 +19,7 @@ export type SidebarTab = 'inspector' | 'sequence' | 'threads' | 'issues';
 export type DialogId =
   | 'appliqueEdges'
   | 'appliqueCut'
+  | 'recognize'
   | 'satinSplit'
   | 'hooping'
   | 'import'

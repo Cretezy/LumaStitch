@@ -12,6 +12,7 @@ export interface DialogProps {
 const DIALOGS: Record<Exclude<DialogId, null>, LazyExoticComponent<ComponentType<DialogProps>>> = {
   appliqueEdges: lazy(() => import('./dialogs/AppliqueEdgesDialog')),
   appliqueCut: lazy(() => import('./dialogs/AppliqueCutDialog')),
+  recognize: lazy(() => import('./dialogs/RecognitionDialog')),
   satinSplit: lazy(() => import('./dialogs/SatinSplitDialog')),
   hooping: lazy(() => import('./dialogs/HoopingDialog')),
   machineImport: lazy(() => import('./dialogs/MachineImportDialog')),
