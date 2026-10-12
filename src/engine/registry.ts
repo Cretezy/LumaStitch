@@ -2,7 +2,7 @@
 /** Stitch type registry. Adding a type = a folder in stitches/ + one line here. */
 import type { ElementRole, StitchType } from '@/model/types';
 import type { StitchTypeDef } from './def';
-import { appliqueDef } from './stitches/applique';
+import { appliqueDef, appliqueBorderDef } from './stitches/applique';
 import { blanketDef } from './stitches/blanket';
 import { contourDef } from './stitches/contour';
 import { crossStitchDef } from './stitches/crossStitch';
@@ -47,6 +47,7 @@ for (const d of [
   perPart(rippleDef),
   perPart(crossStitchDef),
   appliqueDef,
+  appliqueBorderDef,
   motifRunDef,
   blanketDef,
   manualDef,

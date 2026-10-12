@@ -8,8 +8,10 @@
  * Machine stops inside the element are requested with a run point flagged F.JUMP | F.STOP:
  * "stop here, then continue at this point" (see plan.ts).
  */
+import { selectCoverEdges } from '@/applique/edges';
 import { clipPolylines, offset } from '@/geom/clipper';
-import { rotateClosedTo } from '@/geom/polyline';
+import { flattenGeom } from '@/geom/flatten';
+import { reversePolyline, rotateClosedTo } from '@/geom/polyline';
 import type { Polyline, Ring } from '@/geom/types';
 import type { InsideRouter } from '@/geom/visibility';
 import type { Vec2 } from '@/model/types';
@@ -25,6 +27,7 @@ import { fillPolygon, makeRouter, travelTo } from '../tatami';
 export interface AppliquePrep {
   /** Cover centrelines (outer rings and holes), each a ring without a repeated start point. */
   rings: Ring[];
+  paths?: PathItem[];
   halfWidth: number;
   density: number;
   placementLength: number;
@@ -35,6 +38,7 @@ export interface AppliquePrep {
   router: InsideRouter | null;
   covers?: PathItem[];
   precut: boolean;
+  manualCover: boolean;
 }
 
 /** Greedy nearest order of the rings, each rotated to start nearest the previous end. */
@@ -185,7 +189,7 @@ export const appliqueDef: StitchTypeDef<AppliquePrep> = {
     shortStitches: true,
   },
   appliesTo: (s) => s.hasClosed,
-  prepare(geom, params, _el, ctx) {
+  prepare(geom, params, el, ctx) {
     const base = fillPolygon(geom, params, ctx);
     const width = Math.max(0.5, num(params, 'width', 3));
     const pull = Math.max(0, num(params, 'pullComp', 0.2));
@@ -199,20 +203,28 @@ export const appliqueDef: StitchTypeDef<AppliquePrep> = {
       );
     let travelArea = offset(base, -0.1);
     if (!travelArea.length) travelArea = base;
+    const selected = el.appliqueEdges?.omit.length
+      ? selectCoverEdges(
+          rings.map((r) => ({ pts: closeRing(r), closed: true })),
+          geom,
+          el.appliqueEdges,
+        )
+      : undefined;
     return {
       rings,
       covers:
         bool(params, 'partialCover') && ctx.appliqueCoverClip?.length
           ? clipPolylines(
-              rings.map(closeRing),
+              selected ? selected.map((p) => p.pts) : rings.map(closeRing),
               offset(ctx.appliqueCoverClip, -(width / 2 + pull + 0.1)),
               false,
             ).map((pts) => ({
               pts,
               closed: Math.hypot(pts[0] - pts[pts.length - 2], pts[1] - pts[pts.length - 1]) < 1e-6,
             }))
-          : undefined,
+          : selected,
       precut: bool(params, 'precut'),
+      manualCover: Boolean(selected),
       // The cover's outer edge sits on the outline (plus pull compensation).
       halfWidth: width / 2 + pull,
       density: Math.max(0.1, num(params, 'density', 0.4)),
@@ -226,27 +238,30 @@ export const appliqueDef: StitchTypeDef<AppliquePrep> = {
   },
   route(prep, hints) {
     const b = new RunBuilder();
-    if (!prep.rings.length) return b.build();
+    if (!prep.rings.length && !prep.paths?.length) return b.build();
     const t = { router: prep.router, travelLen: 2 };
-    const rings = orderRings(prep.rings, hints.entry);
+    const rings = prep.paths
+      ? orderPaths(prep.paths, hints.entry, 1)
+      : orderRings(prep.rings, hints.entry).map((pts) => ({ pts, closed: true }));
     /** Starts a phase: the first point of every phase after the first carries a machine stop. */
     const begin = (x: number, y: number, phase: number, ri: number) => {
       if (ri === 0 && phase > 0) b.push(x, y, F.JUMP | (phase === 2 && prep.precut ? 0 : F.STOP));
       else if (ri === 0) b.push(x, y);
       // Within a phase, connect rings by inside travel (placement) or a jump (fabric is down).
+      else if (prep.paths) b.jumpTo(x, y, F.TRIM);
       else if (phase === 0) travelTo(b, [x, y], t);
-      else b.jumpTo(x, y);
+      else b.jumpTo(x, y, phase === 2 && prep.manualCover ? F.TRIM : 0);
     };
     // 1. Placement line.
-    rings.forEach((r, ri) => {
+    rings.forEach(({ pts: r }, ri) => {
       const pts = runningPoints(r, prep.placementLength);
       begin(pts[0], pts[1], 0, ri);
       b.pushPolyline(pts, 0, true);
     });
     // 2. Tack-down.
-    rings.forEach((r, ri) => {
+    rings.forEach(({ pts: r, closed }, ri) => {
       if (prep.tackDown === 'zigzag') {
-        const col = columnFromCenterline(r, true, prep.tackWidth / 2);
+        const col = columnFromCenterline(r, closed, prep.tackWidth / 2);
         const tmp = new RunBuilder();
         satinPass(tmp, col, true, { density: prep.tackSpacing });
         begin(tmp.xy[0], tmp.xy[1], 1, ri);
@@ -255,13 +270,11 @@ export const appliqueDef: StitchTypeDef<AppliquePrep> = {
         const pts = runningPoints(r, prep.placementLength);
         begin(pts[0], pts[1], 1, ri);
         b.pushPolyline(pts, 0, true);
-        if (prep.tackDown === 'double') b.pushPolyline(pts, 0, true);
+        if (prep.tackDown === 'double') b.pushPolyline(closed ? pts : reversePolyline(pts), 0, true);
       }
     });
     // 3. Satin cover.
-    const covers = prep.covers
-      ? orderPaths(prep.covers, b.last() ?? undefined, 1)
-      : rings.map((pts) => ({ pts, closed: true }));
+    const covers = prep.covers ? orderPaths(prep.covers, b.last() ?? undefined, 1) : rings;
     covers.forEach(({ pts: r, closed }, ri) => {
       const col = columnFromCenterline(r, closed, prep.halfWidth);
       const tmp = new RunBuilder();
@@ -271,5 +284,38 @@ export const appliqueDef: StitchTypeDef<AppliquePrep> = {
     });
     if (!covers.length && !prep.precut && b.last()) b.push(...b.last()!, F.JUMP | F.STOP);
     return b.build();
+  },
+};
+
+/** Open appliqué follows the drawn path; it does not define a cut-fabric footprint. */
+export const appliqueBorderDef: StitchTypeDef<AppliquePrep> = {
+  ...appliqueDef,
+  id: 'appliqueBorder',
+  label: 'Appliqué border',
+  role: 'outline',
+  description: 'Placement, tack-down and satin cover along open or closed drawn borders, with fabric stops.',
+  params: appliqueDef.params
+    .filter((p) => p.key !== 'partialCover')
+    .map((p) =>
+      p.key === 'width' ? { ...p, help: 'Width of the satin cover, centered on the drawn path.' } : p,
+    ),
+  appliesTo: (s) => s.hasOpen || s.hasClosed,
+  prepare(geom, params, el, ctx) {
+    const flat = flattenGeom(geom, ctx.tolerance);
+    const paths = [
+      ...flat.rings.map((r) => ({ pts: closeRing(r), closed: true })),
+      ...flat.polylines.map((pts) => ({ pts, closed: false })),
+    ];
+    if (!paths.length) throw new Error('Draw a border with at least two distinct points.');
+    const prep = appliqueDef.prepare(
+      { fillRule: 'nonzero', subpaths: [] },
+      params,
+      { ...el, appliqueEdges: undefined },
+      ctx,
+    );
+    const covers = el.appliqueEdges?.omit.length
+      ? selectCoverEdges(paths, geom, el.appliqueEdges)
+      : undefined;
+    return { ...prep, paths, covers, manualCover: Boolean(covers) };
   },
 };

@@ -19,6 +19,12 @@ const tie = z.enum(['auto', 'on', 'off']);
 const element = z.object({
   id: z.string(),
   role: z.enum(['fill', 'outline']),
+  appliqueEdges: z
+    .object({
+      topology: z.string().max(10000),
+      omit: z.array(z.tuple([z.number().int().nonnegative(), z.number().int().nonnegative()])).max(500),
+    })
+    .optional(),
   type: z.enum([
     'tatami',
     'satinFill',
@@ -30,6 +36,7 @@ const element = z.object({
     'patternFill',
     'crossStitch',
     'applique',
+    'appliqueBorder',
     'running',
     'triple',
     'satin',

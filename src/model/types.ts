@@ -60,7 +60,15 @@ export type FillType =
   | 'crossStitch'
   | 'applique';
 export type OutlineType =
-  'running' | 'triple' | 'satin' | 'zigzag' | 'motifRun' | 'blanket' | 'manual' | 'satinColumn';
+  | 'running'
+  | 'triple'
+  | 'satin'
+  | 'zigzag'
+  | 'motifRun'
+  | 'blanket'
+  | 'manual'
+  | 'satinColumn'
+  | 'appliqueBorder';
 export type StitchType = FillType | OutlineType;
 export type ParamValue = number | boolean | string;
 export type TieMode = 'auto' | 'on' | 'off';
@@ -85,6 +93,8 @@ export interface StitchElement {
   tieIn: TieMode;
   tieOut: TieMode;
   trimAfter: TrimMode;
+  /** Omitted source Bézier edges; topology prevents stale indices after node insertion/removal. */
+  appliqueEdges?: { topology: string; omit: [number, number][] };
   /** Set on manual change; auto-digitize can skip. */
   userEdited?: boolean;
 }

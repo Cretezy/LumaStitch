@@ -1,0 +1,106 @@
+{
+  "format": "lumastitch-project",
+  "schemaVersion": 1,
+  "app": "LumaStitch",
+  "savedAt": "2026-10-11T00:00:00.000Z",
+  "design": {
+    "schemaVersion": 1,
+    "name": "Open appliqué pocket border",
+    "fabric": "woven",
+    "threadChart": "exact",
+    "settings": {
+      "trimThreshold": 3,
+      "minStitchLength": 0.3,
+      "maxStitchLength": 12,
+      "tieLength": 0.8,
+      "machineSpm": 600,
+      "trimSeconds": 6,
+      "colorChangeSeconds": 30,
+      "defaultTie": "auto",
+      "scaleStrokeWidths": true
+    },
+    "threads": {
+      "blue": {
+        "id": "blue",
+        "name": "Blue pocket border",
+        "color": "#357693"
+      }
+    },
+    "shapes": {
+      "pocket": {
+        "id": "pocket",
+        "name": "Pocket",
+        "geom": {
+          "fillRule": "nonzero",
+          "subpaths": [
+            {
+              "closed": false,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    0,
+                    28
+                  ],
+                  "out": [
+                    0,
+                    12
+                  ]
+                },
+                {
+                  "p": [
+                    50,
+                    28
+                  ],
+                  "in": [
+                    0,
+                    12
+                  ]
+                },
+                {
+                  "p": [
+                    50,
+                    0
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "stroke": "#357693",
+          "strokeWidth": 0.3
+        },
+        "fill": null,
+        "outline": {
+          "id": "pocket-border",
+          "role": "outline",
+          "type": "appliqueBorder",
+          "threadId": "blue",
+          "params": {
+            "width": 3,
+            "pullComp": 0.15,
+            "density": 0.45
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        }
+      }
+    },
+    "zOrder": [
+      "pocket"
+    ],
+    "sequence": [
+      {
+        "kind": "element",
+        "elementId": "pocket-border"
+      }
+    ]
+  }
+}

@@ -356,7 +356,15 @@ export function setElementProps(
   props: Partial<
     Pick<
       StitchElement,
-      'tieIn' | 'tieOut' | 'trimAfter' | 'threadId' | 'entry' | 'exit' | 'guides' | 'railSplit'
+      | 'tieIn'
+      | 'tieOut'
+      | 'trimAfter'
+      | 'threadId'
+      | 'entry'
+      | 'exit'
+      | 'guides'
+      | 'railSplit'
+      | 'appliqueEdges'
     >
   >,
   label = 'Change element',

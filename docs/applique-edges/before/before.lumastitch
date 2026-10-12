@@ -1,0 +1,163 @@
+{
+  "format": "lumastitch-project",
+  "schemaVersion": 1,
+  "app": "LumaStitch",
+  "savedAt": "2026-10-11T00:00:00.000Z",
+  "design": {
+    "schemaVersion": 1,
+    "name": "Complete pocket cover",
+    "fabric": "woven",
+    "threadChart": "exact",
+    "settings": {
+      "trimThreshold": 3,
+      "minStitchLength": 0.3,
+      "maxStitchLength": 12,
+      "tieLength": 0.8,
+      "machineSpm": 600,
+      "trimSeconds": 6,
+      "colorChangeSeconds": 30,
+      "defaultTie": "auto",
+      "scaleStrokeWidths": true
+    },
+    "threads": {
+      "blue": {
+        "id": "blue",
+        "name": "Blue pocket border",
+        "color": "#357693"
+      }
+    },
+    "shapes": {
+      "pocket": {
+        "id": "pocket",
+        "name": "Pocket",
+        "geom": {
+          "fillRule": "evenodd",
+          "subpaths": [
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    50,
+                    0
+                  ]
+                },
+                {
+                  "p": [
+                    50,
+                    40
+                  ]
+                },
+                {
+                  "p": [
+                    0,
+                    40
+                  ]
+                }
+              ]
+            },
+            {
+              "closed": true,
+              "nodes": [
+                {
+                  "p": [
+                    31,
+                    22
+                  ],
+                  "in": [
+                    0,
+                    -3.313708498984761
+                  ],
+                  "out": [
+                    0,
+                    3.313708498984761
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    25,
+                    28
+                  ],
+                  "in": [
+                    3.313708498984761,
+                    0
+                  ],
+                  "out": [
+                    -3.313708498984761,
+                    0
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    19,
+                    22
+                  ],
+                  "in": [
+                    0,
+                    3.313708498984761
+                  ],
+                  "out": [
+                    0,
+                    -3.313708498984761
+                  ],
+                  "smooth": true
+                },
+                {
+                  "p": [
+                    25,
+                    16
+                  ],
+                  "in": [
+                    -3.313708498984761,
+                    0
+                  ],
+                  "out": [
+                    3.313708498984761,
+                    0
+                  ],
+                  "smooth": true
+                }
+              ]
+            }
+          ]
+        },
+        "art": {
+          "stroke": "#357693",
+          "strokeWidth": 0.3
+        },
+        "fill": {
+          "id": "pocket-border",
+          "role": "fill",
+          "type": "applique",
+          "threadId": "blue",
+          "params": {
+            "width": 3,
+            "pullComp": 0.15,
+            "density": 0.45
+          },
+          "tieIn": "auto",
+          "tieOut": "auto",
+          "trimAfter": "auto"
+        },
+        "outline": null
+      }
+    },
+    "zOrder": [
+      "pocket"
+    ],
+    "sequence": [
+      {
+        "kind": "element",
+        "elementId": "pocket-border"
+      }
+    ]
+  }
+}

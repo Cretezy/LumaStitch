@@ -155,6 +155,9 @@ export function MenuBar() {
             Detach lettering
           </MenubarItem>
           <MenubarSeparator />
+          <MenubarItem disabled={!has} onSelect={() => ui.openDialog('appliqueEdges')}>
+            Appliqué edge coverage…
+          </MenubarItem>
           <MenubarItem disabled={!has} onSelect={() => ui.openDialog('satinSplit')}>
             Split satin column…
           </MenubarItem>

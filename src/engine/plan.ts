@@ -330,6 +330,7 @@ export function* planGenerator(design: Design, opts: BuildOptions = {}): Generat
         p: params,
         gu: el.guides ?? null,
         rs: el.railSplit ?? null,
+        ae: el.appliqueEdges ?? null,
         gc: growKey,
         ac: appliqueKey,
         sw: def.id === 'satin' ? (shape.art.strokeWidth ?? null) : null,
@@ -498,7 +499,10 @@ export function* planGenerator(design: Design, opts: BuildOptions = {}): Generat
         const trim =
           // Guided rows are clipped at holes and disconnected boundaries. A short gap still
           // represents unstitched space, so its explicit no-inside-path jump must remain a jump.
-          (el.type === 'guidedFill' && (f & F.TRIM) !== 0) ||
+          ((el.type === 'guidedFill' ||
+            el.type === 'appliqueBorder' ||
+            (el.type === 'applique' && el.appliqueEdges?.omit.length)) &&
+            (f & F.TRIM) !== 0) ||
           ((f & F.TRIM) !== 0 && d > SHORT_HOP) ||
           (el.trimAfter !== 'never' && (el.trimAfter === 'always' || d > settings.trimThreshold));
         if (trim) {
