@@ -28,7 +28,7 @@ No account · No upload · Works offline · Free and open source (GPL-3.0)
 - **Editable embroidery lettering.** Digitized satin rails, kerning, multiline and curved text, monograms and batch names with project/PES ZIP downloads. [Complete examples and GIFs](docs/lettering/README.md).
 - **Edit like a vector app.** Select, move, scale, rotate and edit nodes; draw shapes; combine them with booleans; set stitch angle, density, underlay, compensation and start/end points per shape.
 - **Many stitch types.** Tatami, satin, contour, meander, ripple, gradient and pattern fills, cross-stitch, appliqué, triple run, bean, motif and blanket stitches.
-- **Complete stitch examples.** [Satin and tatami designs](docs/stitch-examples/README.md) with animated GIF stitch-outs, before/after comparisons, editable projects, SVG artwork and PES/DST downloads.
+- **Complete stitch examples.** [Screenshots and MP4 comparison videos](docs/videos/README.md), plus [satin and tatami designs](docs/stitch-examples/README.md) with animated GIF stitch-outs, before/after comparisons, editable projects, SVG artwork and PES/DST downloads.
 - **What you see is what gets sewn.** The canvas, the simulator and every export come from the same stitch plan, with realistic thread rendering.
 - **Inspect stitch quality.** A worker-computed needle density map includes ties and underlay. Optional rectangular/elliptical sewing fields show fit warnings before machine export. [Calibration sampler](docs/inspection/README.md).
 - **Simulator.** Play the stitch-out at machine speed or faster, step stitch by stitch, and jump between colours.

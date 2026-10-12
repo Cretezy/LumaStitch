@@ -4,6 +4,8 @@ These original designs include the complete stitch-out, underlay, thread sequenc
 
 ## Satin botanical
 
+[Screenshot gallery and side-by-side MP4 comparisons](../videos/README.md) are also available for both designs.
+
 Curved open columns form the stems and leaves, eight separate columns form the petals, and fixed-angle satin fills the centre. Column widths are 3, 5 and 6 mm, with 0.4 mm density, 0.2 mm pull compensation per side and edge-walk plus zigzag underlay. The centre uses edge underlay and splits stitches over 7 mm. Finished bounds: approximately **47.4 × 68 mm**, four thread colours.
 
 | Before (`054c9470`) | After |
