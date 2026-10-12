@@ -18,6 +18,6 @@ The four 20 mm tatami squares use spacing 0.3 and 0.4 mm on the top row, 0.5 and
 
 For each fabric/stabilizer/thread/needle combination, sew a separate sampler and record machine model, tension, speed, stabilizer, thread weight, needle size, finished square dimensions, finished satin widths, coverage, puckering and thread breaks. Keep a photo with the record. Compare target versus finished widths before adjusting pull compensation; change one parameter at a time. Save the adjusted project alongside the record.
 
-This sampler is software-validated and has **not** been physically sewn in this session. Record actual results in [sew-tests.md](../sew-tests.md). Custom reusable fabric profiles and automatic calibration fitting remain outstanding.
+This sampler is software-validated and has **not** been physically sewn in this session. Record actual results in [sew-tests.md](../sew-tests.md). [Reusable fabric profiles](../fabric/README.md) store and share calibration settings; automatic calibration fitting remains outstanding.
 
 Reproduce with `EXAMPLES_MODULE=/tests/inspection/examples.ts node scripts/stitch-examples.mjs . docs/inspection`.

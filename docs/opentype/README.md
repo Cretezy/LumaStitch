@@ -1,8 +1,8 @@
 # Portable OpenType lettering
 
-LumaStitch now offers the original digitized satin font plus Noto Sans, Noto Serif, Noto Sans Arabic and Noto Sans Hebrew outline fonts. Import an individual `.ttf` or `.otf` file from **Object → Add lettering**, choose font size, variable weight/width, language, text direction and tatami or automatic satin fill. The original font, its available license metadata and shaped outlines are embedded in the project, so reopening and editing text does not depend on fonts installed on another computer. Bundled fonts carry their complete SIL Open Font License.
+LumaStitch offers Noto Sans, Noto Serif, Noto Sans Arabic and Noto Sans Hebrew outline fonts alongside its [three digitized satin fonts](../digitized-fonts/README.md). Import an individual `.ttf` or `.otf` file from **Object → Add lettering**, choose font size, variable weight/width, language, text direction and tatami or automatic satin fill. The original font, its available license metadata and shaped outlines are embedded in the project, so reopening and editing text does not depend on fonts installed on another computer. Bundled fonts carry their complete SIL Open Font License.
 
-Before this change, the lettering dialog supported only 118 digitized Geneva Simple Sans characters; Arabic and imported fonts were unavailable. These are feature examples, not a claim that outline fill replaces professionally digitized small-letter satin.
+These examples demonstrate outline-font shaping and fill generation; outline fill does not replace professionally digitized small-letter satin.
 
 | Sans-serif | Serif |
 | --- | --- |

@@ -50,18 +50,51 @@ No account · No upload · Works offline · Free and open source (GPL-3.0)
   </tr>
 </table>
 
+## Editing and production workflows
+
+### Lettering
+
+Use **Object → Add lettering** for editable text, kerning, multiline/circular layouts, monograms and batch project/PES exports. The digitized catalog includes Geneva Simple Sans (118 glyphs), Geneva Simple Sans Rounded (120) and Chopin Script (116), with authored satin rails, running connectors and per-font size limits. [Digitized examples](docs/lettering/README.md) · [Rounded, script and monogram examples](docs/digitized-fonts/README.md).
+
+OpenType lettering supports local TTF/OTF import, variable axes and four bundled Noto fonts: Sans, Serif, Sans Arabic and Sans Hebrew. Projects retain their fonts for portable editing. Unicode 17 bidirectional layout supports mixed Arabic/Hebrew, Latin and numbers. [OpenType examples](docs/opentype/README.md) · [Mixed-direction examples](docs/bidi/README.md).
+
+Select an open curve and choose **Object → Add lettering on path**, then use **Object → Edit lettering baseline** to reshape the guide. Alignment, offset and direction remain editable. [Baseline editing and stitch-outs](docs/lettering-path/README.md).
+
+### Editable machine files and stitch recognition
+
+Open PES, DST, JEF, EXP and VP3 as editable needle/jump/trim/stop nodes. Moving and scaling changes the existing stitch program while preserving duplicate penetrations and short jumps. **Object → Recognize stitches…** previews inferred satin rails and simple tatami fills for geometry and density editing; unsupported needles and commands remain manual. [Import example](docs/machine-import/README.md) · [Recognition before/after](docs/recognition/README.md).
+
+### Satin routing and splitting
+
+Combine intersecting paths and enable **Advanced → Connect satin branches** to cover routing underpaths with the final satin pass. For compatible **Satin rails** objects, use **Object → Group satin rails for routing** to retain editable rails and guides. **Object → Split satin column** previews a centerline cut and creates two editable sections. [Connected fern](docs/satin-branches/README.md) · [Variable-width vine](docs/satin-rails/README.md) · [Split ribbon](docs/satin-split/README.md).
+
+### Guided fills and appliqué
+
+Select a closed fill shape and open guides, then **Object → Make guided fill**. Translated copies, parallel offsets and finite-guide buffers support holes, pull compensation and straight underlay. [Three complete guided-fill examples](docs/guided-fill/README.md).
+
+Appliqué supports pre-cut fabric, hidden-cover removal and manual edge omission, while preserving placement/tack-down. Open **Appliqué border** outlines sew the phases along drawn curves. **File → Appliqué cutting export** produces numbered SVG/DXF pieces with holes, allowance, mirroring and a reference layout. [Cutting packages](docs/applique/README.md) · [Edge controls and open borders](docs/applique-edges/README.md).
+
+### Fabric calibration and inspection
+
+Design settings saves custom spacing, compensation and underlay defaults with fabric/needle/thread/stabilizer notes. Profiles stay embedded in projects and can be reused locally or shared as JSON; per-object overrides remain in effect. The needle-density map and optional sewing-field checks help inspect the generated plan. [Portable profile](docs/fabric/README.md) · [Calibration sampler and inspection screenshots](docs/inspection/README.md).
+
+### Multi-hooping
+
+**File → Multi-hooping export** creates numbered machine/project ZIPs with shared registration marks, basting frames, placement SVGs and manifests. Edit field centers and rotation or search field angles automatically. The whole-object option keeps fitting shapes and touching layer groups in one field, preserving source sewing order; oversized groups retain their seams. All five output formats receive decoded field-fit checks. [Registered fields](docs/hooping/README.md) · [Rotated placements](docs/hooping-placements/README.md) · [Whole objects](docs/hooping-objects/README.md) · [Touching layers](docs/hooping-layers/README.md).
+
 ## Supported formats
 
-| Direction | Formats                                                                                       |
-| --------- | --------------------------------------------------------------------------------------------- |
+| Direction | Formats                                                                                             |
+| --------- | --------------------------------------------------------------------------------------------------- |
 | Import    | SVG, PNG, JPG, WebP, `.lumastitch` projects; PES, DST, JEF, EXP and VP3 as editable stitch programs |
-| Machine   | Brother/Baby Lock PES (v1, v6), Tajima DST, Janome JEF, Melco EXP, Pfaff/Husqvarna Viking VP3 |
-| Other     | PNG preview, SVG geometry, PDF production worksheet, MP4/WebM stitch-out video                |
+| Machine   | Brother/Baby Lock PES (v1, v6), Tajima DST, Janome JEF, Melco EXP, Pfaff/Husqvarna Viking VP3       |
+| Other     | PNG preview, SVG geometry, PDF production worksheet, MP4/WebM stitch-out video                      |
 
 The PES, DST, JEF, EXP and VP3 writers are byte-for-byte ports of [pyembroidery](https://github.com/EmbroidePy/pyembroidery), checked against it in the test suite. Results of sewing on a real machine (Brother SE600) are recorded in [docs/sew-tests.md](./docs/sew-tests.md).
 
 ## Documentation
 
+- [Example gallery](docs/videos/README.md): screenshots, stitch-out GIFs, comparison MP4s and downloadable projects
 - [Capability acceptance ledger](docs/capabilities.md): comparison targets, evidence and outstanding work
 - [SPEC.md](./SPEC.md): what LumaStitch does and why
 - [ARCHITECTURE.md](./ARCHITECTURE.md): how it is built
@@ -110,48 +143,3 @@ Non-production branches use `npx wrangler preview`; the empty `previews` block i
 ## Licence
 
 LumaStitch is free software under the [GNU General Public License v3.0 or later](./LICENSE). It builds on pyembroidery, Ink/Stitch's thread palettes, Potrace, Paper.js, Clipper2 and others; see [NOTICE.md](./NOTICE.md).
-
-### Editable machine files
-
-Open or import PES, DST, JEF, EXP and VP3 as editable stitch nodes. Select a node to change needle/jump/trim/stop commands, move needles, or resize the existing stitch program. Imported programs preserve duplicate penetrations and short jumps; they do not regenerate density or recover original lettering/vector objects. [Complete import example and GIF](docs/machine-import/README.md). Use **Object → Recognize stitches…** to review inferred satin rails and simple tatami fills, then regenerate their stitches by editing geometry or spacing. Unsupported needles and commands remain manual. [Before/after, density edit and rendered GIFs](docs/recognition/README.md).
-
-### Arbitrary guided fills
-
-Select a closed shape and open guide paths, then **Object → Make guided fill**. Edit the dashed guide with the node tool and choose translated copies, parallel offsets or finite-guide buffers. Holes, pull compensation and straight underlay are supported. [Three complete examples with GIFs](docs/guided-fill/README.md).
-
-### Reusable fabric profiles
-
-Design settings now saves custom spacing, compensation and underlay defaults with fabric/needle/thread/stabilizer notes. Profiles stay embedded in projects and can be reused locally or shared as JSON; per-object overrides remain in effect. [Example profile, sampler and GIF](docs/fabric/README.md).
-
-### Multi-hooping
-
-File → Multi-hooping export splits a large stitch plan into overlapping rectangular fields. Numbered ZIP packages include machine files, editable stitch projects, the source project, shared registration marks, basting frames, a placement SVG and a manifest. All five machine formats receive decoded field-fit checks. [Complete three-hoop example and GIFs](docs/hooping/README.md). Edit field centers and rotation, or search field angles automatically; the [rotated ribbon example](docs/hooping-placements/README.md) reduces nine grid fields to three, with before/after packages, placement templates and rendered GIFs. An optional [whole-object policy](docs/hooping-objects/README.md) keeps fitting shapes together across seams, including their fill and outline. [Touching layer groups](docs/hooping-layers/README.md) now move together when a shared field fits them, preserving background/foreground order.
-
-### Connected satin branches
-
-Combine intersecting paths, choose Satin, then enable **Advanced → Connect satin branches**. Repeated branch visits become running underpaths covered by the final satin pass. [Fern before/after projects, machine files and GIFs](docs/satin-branches/README.md).
-
-### Split satin columns
-
-Select an open satin outline or rail column and choose **Object → Split satin column**. Preview a cut percentage and create two editable rail sections with the current stitch settings. [Curved ribbon example and before/after GIFs](docs/satin-split/README.md).
-
-### Appliqué production
-
-Use **Pre-cut fabric** to skip the trimming stop, and **Omit covered satin** to remove cover edges hidden by later appliqué patches. **File → Appliqué cutting export** produces numbered SVG/DXF pieces with holes, allowance, mirroring and a reference layout. [Complete overlapping-patch example, cutting ZIP and GIFs](docs/applique/README.md).
-
-### Lettering along editable paths
-
-Select an open curve and choose **Object → Add lettering on path**. Set alignment, normal offset or reversed direction, then use **Object → Edit lettering baseline** to reshape the guide. Letters reposition with the committed edit and remain editable as text. [Straight/curved projects, GIFs and baseline editor](docs/lettering-path/README.md).
-
-Use **Object → Add lettering** to choose digitized satin or the bundled Noto Sans, Noto Serif, Noto Sans Arabic and Noto Sans Hebrew fonts. Import TTF/OTF files, adjust variable weight/width, language and direction, and generate tatami or automatic satin fill. Projects retain their fonts for portable text editing; path baselines also support connected scripts. [Full font examples, machine files and rendered GIFs](docs/opentype/README.md).
-
-Choose **Object → Appliqué edge coverage** to omit selected satin edges while retaining placement and tack-down. For open paths, choose **Outline → Appliqué border** to sew the three appliqué phases along the drawn border. [Before/after projects, open-border example and GIFs](docs/applique-edges/README.md).
-
-Select compatible **Satin rails** objects and choose **Object → Group satin rails for routing** to connect variable-width columns while retaining their rails and guides. Ungrouping restores separate editable columns. The seven-column vine removes all three trims and 35.67 mm of jumps, adding 29 needles. [Before/after projects, machine files and GIFs](docs/satin-rails/README.md).
-
-
-Mixed-script OpenType text uses Unicode 17 bidirectional layout, keeping numbers, combining marks and joining scripts in reading order. [Arabic/Latin and Hebrew/Latin projects, machine files and rendered GIFs](docs/bidi/README.md) include both paragraph directions and curved text. The bundled catalog now also includes Noto Sans Hebrew.
-
-### More digitized lettering styles
-
-The lettering selector includes **Geneva Simple Sans Rounded** (120 glyphs) and **Chopin Script** (116 glyphs), alongside Geneva Simple Sans. These use authored satin rails and running connectors, with per-font size limits, editable layouts and monograms. Batch packages carry the selected fonts' license notices. [Full projects, machine files and rendered GIFs](docs/digitized-fonts/README.md).

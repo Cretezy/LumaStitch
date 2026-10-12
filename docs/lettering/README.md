@@ -14,7 +14,7 @@ The bundled Geneva Simple Sans font has 118 glyphs, kerning and a supported capi
 ![Curved stitch-out](lettering-arc/stitch-out.gif)
 ![Monogram stitch-out](lettering-monogram/stitch-out.gif)
 
-These are actual engine outputs rendered at accelerated speed, with a two-second final hold. [Metrics](metrics.json) include every underlay, jump and trim. Lettering preserves the font's authored component order; it does not yet implement a branch-aware satin underpath optimizer. It also does not yet provide arbitrary-path baselines, a font importer, right-to-left shaping, or a commercial-sized font catalog. No physical sew-out is claimed.
+These are actual engine outputs rendered at accelerated speed, with a two-second final hold. [Metrics](metrics.json) include every underlay, jump and trim. Lettering preserves the font's authored component order; it does not yet implement a branch-aware satin underpath optimizer. Additional workflows provide [editable path baselines](../lettering-path/README.md), [TTF/OTF import](../opentype/README.md), [mixed-direction shaping](../bidi/README.md), and [rounded/script digitized fonts](../digitized-fonts/README.md). A commercial-sized font catalog remains outside this curated set. No physical sew-out is claimed.
 
 Reproduce with `EXAMPLES_MODULE=/tests/lettering/examples.ts node scripts/stitch-examples.mjs . docs/lettering`. The source font and extracted geometry are CC BY-SA 2.5 with the original Hershey acknowledgements retained; see [NOTICE.md](../../NOTICE.md).
 

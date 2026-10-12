@@ -6,7 +6,7 @@ This design is imported from the [complete satin botanical PES](../stitch-exampl
 
 The folder also contains SVG geometry, re-exported PES/DST, a final PNG and the animated stitch-out. PES re-export preserves every imported needle coordinate at 0.1 mm precision. Machine-format normalization can change jump segmentation, trim interpretation and stop representation; byte identity is not promised.
 
-PES, DST, JEF, EXP and VP3 readers are checked against full independent pyembroidery 1.5.1 command streams for 48 reference files. DST/EXP may lack color data; assign the displayed placeholders. DST/JEF trim-like jump sequences remain explicit jumps rather than guessed trim commands. Original vector objects, fill density, satin rails and text cannot be recovered from these machine files.
+PES, DST, JEF, EXP and VP3 readers are checked against full independent pyembroidery 1.5.1 command streams for 48 reference files. DST/EXP may lack color data; assign the displayed placeholders. DST/JEF trim-like jump sequences remain explicit jumps rather than guessed trim commands. Import preserves the stitch program without reconstructing the original digitizing objects or text. The separate [stitch recognition workflow](../recognition/README.md) can infer simple satin rails, tatami boundaries and spacing for editing, with manual fallback; it does not recover the original source file.
 
 Reproduce the artifacts with:
 
