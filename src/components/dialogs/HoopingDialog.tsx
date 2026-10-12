@@ -251,7 +251,7 @@ export default function HoopingDialog({ open, onClose }: DialogProps) {
               setResult(null);
             }}
           />
-          Keep whole objects when they fit (fill and outline together; touching objects keep seams)
+          Keep whole objects when they fit (touching layers move together if their group fits)
         </label>
         <p className="text-xs text-muted-foreground">
           Each file begins with temporary basting and shared crosses, then stops before the design. Keep the

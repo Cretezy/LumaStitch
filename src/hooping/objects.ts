@@ -9,6 +9,8 @@ export interface WholeObject {
   name: string;
   elementIds: string[];
   field: number;
+  /** Source shapes moved together to preserve all touching layer relationships. */
+  layerGroup?: string;
 }
 export function assignWholeObjects(
   design: Design,
@@ -33,7 +35,7 @@ export function assignWholeObjects(
   const addFootprint = (key: string, a: Vec2, b: Vec2) => {
     // A half-millimetre exclusion band around each sewn chord prevents changing relative
     // layer order where thread paths touch. Cell-local bounding boxes are conservative:
-    // false positives leave seams unchanged rather than moving potentially overlapping ink.
+    // false positives conservatively join layers; an oversized joined group retains its seams.
     const box = {
       minX: Math.min(a[0], b[0]) - 0.25,
       minY: Math.min(a[1], b[1]) - 0.25,
@@ -119,16 +121,28 @@ export function assignWholeObjects(
     // object. Convex field containment of both endpoints proves the entire chord fits.
     previous = p;
   }
-  const blocked = new Set<string>();
+  // Contact is transitive: all touching source shapes must travel together. A component
+  // either fits a shared field, or every member retains the original seam ownership.
+  const parents = new Map([...groups.keys()].map((key) => [key, key]));
+  const root = (key: string): string => {
+    let r = key;
+    while (parents.get(r)! !== r) r = parents.get(r)!;
+    while (key !== r) {
+      const next = parents.get(key)!;
+      parents.set(key, r);
+      key = next;
+    }
+    return r;
+  };
   for (const cell of cells.values()) {
     const items = [...cell];
     for (let i = 0; i < items.length; i++)
       for (let j = i + 1; j < items.length; j++) {
-        if (blocked.has(items[i][0]) && blocked.has(items[j][0])) continue;
         if (++work > 30000000)
           throw new Error(
             'Whole-object overlap checking exceeds the work limit. Disable keeping whole objects or split the source design.',
           );
+        if (root(items[i][0]) === root(items[j][0])) continue;
         const a = items[i][1],
           b = items[j][1];
         if (
@@ -143,29 +157,58 @@ export function assignWholeObjects(
             }),
           )
         ) {
-          blocked.add(items[i][0]);
-          blocked.add(items[j][0]);
+          parents.set(root(items[j][0]), root(items[i][0]));
         }
       }
   }
   const owners = new Int16Array(plan.elementIds.length).fill(-1),
     objects: WholeObject[] = [];
-  for (const [shapeId, group] of groups) {
-    if (!group.candidates.length || blocked.has(shapeId)) continue;
-    const center: Vec2 = [(group.minX + group.maxX) / 2, (group.minY + group.maxY) / 2];
-    group.candidates.sort(
+  const components = new Map<string, string[]>();
+  for (const key of groups.keys()) {
+    const r = root(key),
+      members = components.get(r) ?? [];
+    members.push(key);
+    components.set(r, members);
+  }
+  for (const members of components.values()) {
+    let candidates = groups.get(members[0])!.candidates;
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
+    for (const id of members) {
+      const g = groups.get(id)!;
+      work += candidates.length;
+      if (work > 30000000)
+        throw new Error(
+          'Whole-object assignment exceeds the geometry work limit. Use fewer fields or disable keeping whole objects.',
+        );
+      const fitting = new Set(g.candidates);
+      candidates = candidates.filter((field) => fitting.has(field));
+      minX = Math.min(minX, g.minX);
+      minY = Math.min(minY, g.minY);
+      maxX = Math.max(maxX, g.maxX);
+      maxY = Math.max(maxY, g.maxY);
+    }
+    if (!candidates.length) continue;
+    const center: Vec2 = [(minX + maxX) / 2, (minY + maxY) / 2];
+    candidates.sort(
       (a, b) =>
         Math.hypot(fields[a].center[0] - center[0], fields[a].center[1] - center[1]) -
           Math.hypot(fields[b].center[0] - center[0], fields[b].center[1] - center[1]) || a - b,
     );
-    const field = group.candidates[0];
-    for (const owner of group.indices) owners[owner] = field;
-    objects.push({
-      shapeId,
-      name: design.shapes[shapeId].name,
-      elementIds: [...group.indices].map((i) => plan.elementIds[i]),
-      field,
-    });
+    const field = candidates[0];
+    for (const shapeId of members) {
+      const group = groups.get(shapeId)!;
+      for (const owner of group.indices) owners[owner] = field;
+      objects.push({
+        shapeId,
+        name: design.shapes[shapeId].name,
+        elementIds: [...group.indices].map((i) => plan.elementIds[i]),
+        field,
+        ...(members.length > 1 ? { layerGroup: members[0] } : {}),
+      });
+    }
   }
   return { owners, objects };
 }

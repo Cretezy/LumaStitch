@@ -326,7 +326,7 @@ export function splitHoopings(design: Design, input: MultiHoopOptions): Hooping[
       design: d,
       wholeObjects: (whole?.objects ?? [])
         .filter((o) => o.field === t.index)
-        .map(({ shapeId, name, elementIds }) => ({ shapeId, name, elementIds })),
+        .map(({ field: _field, ...object }) => object),
       originalNeedles: t.originalNeedles,
     };
   });

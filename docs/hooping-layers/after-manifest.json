@@ -1,0 +1,163 @@
+{
+  "version": 1,
+  "design": "Layered gold and cream badges at hoop seams",
+  "units": "mm",
+  "coordinates": "+x right, +y down",
+  "options": {
+    "width": 100,
+    "height": 100,
+    "margin": 3,
+    "overlap": 30,
+    "keepObjects": true
+  },
+  "sourceStitches": 897,
+  "hoopings": [
+    {
+      "number": 1,
+      "row": 0,
+      "column": 0,
+      "file": "hoop-01.pes",
+      "project": "hoop-01.lumastitch",
+      "centerMm": [
+        16,
+        0
+      ],
+      "clockwiseDegrees": 0,
+      "placement": 1,
+      "registrationParent": null,
+      "sharedRegistrationMm": [
+        [
+          48,
+          -23.5
+        ],
+        [
+          48,
+          23.5
+        ]
+      ],
+      "sourceNeedles": 427,
+      "wholeObjects": [
+        {
+          "shapeId": "background-0",
+          "name": "Badge 1 gold background",
+          "elementIds": [
+            "background-fill-0"
+          ],
+          "layerGroup": "background-0"
+        },
+        {
+          "shapeId": "star-0",
+          "name": "Badge 1 cream star",
+          "elementIds": [
+            "star-outline-0"
+          ],
+          "layerGroup": "background-0"
+        }
+      ],
+      "stats": {
+        "stitches": 582,
+        "jumps": 12,
+        "trims": 12,
+        "colorChanges": 3,
+        "stops": 1,
+        "threadLengthMm": 1154.5910948676205,
+        "estSeconds": 250.2
+      }
+    },
+    {
+      "number": 2,
+      "row": 0,
+      "column": 1,
+      "file": "hoop-02.pes",
+      "project": "hoop-02.lumastitch",
+      "centerMm": [
+        80,
+        0
+      ],
+      "clockwiseDegrees": 0,
+      "placement": 2,
+      "registrationParent": null,
+      "sharedRegistrationMm": [
+        [
+          48,
+          -23.5
+        ],
+        [
+          48,
+          23.5
+        ],
+        [
+          112,
+          -23.5
+        ],
+        [
+          112,
+          23.5
+        ]
+      ],
+      "sourceNeedles": 419,
+      "wholeObjects": [
+        {
+          "shapeId": "background-1",
+          "name": "Badge 2 gold background",
+          "elementIds": [
+            "background-fill-1"
+          ],
+          "layerGroup": "background-1"
+        },
+        {
+          "shapeId": "star-1",
+          "name": "Badge 2 cream star",
+          "elementIds": [
+            "star-outline-1"
+          ],
+          "layerGroup": "background-1"
+        }
+      ],
+      "stats": {
+        "stitches": 589,
+        "jumps": 16,
+        "trims": 16,
+        "colorChanges": 3,
+        "stops": 1,
+        "threadLengthMm": 1169.667401169388,
+        "estSeconds": 274.9
+      }
+    },
+    {
+      "number": 3,
+      "row": 0,
+      "column": 2,
+      "file": "hoop-03.pes",
+      "project": "hoop-03.lumastitch",
+      "centerMm": [
+        144,
+        0
+      ],
+      "clockwiseDegrees": 0,
+      "placement": 3,
+      "registrationParent": null,
+      "sharedRegistrationMm": [
+        [
+          112,
+          -23.5
+        ],
+        [
+          112,
+          23.5
+        ]
+      ],
+      "sourceNeedles": 51,
+      "wholeObjects": [],
+      "stats": {
+        "stitches": 197,
+        "jumps": 9,
+        "trims": 9,
+        "colorChanges": 1,
+        "stops": 1,
+        "threadLengthMm": 505.1999969482422,
+        "estSeconds": 133.7
+      }
+    }
+  ]
+}

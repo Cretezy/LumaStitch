@@ -1,0 +1,135 @@
+[
+  {
+    "name": "source-panel",
+    "stitches": 897,
+    "jumps": 5,
+    "trims": 4,
+    "colorChanges": 2,
+    "stops": 0,
+    "threadLengthMm": 1669.5429504763006,
+    "estSeconds": 173.7,
+    "jumpMm": 210.29434050850736,
+    "travelMm": 0.5990395892097231,
+    "bounds": {
+      "minX": 0,
+      "minY": -14,
+      "maxX": 160,
+      "maxY": 14
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "before-hoop-1",
+    "stitches": 415,
+    "jumps": 13,
+    "trims": 13,
+    "colorChanges": 3,
+    "stops": 1,
+    "threadLengthMm": 833.0154885968193,
+    "estSeconds": 239.5,
+    "jumpMm": 275.741194211613,
+    "travelMm": 0,
+    "bounds": {
+      "minX": -46.5,
+      "minY": -46.5,
+      "maxX": 46.5,
+      "maxY": 46.5
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "before-hoop-2",
+    "stitches": 655,
+    "jumps": 22,
+    "trims": 22,
+    "colorChanges": 3,
+    "stops": 1,
+    "threadLengthMm": 1189.9477091712183,
+    "estSeconds": 317.5,
+    "jumpMm": 505.6906651889649,
+    "travelMm": 0,
+    "bounds": {
+      "minX": -46.5,
+      "minY": -46.5,
+      "maxX": 46.5,
+      "maxY": 46.5
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "before-hoop-3",
+    "stitches": 402,
+    "jumps": 12,
+    "trims": 12,
+    "colorChanges": 3,
+    "stops": 1,
+    "threadLengthMm": 825.2806740419219,
+    "estSeconds": 232.2,
+    "jumpMm": 136.02708709089612,
+    "travelMm": 0,
+    "bounds": {
+      "minX": -46.5,
+      "minY": -46.5,
+      "maxX": 46.5,
+      "maxY": 46.5
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "after-hoop-1",
+    "stitches": 582,
+    "jumps": 12,
+    "trims": 12,
+    "colorChanges": 3,
+    "stops": 1,
+    "threadLengthMm": 1154.5910948676205,
+    "estSeconds": 250.2,
+    "jumpMm": 263.34369255688625,
+    "travelMm": 0,
+    "bounds": {
+      "minX": -46.5,
+      "minY": -46.5,
+      "maxX": 46.5,
+      "maxY": 46.5
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "after-hoop-2",
+    "stitches": 589,
+    "jumps": 16,
+    "trims": 16,
+    "colorChanges": 3,
+    "stops": 1,
+    "threadLengthMm": 1169.667401169388,
+    "estSeconds": 274.9,
+    "jumpMm": 377.6559606613654,
+    "travelMm": 0,
+    "bounds": {
+      "minX": -46.5,
+      "minY": -46.5,
+      "maxX": 46.5,
+      "maxY": 46.5
+    },
+    "diagnostics": []
+  },
+  {
+    "name": "after-hoop-3",
+    "stitches": 197,
+    "jumps": 9,
+    "trims": 9,
+    "colorChanges": 1,
+    "stops": 1,
+    "threadLengthMm": 505.1999969482422,
+    "estSeconds": 133.7,
+    "jumpMm": 114.00856611224474,
+    "travelMm": 0,
+    "bounds": {
+      "minX": -46.5,
+      "minY": -46.5,
+      "maxX": 46.5,
+      "maxY": 46.5
+    },
+    "diagnostics": []
+  }
+]
