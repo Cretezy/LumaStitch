@@ -21,6 +21,7 @@ export function splitSatinGeometry(
   fraction: number,
 ) {
   const el = shape.outline;
+  if (el?.satinGroups) throw new Error('Ungroup the satin columns before splitting one.');
   if (shape.locked) throw new Error('Unlock the column before splitting it.');
   if (shape.fill || !el || !['satin', 'satinColumn'].includes(el.type))
     throw new Error('Select one satin outline or rail column without a fill.');

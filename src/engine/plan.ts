@@ -331,6 +331,7 @@ export function* planGenerator(design: Design, opts: BuildOptions = {}): Generat
         gu: el.guides ?? null,
         rs: el.railSplit ?? null,
         ae: el.appliqueEdges ?? null,
+        sg: el.satinGroups ?? null,
         gc: growKey,
         ac: appliqueKey,
         sw: def.id === 'satin' ? (shape.art.strokeWidth ?? null) : null,
@@ -501,6 +502,7 @@ export function* planGenerator(design: Design, opts: BuildOptions = {}): Generat
           // represents unstitched space, so its explicit no-inside-path jump must remain a jump.
           ((el.type === 'guidedFill' ||
             el.type === 'appliqueBorder' ||
+            (el.type === 'satinColumn' && el.satinGroups) ||
             (el.type === 'applique' && el.appliqueEdges?.omit.length)) &&
             (f & F.TRIM) !== 0) ||
           ((f & F.TRIM) !== 0 && d > SHORT_HOP) ||

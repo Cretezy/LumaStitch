@@ -93,6 +93,8 @@ export interface StitchElement {
   tieIn: TieMode;
   tieOut: TieMode;
   trimAfter: TrimMode;
+  /** Consecutive subpath counts for grouped explicit satin columns (rails, then rungs). */
+  satinGroups?: number[];
   /** Omitted source Bézier edges; topology prevents stale indices after node insertion/removal. */
   appliqueEdges?: { topology: string; omit: [number, number][] };
   /** Set on manual change; auto-digitize can skip. */

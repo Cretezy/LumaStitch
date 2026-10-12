@@ -19,6 +19,7 @@ const tie = z.enum(['auto', 'on', 'off']);
 const element = z.object({
   id: z.string(),
   role: z.enum(['fill', 'outline']),
+  satinGroups: z.array(z.number().int().min(2).max(2002)).min(2).max(50).optional(),
   appliqueEdges: z
     .object({
       topology: z.string().max(10000),

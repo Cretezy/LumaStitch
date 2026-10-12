@@ -158,6 +158,12 @@ export function MenuBar() {
           <MenubarItem disabled={!has} onSelect={() => ui.openDialog('appliqueEdges')}>
             Appliqué edge coverage…
           </MenubarItem>
+          <MenubarItem disabled={!has} onSelect={() => A.groupSelectedSatinRails()}>
+            Group satin rails for routing
+          </MenubarItem>
+          <MenubarItem disabled={!has} onSelect={() => A.ungroupSelectedSatinRails()}>
+            Ungroup satin rails
+          </MenubarItem>
           <MenubarItem disabled={!has} onSelect={() => ui.openDialog('satinSplit')}>
             Split satin column…
           </MenubarItem>

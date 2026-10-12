@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /** Explicit digitized rails. First two subpaths are rails; subsequent paths are direction rungs. */
+import { buildRailNetwork, routeRailNetwork, type RailNetwork } from './network';
+import { F } from '../../types';
 import { flattenSubpath } from '@/geom/flatten';
 import { cumulativeLengths, nearestOnPolyline, pointAtLength } from '@/geom/polyline';
 import type { Polyline } from '@/geom/types';
@@ -77,7 +79,9 @@ export function columnFromRails(a: Polyline, b: Polyline, rungs: [Vec2, Vec2][] 
   return { a: Float64Array.from(aa), b: Float64Array.from(bb), c, s, closed: false, length: s.at(-1)! };
 }
 
-interface Prep {
+export interface SatinRailPrep {
+  groups?: SatinRailPrep[];
+  network?: RailNetwork;
   col: Column | null;
   density: number;
   underlay: UnderlayKind;
@@ -88,7 +92,7 @@ interface Prep {
   splitAbove: number;
 }
 
-export const satinColumnDef: StitchTypeDef<Prep> = {
+export const satinColumnDef: StitchTypeDef<SatinRailPrep> = {
   id: 'satinColumn',
   label: 'Satin rails',
   role: 'outline',
@@ -97,6 +101,37 @@ export const satinColumnDef: StitchTypeDef<Prep> = {
   defaults: satinCommonDefaults,
   appliesTo: (s) => s.hasOpen,
   prepare(geom, params, el, ctx) {
+    if (el.satinGroups) {
+      if (
+        el.satinGroups.length < 2 ||
+        el.satinGroups.length > 50 ||
+        el.satinGroups.some((n) => !Number.isInteger(n) || n < 2) ||
+        el.satinGroups.reduce((a, b) => a + b, 0) !== geom.subpaths.length ||
+        geom.subpaths.some((p) => p.closed)
+      )
+        throw new Error('Grouped satin topology changed. Undo the path operation or ungroup the columns.');
+      const groups: SatinRailPrep[] = [];
+      let offset = 0;
+      for (const count of el.satinGroups) {
+        groups.push(
+          satinColumnDef.prepare(
+            { ...geom, subpaths: geom.subpaths.slice(offset, offset + count) },
+            params,
+            { ...el, satinGroups: undefined, guides: undefined },
+            ctx,
+          ),
+        );
+        offset += count;
+      }
+      if (groups.some((p) => !p.col)) throw new Error('A grouped satin column has invalid rails or guides.');
+      const network = buildRailNetwork(groups.map((p) => p.col!)) ?? undefined;
+      if (!network)
+        ctx.diag(
+          'satin-network-limit',
+          'Grouped satin routing exceeded the geometry limit; sewing separate columns in their saved order.',
+        );
+      return { ...groups[0], col: null, groups, network };
+    }
     let col: Column | null = null;
     let width = 0;
     try {
@@ -132,6 +167,22 @@ export const satinColumnDef: StitchTypeDef<Prep> = {
   },
   route(prep, hints) {
     const b = new RunBuilder();
+    if (prep.groups) {
+      if (prep.network)
+        return routeRailNetwork(
+          prep.network,
+          prep.groups.map((p) => ({ ...p, col: p.col! })),
+          hints.entry,
+          hints.exit,
+        );
+      for (const p of prep.groups)
+        if (p.col) {
+          const run = new RunBuilder();
+          sewColumn(run, p.col, p, b.last() ?? hints.entry, hints.exit);
+          if (b.length && run.length) b.jumpTo(run.xy[0], run.xy[1], F.TRIM);
+          b.append(run.build());
+        }
+    }
     if (prep.col) sewColumn(b, prep.col, prep, hints.entry, hints.exit);
     return b.build();
   },

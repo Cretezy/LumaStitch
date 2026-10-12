@@ -51,6 +51,7 @@ import {
 } from './commands';
 import { exec, useDoc } from './documentStore';
 import { useUi } from './uiStore';
+import { groupSatinColumns, ungroupSatinColumns } from '@/satin/group';
 import { splitSatinShape } from '@/satin/split';
 import { selectionBBox } from '@/tools/selection';
 
@@ -468,6 +469,30 @@ export function combineSelection(): void {
 }
 
 /** Moves editable guide geometry into one fill shape; all changes undo together. */
+export function groupSelectedSatinRails(): void {
+  const d = useDoc.getState().design,
+    ids = useUi.getState().selection.shapeIds;
+  if (!d) return;
+  try {
+    const result = groupSatinColumns(d, ids);
+    replaceShapes('Group satin rails', ids, [result], ids[0]);
+  } catch (error) {
+    toast(error instanceof Error ? error.message : String(error), 'error');
+  }
+}
+
+export function ungroupSelectedSatinRails(): void {
+  const d = useDoc.getState().design,
+    ids = useUi.getState().selection.shapeIds;
+  if (!d) return;
+  try {
+    if (ids.length !== 1 || !d.shapes[ids[0]]) throw new Error('Select one grouped satin object.');
+    replaceShapes('Ungroup satin rails', ids, ungroupSatinColumns(d.shapes[ids[0]]), ids[0]);
+  } catch (error) {
+    toast(error instanceof Error ? error.message : String(error), 'error');
+  }
+}
+
 export function splitSelectedSatin(fraction: number): void {
   const d = useDoc.getState().design;
   const ids = useUi.getState().selection.shapeIds;

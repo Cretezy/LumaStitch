@@ -4,6 +4,9 @@ import type { Vec2 } from '@/model/types';
 import type { PathItem } from './index';
 
 interface Edge {
+  source: number;
+  start: number;
+  end: number;
   a: number;
   b: number;
   length: number;
@@ -15,6 +18,9 @@ export interface RunningNetwork {
   components: number[][];
 }
 export interface NetworkStep {
+  source: number;
+  start: number;
+  end: number;
   from: Vec2;
   to: Vec2;
   underpath: boolean;
@@ -24,14 +30,17 @@ const EPS = 1e-7;
 
 /** Preserve overlapping strokes as parallel edges: an intentional repeated line is still sewn. */
 export function buildRunningNetwork(paths: PathItem[]): RunningNetwork | null {
-  const segments: { a: Vec2; b: Vec2; cuts: number[] }[] = [];
-  for (const { pts, closed } of paths) {
+  const segments: { a: Vec2; b: Vec2; cuts: number[]; source: number; start: number; length: number }[] = [];
+  for (const [source, { pts, closed }] of paths.entries()) {
+    let start = 0;
     const end = closed ? pts.length : pts.length - 2;
     for (let i = 0; i < end; i += 2) {
       const j = (i + 2) % pts.length;
       const a: Vec2 = [pts[i], pts[i + 1]],
         b: Vec2 = [pts[j], pts[j + 1]];
-      if (Math.hypot(a[0] - b[0], a[1] - b[1]) > EPS) segments.push({ a, b, cuts: [0, 1] });
+      const length = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      if (length > EPS) segments.push({ a, b, cuts: [0, 1], source, start, length });
+      start += length;
     }
   }
   // Bound intersection work; oversized drawings keep the normal path router.
@@ -89,7 +98,14 @@ export function buildRunningNetwork(paths: PathItem[]): RunningNetwork | null {
       if (a === b) continue;
       if (points.length > 1000 || edges.length >= 3000) return null;
       const id = edges.length;
-      edges.push({ a, b, length: Math.hypot(points[a][0] - points[b][0], points[a][1] - points[b][1]) });
+      edges.push({
+        source: s.source,
+        start: s.start + cuts[i - 1] * s.length,
+        end: s.start + cuts[i] * s.length,
+        a,
+        b,
+        length: Math.hypot(points[a][0] - points[b][0], points[a][1] - points[b][1]),
+      });
       adjacent[a].push(id);
       adjacent[b].push(id);
     }
@@ -257,13 +273,19 @@ export function routeRunningNetwork(g: RunningNetwork, entry?: Vec2, exit?: Vec2
     reverse.reverse();
     const lastUse = new Map<number, number>();
     reverse.forEach((s, k) => lastUse.set(s.edge, k));
-    for (let k = 1; k < reverse.length; k++)
+    for (let k = 1; k < reverse.length; k++) {
+      const edge = edges[reverse[k].edge],
+        forward = edge.a === reverse[k - 1].node;
       result.push({
+        source: edge.source,
+        start: forward ? edge.start : edge.end,
+        end: forward ? edge.end : edge.start,
         from: points[reverse[k - 1].node],
         to: points[reverse[k].node],
         underpath: lastUse.get(reverse[k].edge) !== k,
         jump: k === 1 && result.length > 0,
       });
+    }
     position = points[end];
   }
   return result;
