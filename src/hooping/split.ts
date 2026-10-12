@@ -7,6 +7,7 @@ import { machineDesign } from '@/io/machine/import';
 import type { Design, MultiHoopOptions, Vec2 } from '@/model/types';
 import { multiHoopSchema } from '@/model/schema';
 import { hoopFit } from '@/engine/hoop';
+import { assignWholeObjects, type WholeObject } from './objects';
 import { placedLayout, toLocal, toWorld, type Placement } from './placement';
 
 export interface Hooping {
@@ -19,6 +20,7 @@ export interface Hooping {
   placement: number;
   registrationParent: number | null;
   design: Design;
+  wholeObjects: Omit<WholeObject, 'field'>[];
   originalNeedles: number;
 }
 interface Tile extends Placement {
@@ -99,6 +101,7 @@ export function splitHoopings(design: Design, input: MultiHoopOptions): Hooping[
           sinceStop: false,
           originalNeedles: 0,
         });
+  const whole = options.keepObjects ? assignWholeObjects(design, plan, tiles, w, h) : null;
   const at = (row: number, col: number) => tiles[row * cols + col];
   // Shared pairs in overlap bands: two noncoincident points establish translation and rotation.
   if (!custom)
@@ -231,6 +234,7 @@ export function splitHoopings(design: Design, input: MultiHoopOptions): Hooping[
     const flag = plan.flags[i];
     while (block + 1 < plan.colorBlocks.length && i >= plan.colorBlocks[block].end) block++;
     const p: Vec2 = [r(plan.x[i]), r(plan.y[i])];
+    const forced = whole?.owners[plan.element[i]] ?? -1;
     if (flag & COMMAND_MASK) {
       closeAll();
       previous = null;
@@ -244,7 +248,7 @@ export function splitHoopings(design: Design, input: MultiHoopOptions): Hooping[
       continue;
     }
     if (!previous || same(previous, p)) {
-      const t = locate(p);
+      const t = forced >= 0 ? tiles[forced] : locate(p);
       begin(t, p, p);
       emit(t, MC.STITCH, p);
       t.originalNeedles++;
@@ -261,15 +265,18 @@ export function splitHoopings(design: Design, input: MultiHoopOptions): Hooping[
         if (u > 1e-8 && u < 1 - 1e-8) cuts.push(u);
       }
     };
-    if (custom) cuts.push(...custom.cuts(a, p));
-    else {
-      addCuts(a[0], p[0], ox, sx, cols);
-      addCuts(a[1], p[1], oy, sy, rows);
+    // Whole-object assignment has already checked both endpoints of every sewn chord.
+    if (forced < 0) {
+      if (custom) cuts.push(...custom.cuts(a, p));
+      else {
+        addCuts(a[0], p[0], ox, sx, cols);
+        addCuts(a[1], p[1], oy, sy, rows);
+      }
     }
     const sorted = [...new Set(cuts)].sort((x, y) => x - y);
     const point = (u: number): Vec2 => [a[0] + (p[0] - a[0]) * u, a[1] + (p[1] - a[1]) * u];
     for (let j = 1; j < sorted.length; j++) {
-      const owner = locate(point((sorted[j - 1] + sorted[j]) / 2));
+      const owner = forced >= 0 ? tiles[forced] : locate(point((sorted[j - 1] + sorted[j]) / 2));
       const first = j;
       while (custom && j + 1 < sorted.length && locate(point((sorted[j] + sorted[j + 1]) / 2)) === owner) j++;
       const start = point(sorted[first - 1]),
@@ -317,6 +324,9 @@ export function splitHoopings(design: Design, input: MultiHoopOptions): Hooping[
       registrationParent:
         custom?.parents[t.index] != null ? custom.order.indexOf(custom.parents[t.index]!) + 1 : null,
       design: d,
+      wholeObjects: (whole?.objects ?? [])
+        .filter((o) => o.field === t.index)
+        .map(({ shapeId, name, elementIds }) => ({ shapeId, name, elementIds })),
       originalNeedles: t.originalNeedles,
     };
   });

@@ -146,6 +146,7 @@ export const multiHoopSchema = z
     margin: z.number().min(1).max(20),
     overlap: z.number().min(6).max(100),
     joinSeams: z.boolean().optional(),
+    keepObjects: z.boolean().optional(),
     placements: z
       .array(
         z.object({

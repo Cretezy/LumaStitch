@@ -232,6 +232,7 @@ export interface MultiHoopOptions {
   margin: number;
   overlap: number;
   joinSeams?: boolean;
+  keepObjects?: boolean;
   /** Explicit field centers in design millimetres and clockwise rotation in degrees. */
   placements?: { center: Vec2; angle: number }[];
 }

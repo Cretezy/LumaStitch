@@ -241,6 +241,18 @@ export default function HoopingDialog({ open, onClose }: DialogProps) {
           />
           Join nearby seam endpoints (up to 1 mm along the same seam)
         </label>
+        <label className="flex items-center gap-2 text-xs">
+          <Switch
+            aria-label="Keep whole objects when they fit"
+            disabled={busy}
+            checked={options.keepObjects ?? false}
+            onCheckedChange={(value) => {
+              setOptions((o) => ({ ...o, keepObjects: value }));
+              setResult(null);
+            }}
+          />
+          Keep whole objects when they fit (fill and outline together; touching objects keep seams)
+        </label>
         <p className="text-xs text-muted-foreground">
           Each file begins with temporary basting and shared crosses, then stops before the design. Keep the
           basting frame to preserve file centering. The package includes the original project, editable stitch
@@ -257,6 +269,8 @@ export default function HoopingDialog({ open, onClose }: DialogProps) {
             <p className="text-sm">
               {result.manifest.hoopings.length} hoopings · {result.manifest.sourceStitches.toLocaleString()}{' '}
               source penetrations retained
+              {options.keepObjects &&
+                ` · ${result.manifest.hoopings.reduce((n, p) => n + p.wholeObjects.length, 0)} objects kept whole`}
             </p>
             <img
               alt="Numbered hooping layout with shared registration marks"
