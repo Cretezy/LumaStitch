@@ -52,13 +52,28 @@ export function optimizeSequence(design: Design, opts: OptimizeOpts = {}): Seque
   // Manual stops are operation boundaries (e.g. placing appliqué fabric). Never move work across
   // one, even when regrouping the same thread would save a colour change.
   const out: SequenceEntry[] = [];
+  const index = buildElementIndex(design);
+  const containsStop = (entry: SequenceEntry): boolean => {
+    if (entry.kind === 'stop') return true;
+    const ref = index.get(entry.elementId);
+    if (!ref) return false;
+    const shape = design.shapes[ref.shapeId];
+    const element = ref.role === 'fill' ? shape.fill : shape.outline;
+    return (
+      element?.type === 'manual' &&
+      element.params.preserveCommands === true &&
+      shape.geom.subpaths.some((path) => path.nodes.some((node) => node.command === 'stop'))
+    );
+  };
   let segment: SequenceEntry[] = [];
   const flush = () => {
     if (segment.length) out.push(...optimizeSegment({ ...design, sequence: segment }, opts));
     segment = [];
   };
   for (const entry of design.sequence) {
-    if (entry.kind === 'stop') {
+    if (containsStop(entry)) {
+      // An imported block can contain a pause anywhere in its needle program. Keep the whole
+      // block at this boundary so neither earlier nor later objects can cross that pause.
       flush();
       out.push(entry);
     } else segment.push(entry);

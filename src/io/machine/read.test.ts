@@ -8,6 +8,7 @@ import { toMachineCommands, MC } from '@/io/pes/machineCommands';
 import { parseProjectFile, serializeProject } from '@/model/schema';
 import { pesFormat } from '@/io/export/pesFormat';
 import { readPes } from '@/io/pes/pesReader';
+import { writeVp3Pattern } from '@/io/formats/vp3';
 
 const files = ['formats', 'pes'].flatMap((dir) =>
   readdirSync(`tests/fixtures/${dir}`)
@@ -41,6 +42,34 @@ it.each(files)('%s decodes to an editable, command-preserving plan', (file) => {
 it('rejects truncated records and unsupported files explicitly', () => {
   for (const ext of ['dst', 'jef', 'exp', 'vp3'])
     expect(() => readMachine(new Uint8Array([0x80]), ext)).toThrow();
+});
+
+it.each([
+  [0, 0],
+  [0, 50],
+  [50, 0],
+])('positions a later VP3 color block at (%i, %i)', (x, y) => {
+  const commands = [
+    { x: 100, y: 100, cmd: MC.STITCH },
+    { x, y, cmd: MC.COLOR_CHANGE },
+    { x, y, cmd: MC.STITCH },
+    { x: x + 20, y: y + 30, cmd: MC.STITCH },
+    { x: x + 20, y: y + 30, cmd: MC.END },
+  ];
+  const bytes = writeVp3Pattern({
+    name: 'Return to origin',
+    commands,
+    threads: [{ color: '#ff0000' }, { color: '#0000ff' }],
+  });
+  const parsed = readMachine(bytes, 'vp3');
+  const expected = commands.filter((c) => c.cmd === MC.STITCH);
+  expect(parsed.commands.filter((c) => c.cmd === MC.STITCH)).toEqual(expected);
+  const design = machineDesign(parsed, 'Return to origin');
+  expect(
+    readPes(pesFormat.write(buildPlan(design), design, { version: 6 })).commands.filter(
+      (c) => c.cmd === MC.STITCH,
+    ),
+  ).toEqual(expected);
 });
 
 it('preserves explicit controls, duplicate needles and transformed command nodes', async () => {

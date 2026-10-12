@@ -153,6 +153,45 @@ it('preserves the original order when fixed elements contradict stacking', () =>
   expect(optimizeSequence(d, { elementIds: [] })).toEqual(d.sequence);
 });
 
+it.each([0, 1, 3])('keeps other objects on their side of an imported stop at node %i', (stopIndex) => {
+  const d = createDesign();
+  d.threads.red = { id: 'red', name: 'Red', color: '#ff0000' };
+  d.threads.blue = { id: 'blue', name: 'Blue', color: '#0000ff' };
+  const add = (x: number, thread: string, imported = false) => {
+    const s = createShape(
+      'Line',
+      {
+        fillRule: 'nonzero',
+        subpaths: [{ closed: false, nodes: [{ p: [x, 0] }, { p: [x + 2, 0] }, { p: [x + 4, 0] }] }],
+      },
+      { strokeWidth: 0.15 },
+    );
+    s.outline = createElement('outline', 'manual', thread, { preserveCommands: imported });
+    s.outline.tieIn = s.outline.tieOut = 'off';
+    if (imported) s.geom.subpaths[0].nodes.splice(stopIndex, 0, { p: [x + stopIndex, 0], command: 'stop' });
+    d.shapes[s.id] = s;
+    d.zOrder.push(s.id);
+    d.sequence.push({ kind: 'element', elementId: s.outline.id });
+  };
+  add(100, 'blue');
+  add(30, 'red', true);
+  add(40, 'blue');
+  add(0, 'red');
+  const original = d.sequence.slice();
+  const sequence = optimizeSequence(d);
+  expect(sequence.slice(0, 2)).toEqual(original.slice(0, 2));
+  expect(new Set(sequence.slice(2))).toEqual(new Set(original.slice(2)));
+  const plan = buildPlan({ ...d, sequence });
+  expect(plan.stats.stops).toBe(1);
+  const stop = plan.flags.findIndex((flag) => !!(flag & F.STOP));
+  const firstAfter = plan.element.findIndex((element) =>
+    original
+      .slice(2)
+      .some((entry) => entry.kind === 'element' && entry.elementId === plan.elementIds[element]),
+  );
+  expect(firstAfter).toBeGreaterThan(stop);
+});
+
 it('keeps unselected elements in relative order while optimizing selected ones', () => {
   const d = design(Array.from({ length: 8 }, (_, i) => ({ geom: rectGeom((7 - i) * 12, 0, 8, 8) })));
   const ids = d.sequence.flatMap((e) => (e.kind === 'element' ? [e.elementId] : []));

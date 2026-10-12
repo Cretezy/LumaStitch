@@ -194,8 +194,9 @@ export function readMachine(data: Uint8Array, extension: string): MachineReadRes
       const ax = r.i32() / 100 + cx,
         ay = -r.i32() / 100 + cy;
       if (block) emit(MC.COLOR_CHANGE);
-      // Correct upstream's && test: an offset on either axis needs positioning.
-      if (ax !== 0 || ay !== 0) emit(MC.JUMP, ax - x, ay - y);
+      // Preserve block positioning records, including zero-distance jumps at nonzero starts.
+      // A block at the origin must also reset a previous block's nonzero end position.
+      if (ax !== 0 || ay !== 0 || x !== 0 || y !== 0) emit(MC.JUMP, ax - x, ay - y);
       const colors = r.u8();
       r.u8();
       let color = '#000000';

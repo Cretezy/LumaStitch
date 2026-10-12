@@ -54,7 +54,7 @@ No account · No upload · Works offline · Free and open source (GPL-3.0)
 
 | Direction | Formats                                                                                       |
 | --------- | --------------------------------------------------------------------------------------------- |
-| Import    | SVG, PNG, JPG, WebP, `.lumastitch` projects; `.pes` files open in a read-only viewer          |
+| Import    | SVG, PNG, JPG, WebP, `.lumastitch` projects; PES, DST, JEF, EXP and VP3 as editable stitch programs |
 | Machine   | Brother/Baby Lock PES (v1, v6), Tajima DST, Janome JEF, Melco EXP, Pfaff/Husqvarna Viking VP3 |
 | Other     | PNG preview, SVG geometry, PDF production worksheet, MP4/WebM stitch-out video                |
 
