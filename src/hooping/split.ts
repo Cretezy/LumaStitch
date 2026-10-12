@@ -7,6 +7,7 @@ import { machineDesign } from '@/io/machine/import';
 import type { Design, MultiHoopOptions, Vec2 } from '@/model/types';
 import { multiHoopSchema } from '@/model/schema';
 import { hoopFit } from '@/engine/hoop';
+import { placedLayout, toLocal, toWorld, type Placement } from './placement';
 
 export interface Hooping {
   number: number;
@@ -14,10 +15,14 @@ export interface Hooping {
   column: number;
   center: Vec2;
   marks: Vec2[];
+  angle: number;
+  placement: number;
+  registrationParent: number | null;
   design: Design;
   originalNeedles: number;
 }
-interface Tile {
+interface Tile extends Placement {
+  index: number;
   row: number;
   column: number;
   center: Vec2;
@@ -49,21 +54,23 @@ export function splitHoopings(design: Design, input: MultiHoopOptions): Hooping[
   const bounds = plan.bounds;
   const cols = Math.max(1, Math.ceil((bounds.maxX - bounds.minX + 6 - w) / sx) + 1);
   const rows = Math.max(1, Math.ceil((bounds.maxY - bounds.minY + 6 - h) / sy) + 1);
-  if (rows * cols > 64)
+  if (!options.placements && rows * cols > 64)
     throw new Error(
       `This layout needs ${rows * cols} hoopings; the limit is 64. Increase the sewing field or split the design first.`,
     );
   // Center the complete grid on the design, sharing spare room between its outer edges.
   const ox = r((bounds.minX + bounds.maxX - (cols - 1) * sx) / 2),
     oy = r((bounds.minY + bounds.maxY - (rows - 1) * sy) / 2);
+  const custom = options.placements ? placedLayout(options.placements, w, h) : null;
   const tiles: Tile[] = [];
-  for (let row = 0; row < rows; row++)
-    for (let column = 0; column < cols; column++)
+  if (options.placements) {
+    for (const [index, p] of options.placements.entries())
       tiles.push({
-        row,
-        column,
-        center: [r(ox + column * sx), r(oy + row * sy)],
-        marks: [],
+        ...p,
+        index,
+        row: 0,
+        column: index,
+        marks: custom!.marks[index],
         commands: [],
         colors: [REG],
         active: false,
@@ -73,32 +80,49 @@ export function splitHoopings(design: Design, input: MultiHoopOptions): Hooping[
         sinceStop: false,
         originalNeedles: 0,
       });
+  } else
+    for (let row = 0; row < rows; row++)
+      for (let column = 0; column < cols; column++)
+        tiles.push({
+          index: tiles.length,
+          angle: 0,
+          row,
+          column,
+          center: [r(ox + column * sx), r(oy + row * sy)],
+          marks: [],
+          commands: [],
+          colors: [REG],
+          active: false,
+          last: null,
+          prior: null,
+          color: -1,
+          sinceStop: false,
+          originalNeedles: 0,
+        });
   const at = (row: number, col: number) => tiles[row * cols + col];
   // Shared pairs in overlap bands: two noncoincident points establish translation and rotation.
-  for (const t of tiles) {
-    if (t.column + 1 < cols) {
-      const other = at(t.row, t.column + 1);
-      const x = r((t.center[0] + other.center[0]) / 2);
-      for (const y of [r(t.center[1] - h / 4), r(t.center[1] + h / 4)]) {
-        t.marks.push([x, y]);
-        other.marks.push([x, y]);
+  if (!custom)
+    for (const t of tiles) {
+      if (t.column + 1 < cols) {
+        const other = at(t.row, t.column + 1);
+        const x = r((t.center[0] + other.center[0]) / 2);
+        for (const y of [r(t.center[1] - h / 4), r(t.center[1] + h / 4)]) {
+          t.marks.push([x, y]);
+          other.marks.push([x, y]);
+        }
+      }
+      if (t.row + 1 < rows) {
+        const other = at(t.row + 1, t.column);
+        const y = r((t.center[1] + other.center[1]) / 2);
+        for (const x of [r(t.center[0] - w / 4), r(t.center[0] + w / 4)]) {
+          t.marks.push([x, y]);
+          other.marks.push([x, y]);
+        }
       }
     }
-    if (t.row + 1 < rows) {
-      const other = at(t.row + 1, t.column);
-      const y = r((t.center[1] + other.center[1]) / 2);
-      for (const x of [r(t.center[0] - w / 4), r(t.center[0] + w / 4)]) {
-        t.marks.push([x, y]);
-        other.marks.push([x, y]);
-      }
-    }
-  }
   const emit = (t: Tile, cmd: MachineCmd, p: Vec2) => {
-    t.commands.push({
-      cmd,
-      x: Math.round((p[0] - t.center[0]) * 10),
-      y: Math.round((p[1] - t.center[1]) * 10),
-    });
+    const local = toLocal(p, t);
+    t.commands.push({ cmd, x: Math.round(local[0] * 10), y: Math.round(local[1] * 10) });
   };
   const line = (t: Tile, a: Vec2, b: Vec2, step = 3) => {
     emit(t, MC.JUMP, a);
@@ -109,14 +133,15 @@ export function splitHoopings(design: Design, input: MultiHoopOptions): Hooping[
     emit(t, MC.TRIM, b);
   };
   for (const t of tiles) {
-    const [x, y] = t.center;
     // Symmetric basting frame fixes the exported file's centering across all formats.
-    const corners: Vec2[] = [
-      [x - w / 2 + 0.5, y - h / 2 + 0.5],
-      [x + w / 2 - 0.5, y - h / 2 + 0.5],
-      [x + w / 2 - 0.5, y + h / 2 - 0.5],
-      [x - w / 2 + 0.5, y + h / 2 - 0.5],
-    ];
+    const corners = (
+      [
+        [-w / 2 + 0.5, -h / 2 + 0.5],
+        [w / 2 - 0.5, -h / 2 + 0.5],
+        [w / 2 - 0.5, h / 2 - 0.5],
+        [-w / 2 + 0.5, h / 2 - 0.5],
+      ] as Vec2[]
+    ).map((p) => toWorld(p, t));
     for (let i = 0; i < 4; i++) line(t, corners[i], corners[(i + 1) % 4]);
     for (const [a, b] of t.marks) {
       line(t, [a - 1, b], [a + 1, b], 1);
@@ -140,10 +165,12 @@ export function splitHoopings(design: Design, input: MultiHoopOptions): Hooping[
   };
   const closeAll = () => tiles.forEach(close);
   const locate = (p: Vec2) =>
-    at(
-      Math.max(0, Math.min(rows - 1, Math.floor((p[1] - oy) / sy + 0.5))),
-      Math.max(0, Math.min(cols - 1, Math.floor((p[0] - ox) / sx + 0.5))),
-    );
+    custom
+      ? tiles[custom.locate(p)]
+      : at(
+          Math.max(0, Math.min(rows - 1, Math.floor((p[1] - oy) / sy + 0.5))),
+          Math.max(0, Math.min(cols - 1, Math.floor((p[0] - ox) / sx + 0.5))),
+        );
   let color = 0,
     block = 0,
     previous: Vec2 | null = null;
@@ -164,7 +191,9 @@ export function splitHoopings(design: Design, input: MultiHoopOptions): Hooping[
       if (t.row) boundaries.push([1, t.center[1] - sy / 2]);
       if (t.row + 1 < rows) boundaries.push([1, t.center[1] + sy / 2]);
       if (
-        boundaries.some(([axis, v]) => Math.abs(a[axis] - v) < 1e-6 && Math.abs(t.last![axis] - v) < 1e-6)
+        custom
+          ? custom.canJoin(t.index, a, t.last)
+          : boundaries.some(([axis, v]) => Math.abs(a[axis] - v) < 1e-6 && Math.abs(t.last![axis] - v) < 1e-6)
       ) {
         emit(t, MC.STITCH, a);
         t.prior = t.last;
@@ -232,14 +261,20 @@ export function splitHoopings(design: Design, input: MultiHoopOptions): Hooping[
         if (u > 1e-8 && u < 1 - 1e-8) cuts.push(u);
       }
     };
-    addCuts(a[0], p[0], ox, sx, cols);
-    addCuts(a[1], p[1], oy, sy, rows);
+    if (custom) cuts.push(...custom.cuts(a, p));
+    else {
+      addCuts(a[0], p[0], ox, sx, cols);
+      addCuts(a[1], p[1], oy, sy, rows);
+    }
     const sorted = [...new Set(cuts)].sort((x, y) => x - y);
     const point = (u: number): Vec2 => [a[0] + (p[0] - a[0]) * u, a[1] + (p[1] - a[1]) * u];
     for (let j = 1; j < sorted.length; j++) {
-      const start = point(sorted[j - 1]),
+      const owner = locate(point((sorted[j - 1] + sorted[j]) / 2));
+      const first = j;
+      while (custom && j + 1 < sorted.length && locate(point((sorted[j] + sorted[j + 1]) / 2)) === owner) j++;
+      const start = point(sorted[first - 1]),
         end = point(sorted[j]),
-        t = locate(point((sorted[j - 1] + sorted[j]) / 2));
+        t = owner;
       begin(t, start, end);
       emit(t, MC.STITCH, end);
       t.prior = start;
@@ -251,9 +286,9 @@ export function splitHoopings(design: Design, input: MultiHoopOptions): Hooping[
   closeAll();
   // Serpentine hooping order keeps successive placements adjacent; source order is retained
   // independently inside every hoop, including stops for multi-stage appliqué.
-  const ordered = tiles
-    .slice()
-    .sort((a, b) => a.row - b.row || (a.row % 2 ? b.column - a.column : a.column - b.column));
+  const ordered = custom
+    ? custom.order.map((i) => tiles[i])
+    : tiles.slice().sort((a, b) => a.row - b.row || (a.row % 2 ? b.column - a.column : a.column - b.column));
   return ordered.map((t, i) => {
     const last = t.commands.at(-1)!;
     t.commands.push({ ...last, cmd: MC.END });
@@ -277,6 +312,10 @@ export function splitHoopings(design: Design, input: MultiHoopOptions): Hooping[
       column: t.column,
       center: t.center,
       marks: t.marks,
+      angle: t.angle,
+      placement: t.index + 1,
+      registrationParent:
+        custom?.parents[t.index] != null ? custom.order.indexOf(custom.parents[t.index]!) + 1 : null,
       design: d,
       originalNeedles: t.originalNeedles,
     };

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as Comlink from 'comlink';
 import type { DialogProps } from '../DialogHost';
 import {
@@ -15,8 +15,11 @@ import { Switch } from '@/components/ui/switch';
 import { NumberField } from '@/components/inspector/NumberField';
 import { useDoc, exec } from '@/store/documentStore';
 import type { MultiHoopOptions } from '@/model/types';
+import type { optimizeHoopLayout } from '@/hooping/optimize';
 import type { hoopingArchive } from '@/hooping/archive';
 import { saveFile } from '@/io/project/files';
+import { placementPreview } from '@/hooping/preview';
+import type { Placement } from '@/hooping/placement';
 
 type Package = ReturnType<typeof hoopingArchive>;
 export default function HoopingDialog({ open, onClose }: DialogProps) {
@@ -34,13 +37,33 @@ export default function HoopingDialog({ open, onClose }: DialogProps) {
     [result, setResult] = useState<Package | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState('');
+  const preview = useMemo(
+    () => (design && options.placements ? placementPreview(design, options) : null),
+    [design, options],
+  );
   const worker = useRef<Worker | null>(null);
   useEffect(() => () => worker.current?.terminate(), []);
   const change = (key: keyof MultiHoopOptions, value: number) => {
     setOptions((v) => ({ ...v, [key]: value }));
     setResult(null);
   };
-  async function calculate() {
+  function placements(value: Placement[] | undefined) {
+    setOptions((o) => ({ ...o, placements: value }));
+    setResult(null);
+    setError('');
+  }
+  function editPlacement(index: number, key: 'x' | 'y' | 'angle', value: number) {
+    placements(
+      options.placements!.map((p, i) =>
+        i !== index
+          ? p
+          : key === 'angle'
+            ? { ...p, angle: value }
+            : { ...p, center: key === 'x' ? [value, p.center[1]] : [p.center[0], value] },
+      ),
+    );
+  }
+  async function calculate(optimize = false) {
     if (!design) return;
     setBusy(true);
     setError('');
@@ -49,12 +72,17 @@ export default function HoopingDialog({ open, onClose }: DialogProps) {
     const w = new Worker(new URL('../../worker/hooping.worker.ts', import.meta.url), { type: 'module' });
     worker.current = w;
     try {
-      const api = Comlink.wrap<{ hoopingArchive: typeof hoopingArchive }>(w);
-      const next = await api.hoopingArchive(structuredClone(design), options, format);
+      const api = Comlink.wrap<{
+        hoopingArchive: typeof hoopingArchive;
+        optimizeHoopLayout: typeof optimizeHoopLayout;
+      }>(w);
+      const settings = optimize ? await api.optimizeHoopLayout(structuredClone(design), options) : options;
+      const next = await api.hoopingArchive(structuredClone(design), settings, format);
       if (worker.current !== w) return;
       setResult(next);
+      setOptions(settings);
       exec('Set multi-hooping layout', (d) => {
-        d.multiHoop = options;
+        d.multiHoop = settings;
       });
     } catch (e) {
       setError(String(e));
@@ -105,13 +133,83 @@ export default function HoopingDialog({ open, onClose }: DialogProps) {
                 step={1}
                 digits={1}
                 unit="mm"
-                disabled={busy}
+                disabled={busy || (key === 'overlap' && !!options.placements)}
                 ariaLabel={label}
                 onCommit={(v) => change(key, v)}
               />
             </label>
           ))}
         </div>
+        {options.placements ? (
+          <div className="grid gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-medium">Custom hoop placements</span>
+              <Button variant="outline" size="sm" disabled={busy} onClick={() => placements(undefined)}>
+                Use automatic grid
+              </Button>
+            </div>
+            {preview && !result && (
+              <img
+                alt="Editable hoop placements over design artwork"
+                className="max-h-64 w-full rounded border bg-white object-contain"
+                src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(preview)}`}
+              />
+            )}
+            <p className="text-xs text-muted-foreground">
+              Centers use design coordinates; angles rotate clockwise. Dashed frames must cover all stitches.
+              Arrowheads mark the top of each field. Calculate to check coverage and registration; sewing
+              order follows connected overlaps.
+            </p>
+            <div className="max-h-44 overflow-y-auto rounded border p-2">
+              <div className="grid grid-cols-[2rem_1fr_1fr_1fr_auto] items-center gap-2 text-xs">
+                <span>Field</span>
+                <span>Center X</span>
+                <span>Center Y</span>
+                <span>Angle</span>
+                <span />
+                {options.placements.map((p, i) => (
+                  <PlacementRow
+                    key={i}
+                    index={i}
+                    placement={p}
+                    disabled={busy}
+                    canRemove={options.placements!.length > 1}
+                    edit={editPlacement}
+                    remove={() => placements(options.placements!.filter((_, j) => i !== j))}
+                  />
+                ))}
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={busy || options.placements.length >= 64}
+              onClick={() => {
+                const last = options.placements!.at(-1)!;
+                placements([
+                  ...options.placements!,
+                  { ...last, center: [last.center[0] + 20, last.center[1]] },
+                ]);
+              }}
+            >
+              Add hoop placement
+            </Button>
+          </div>
+        ) : (
+          result && (
+            <Button
+              variant="outline"
+              disabled={busy}
+              onClick={() =>
+                placements(
+                  result.manifest.hoopings.map((p) => ({ center: p.centerMm, angle: p.clockwiseDegrees })),
+                )
+              }
+            >
+              Edit calculated placements
+            </Button>
+          )
+        )}
         <label className="grid gap-1 text-xs">
           Machine format
           <select
@@ -165,6 +263,16 @@ export default function HoopingDialog({ open, onClose }: DialogProps) {
               className="max-h-80 w-full rounded border bg-white object-contain"
               src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(result.layout)}`}
             />
+            {options.placements && (
+              <p className="text-xs text-muted-foreground">
+                {result.manifest.hoopings
+                  .map(
+                    (p) =>
+                      `Hoop ${p.number}: placement ${p.placement}, ${p.clockwiseDegrees}°${p.registrationParent ? `, align with hoop ${p.registrationParent}` : ', start here'}`,
+                  )
+                  .join(' · ')}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground">
               Sew in numbered order. Red cross pairs are shared between neighboring fields. Empty fields are
               retained for registration continuity. Rectangular fields only; this is separate from a
@@ -176,6 +284,9 @@ export default function HoopingDialog({ open, onClose }: DialogProps) {
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
+          <Button variant="outline" disabled={busy || !design} onClick={() => void calculate(true)}>
+            Optimize field angle
+          </Button>
           <Button disabled={busy || !design} onClick={() => void calculate()}>
             {busy ? 'Calculating…' : 'Calculate hoopings'}
           </Button>
@@ -185,5 +296,50 @@ export default function HoopingDialog({ open, onClose }: DialogProps) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function PlacementRow({
+  index,
+  placement,
+  disabled,
+  canRemove,
+  edit,
+  remove,
+}: {
+  index: number;
+  placement: Placement;
+  disabled: boolean;
+  canRemove: boolean;
+  edit: (index: number, key: 'x' | 'y' | 'angle', value: number) => void;
+  remove: () => void;
+}) {
+  return (
+    <>
+      <span>{index + 1}</span>
+      {(['x', 'y', 'angle'] as const).map((key, i) => (
+        <NumberField
+          key={key}
+          ariaLabel={`Hoop ${index + 1} ${key}`}
+          value={key === 'angle' ? placement.angle : placement.center[i]}
+          min={key === 'angle' ? -180 : -100000}
+          max={key === 'angle' ? 180 : 100000}
+          digits={1}
+          unit={key === 'angle' ? '°' : 'mm'}
+          step={key === 'angle' ? 15 : 1}
+          disabled={disabled}
+          onCommit={(v) => edit(index, key, v)}
+        />
+      ))}
+      <Button
+        variant="ghost"
+        size="sm"
+        aria-label={`Remove hoop ${index + 1}`}
+        disabled={disabled || !canRemove}
+        onClick={remove}
+      >
+        Remove
+      </Button>
+    </>
   );
 }

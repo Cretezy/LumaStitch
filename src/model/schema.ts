@@ -146,6 +146,19 @@ export const multiHoopSchema = z
     margin: z.number().min(1).max(20),
     overlap: z.number().min(6).max(100),
     joinSeams: z.boolean().optional(),
+    placements: z
+      .array(
+        z.object({
+          center: z.tuple([
+            z.number().finite().min(-100000).max(100000),
+            z.number().finite().min(-100000).max(100000),
+          ]),
+          angle: z.number().finite().min(-180).max(180),
+        }),
+      )
+      .min(1)
+      .max(64)
+      .optional(),
   })
   .refine(
     (v) => Math.min(v.width, v.height) - 2 * v.margin - v.overlap >= 10,

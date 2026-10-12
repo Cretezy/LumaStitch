@@ -1,0 +1,441 @@
+{
+  "version": 1,
+  "design": "Diagonal botanical ribbon",
+  "units": "mm",
+  "coordinates": "+x right, +y down",
+  "options": {
+    "width": 100,
+    "height": 100,
+    "margin": 3,
+    "overlap": 12
+  },
+  "sourceStitches": 7075,
+  "hoopings": [
+    {
+      "number": 1,
+      "row": 0,
+      "column": 0,
+      "file": "hoop-01.pes",
+      "project": "hoop-01.lumastitch",
+      "centerMm": [
+        2.7,
+        2.7
+      ],
+      "clockwiseDegrees": 0,
+      "placement": 1,
+      "registrationParent": null,
+      "sharedRegistrationMm": [
+        [
+          43.7,
+          -20.8
+        ],
+        [
+          43.7,
+          26.2
+        ],
+        [
+          -20.8,
+          43.7
+        ],
+        [
+          26.2,
+          43.7
+        ]
+      ],
+      "sourceNeedles": 1666,
+      "stats": {
+        "stitches": 1892,
+        "jumps": 19,
+        "trims": 19,
+        "colorChanges": 2,
+        "stops": 1,
+        "threadLengthMm": 3775.2491541882373,
+        "estSeconds": 393.2
+      }
+    },
+    {
+      "number": 2,
+      "row": 0,
+      "column": 1,
+      "file": "hoop-02.pes",
+      "project": "hoop-02.lumastitch",
+      "centerMm": [
+        84.7,
+        2.7
+      ],
+      "clockwiseDegrees": 0,
+      "placement": 2,
+      "registrationParent": null,
+      "sharedRegistrationMm": [
+        [
+          43.7,
+          -20.8
+        ],
+        [
+          43.7,
+          26.2
+        ],
+        [
+          125.7,
+          -20.8
+        ],
+        [
+          125.7,
+          26.2
+        ],
+        [
+          61.2,
+          43.7
+        ],
+        [
+          108.2,
+          43.7
+        ]
+      ],
+      "sourceNeedles": 198,
+      "stats": {
+        "stitches": 436,
+        "jumps": 22,
+        "trims": 22,
+        "colorChanges": 2,
+        "stops": 1,
+        "threadLengthMm": 792.8753260269148,
+        "estSeconds": 265.6
+      }
+    },
+    {
+      "number": 3,
+      "row": 0,
+      "column": 2,
+      "file": "hoop-03.pes",
+      "project": "hoop-03.lumastitch",
+      "centerMm": [
+        166.7,
+        2.7
+      ],
+      "clockwiseDegrees": 0,
+      "placement": 3,
+      "registrationParent": null,
+      "sharedRegistrationMm": [
+        [
+          125.7,
+          -20.8
+        ],
+        [
+          125.7,
+          26.2
+        ],
+        [
+          143.2,
+          43.7
+        ],
+        [
+          190.2,
+          43.7
+        ]
+      ],
+      "sourceNeedles": 0,
+      "stats": {
+        "stitches": 152,
+        "jumps": 12,
+        "trims": 12,
+        "colorChanges": 0,
+        "stops": 1,
+        "threadLengthMm": 388,
+        "estSeconds": 117.2
+      }
+    },
+    {
+      "number": 4,
+      "row": 1,
+      "column": 2,
+      "file": "hoop-04.pes",
+      "project": "hoop-04.lumastitch",
+      "centerMm": [
+        166.7,
+        84.7
+      ],
+      "clockwiseDegrees": 0,
+      "placement": 6,
+      "registrationParent": null,
+      "sharedRegistrationMm": [
+        [
+          143.2,
+          43.7
+        ],
+        [
+          190.2,
+          43.7
+        ],
+        [
+          125.7,
+          61.2
+        ],
+        [
+          125.7,
+          108.2
+        ],
+        [
+          143.2,
+          125.7
+        ],
+        [
+          190.2,
+          125.7
+        ]
+      ],
+      "sourceNeedles": 198,
+      "stats": {
+        "stitches": 438,
+        "jumps": 23,
+        "trims": 23,
+        "colorChanges": 2,
+        "stops": 1,
+        "threadLengthMm": 796.0770917666035,
+        "estSeconds": 271.8
+      }
+    },
+    {
+      "number": 5,
+      "row": 1,
+      "column": 1,
+      "file": "hoop-05.pes",
+      "project": "hoop-05.lumastitch",
+      "centerMm": [
+        84.7,
+        84.7
+      ],
+      "clockwiseDegrees": 0,
+      "placement": 5,
+      "registrationParent": null,
+      "sharedRegistrationMm": [
+        [
+          61.2,
+          43.7
+        ],
+        [
+          108.2,
+          43.7
+        ],
+        [
+          43.7,
+          61.2
+        ],
+        [
+          43.7,
+          108.2
+        ],
+        [
+          125.7,
+          61.2
+        ],
+        [
+          125.7,
+          108.2
+        ],
+        [
+          61.2,
+          125.7
+        ],
+        [
+          108.2,
+          125.7
+        ]
+      ],
+      "sourceNeedles": 2903,
+      "stats": {
+        "stitches": 3232,
+        "jumps": 34,
+        "trims": 34,
+        "colorChanges": 2,
+        "stops": 1,
+        "threadLengthMm": 6491.0837810749135,
+        "estSeconds": 617.2
+      }
+    },
+    {
+      "number": 6,
+      "row": 1,
+      "column": 0,
+      "file": "hoop-06.pes",
+      "project": "hoop-06.lumastitch",
+      "centerMm": [
+        2.7,
+        84.7
+      ],
+      "clockwiseDegrees": 0,
+      "placement": 4,
+      "registrationParent": null,
+      "sharedRegistrationMm": [
+        [
+          -20.8,
+          43.7
+        ],
+        [
+          26.2,
+          43.7
+        ],
+        [
+          43.7,
+          61.2
+        ],
+        [
+          43.7,
+          108.2
+        ],
+        [
+          -20.8,
+          125.7
+        ],
+        [
+          26.2,
+          125.7
+        ]
+      ],
+      "sourceNeedles": 196,
+      "stats": {
+        "stitches": 427,
+        "jumps": 21,
+        "trims": 21,
+        "colorChanges": 2,
+        "stops": 1,
+        "threadLengthMm": 786.3077493652181,
+        "estSeconds": 258.7
+      }
+    },
+    {
+      "number": 7,
+      "row": 2,
+      "column": 0,
+      "file": "hoop-07.pes",
+      "project": "hoop-07.lumastitch",
+      "centerMm": [
+        2.7,
+        166.7
+      ],
+      "clockwiseDegrees": 0,
+      "placement": 7,
+      "registrationParent": null,
+      "sharedRegistrationMm": [
+        [
+          -20.8,
+          125.7
+        ],
+        [
+          26.2,
+          125.7
+        ],
+        [
+          43.7,
+          143.2
+        ],
+        [
+          43.7,
+          190.2
+        ]
+      ],
+      "sourceNeedles": 0,
+      "stats": {
+        "stitches": 152,
+        "jumps": 12,
+        "trims": 12,
+        "colorChanges": 0,
+        "stops": 1,
+        "threadLengthMm": 388,
+        "estSeconds": 117.2
+      }
+    },
+    {
+      "number": 8,
+      "row": 2,
+      "column": 1,
+      "file": "hoop-08.pes",
+      "project": "hoop-08.lumastitch",
+      "centerMm": [
+        84.7,
+        166.7
+      ],
+      "clockwiseDegrees": 0,
+      "placement": 8,
+      "registrationParent": null,
+      "sharedRegistrationMm": [
+        [
+          61.2,
+          125.7
+        ],
+        [
+          108.2,
+          125.7
+        ],
+        [
+          43.7,
+          143.2
+        ],
+        [
+          43.7,
+          190.2
+        ],
+        [
+          125.7,
+          143.2
+        ],
+        [
+          125.7,
+          190.2
+        ]
+      ],
+      "sourceNeedles": 196,
+      "stats": {
+        "stitches": 424,
+        "jumps": 20,
+        "trims": 20,
+        "colorChanges": 2,
+        "stops": 1,
+        "threadLengthMm": 787.411168240275,
+        "estSeconds": 252.4
+      }
+    },
+    {
+      "number": 9,
+      "row": 2,
+      "column": 2,
+      "file": "hoop-09.pes",
+      "project": "hoop-09.lumastitch",
+      "centerMm": [
+        166.7,
+        166.7
+      ],
+      "clockwiseDegrees": 0,
+      "placement": 9,
+      "registrationParent": null,
+      "sharedRegistrationMm": [
+        [
+          143.2,
+          125.7
+        ],
+        [
+          190.2,
+          125.7
+        ],
+        [
+          125.7,
+          143.2
+        ],
+        [
+          125.7,
+          190.2
+        ]
+      ],
+      "sourceNeedles": 1718,
+      "stats": {
+        "stitches": 1943,
+        "jumps": 20,
+        "trims": 20,
+        "colorChanges": 2,
+        "stops": 1,
+        "threadLengthMm": 3843.692732110098,
+        "estSeconds": 404.3
+      }
+    }
+  ]
+}

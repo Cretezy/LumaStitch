@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "design": "Diagonal botanical ribbon",
+  "units": "mm",
+  "coordinates": "+x right, +y down",
+  "options": {
+    "width": 100,
+    "height": 100,
+    "margin": 3,
+    "overlap": 12,
+    "placements": [
+      {
+        "center": [
+          28,
+          28
+        ],
+        "angle": 45
+      },
+      {
+        "center": [
+          85,
+          85
+        ],
+        "angle": 40
+      },
+      {
+        "center": [
+          142,
+          142
+        ],
+        "angle": 50
+      }
+    ]
+  },
+  "sourceStitches": 7075,
+  "hoopings": [
+    {
+      "number": 1,
+      "row": 0,
+      "column": 0,
+      "file": "hoop-01.pes",
+      "project": "hoop-01.lumastitch",
+      "centerMm": [
+        28,
+        28
+      ],
+      "clockwiseDegrees": 45,
+      "placement": 1,
+      "registrationParent": null,
+      "sharedRegistrationMm": [
+        [
+          82.6982568153282,
+          35.614444525425185
+        ],
+        [
+          30.26988900309238,
+          81.67915703108433
+        ]
+      ],
+      "sourceNeedles": 2344,
+      "stats": {
+        "stitches": 2563,
+        "jumps": 21,
+        "trims": 21,
+        "colorChanges": 2,
+        "stops": 1,
+        "threadLengthMm": 5177.503762072199,
+        "estSeconds": 472.3
+      }
+    },
+    {
+      "number": 2,
+      "row": 0,
+      "column": 1,
+      "file": "hoop-02.pes",
+      "project": "hoop-02.lumastitch",
+      "centerMm": [
+        85,
+        85
+      ],
+      "clockwiseDegrees": 40,
+      "placement": 2,
+      "registrationParent": 1,
+      "sharedRegistrationMm": [
+        [
+          82.6982568153282,
+          35.614444525425185
+        ],
+        [
+          30.26988900309238,
+          81.67915703108433
+        ],
+        [
+          141.57882066916846,
+          85.42117933083152
+        ],
+        [
+          90.47265804558194,
+          136.52734195441803
+        ]
+      ],
+      "sourceNeedles": 2368,
+      "stats": {
+        "stitches": 2688,
+        "jumps": 40,
+        "trims": 40,
+        "colorChanges": 2,
+        "stops": 1,
+        "threadLengthMm": 5256.860108037855,
+        "estSeconds": 598.8
+      }
+    },
+    {
+      "number": 3,
+      "row": 0,
+      "column": 2,
+      "file": "hoop-03.pes",
+      "project": "hoop-03.lumastitch",
+      "centerMm": [
+        142,
+        142
+      ],
+      "clockwiseDegrees": 50,
+      "placement": 3,
+      "registrationParent": 2,
+      "sharedRegistrationMm": [
+        [
+          141.57882066916846,
+          85.42117933083152
+        ],
+        [
+          90.47265804558194,
+          136.52734195441803
+        ]
+      ],
+      "sourceNeedles": 2363,
+      "stats": {
+        "stitches": 2585,
+        "jumps": 22,
+        "trims": 22,
+        "colorChanges": 2,
+        "stops": 1,
+        "threadLengthMm": 5191.986018577986,
+        "estSeconds": 480.5
+      }
+    }
+  ]
+}

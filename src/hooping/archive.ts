@@ -8,12 +8,14 @@ import { serializeProject } from '@/model/schema';
 import type { Design, MultiHoopOptions } from '@/model/types';
 import { zipFiles, type ZipEntry } from '@/library/zip';
 import { splitHoopings, type Hooping } from './split';
+import { fieldCorners, toWorld } from './placement';
 
 export function hoopingLayout(parts: Hooping[], options: MultiHoopOptions): string {
-  const left = Math.min(...parts.map((p) => p.center[0] - options.width / 2)) - 6,
-    top = Math.min(...parts.map((p) => p.center[1] - options.height / 2)) - 8;
-  const right = Math.max(...parts.map((p) => p.center[0] + options.width / 2)) + 6,
-    bottom = Math.max(...parts.map((p) => p.center[1] + options.height / 2)) + 8;
+  const corners = parts.flatMap((p) => fieldCorners(p, options.width, options.height));
+  const left = Math.min(...corners.map((p) => p[0])) - 6,
+    top = Math.min(...corners.map((p) => p[1])) - 8,
+    right = Math.max(...corners.map((p) => p[0])) + 6,
+    bottom = Math.max(...corners.map((p) => p[1])) + 8;
   const lines = [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${right - left}mm" height="${bottom - top}mm" viewBox="${left} ${top} ${right - left} ${bottom - top}">`,
     `<rect x="${left}" y="${top}" width="${right - left}" height="${bottom - top}" fill="#fffdf6"/>`,
@@ -31,7 +33,8 @@ export function hoopingLayout(parts: Hooping[], options: MultiHoopOptions): stri
             move = true;
             continue;
           }
-          path.push(`${move ? 'M' : 'L'}${node.p[0] + x} ${node.p[1] + y}`);
+          const point = toWorld(node.p, p);
+          path.push(`${move ? 'M' : 'L'}${point[0]} ${point[1]}`);
           move = false;
         }
       }
@@ -39,14 +42,17 @@ export function hoopingLayout(parts: Hooping[], options: MultiHoopOptions): stri
         `<path d="${path.join('')}" fill="none" stroke="${escapeXml(thread.color)}" stroke-width="0.15" opacity="0.65"/>`,
       );
     }
+    lines.push(`<g transform="rotate(${p.angle} ${x} ${y})">`);
     lines.push(
       `<rect x="${x - options.width / 2}" y="${y - options.height / 2}" width="${options.width}" height="${options.height}" fill="none" stroke="#234a73" stroke-width="0.3"/>`,
     );
     lines.push(
       `<rect x="${x - options.width / 2 + options.margin}" y="${y - options.height / 2 + options.margin}" width="${options.width - 2 * options.margin}" height="${options.height - 2 * options.margin}" fill="none" stroke="#708090" stroke-width="0.2" stroke-dasharray="1 1"/>`,
     );
+    lines.push(`<path d="M${x} ${y - options.height / 2}l-2 4h4z" fill="#234a73"/>`);
+    lines.push(`</g>`);
     lines.push(
-      `<text x="${x}" y="${y}" font-family="sans-serif" font-size="4" text-anchor="middle" fill="#234a73">${p.number}${p.originalNeedles ? '' : ' (registration only)'}</text>`,
+      `<text x="${x}" y="${y}" font-family="sans-serif" font-size="4" text-anchor="middle" fill="#234a73">${p.number}${p.angle ? ` · ${p.angle}°` : ''}${p.originalNeedles ? '' : ' (registration only)'}</text>`,
     );
     for (const [a, b] of p.marks)
       lines.push(`<path d="M${a - 1} ${b}h2M${a} ${b - 1}v2" stroke="#c23b45" stroke-width="0.25"/>`);
@@ -90,6 +96,9 @@ export function hoopingArchive(design: Design, options: MultiHoopOptions, format
       file: `${name}.${format.ext}`,
       project: `${name}.lumastitch`,
       centerMm: part.center,
+      clockwiseDegrees: part.angle,
+      placement: part.placement,
+      registrationParent: part.registrationParent,
       sharedRegistrationMm: part.marks,
       sourceNeedles: part.originalNeedles,
       stats: plan.stats,
@@ -105,7 +114,7 @@ export function hoopingArchive(design: Design, options: MultiHoopOptions, format
     hoopings: entries,
   };
   const layout = hoopingLayout(parts, options);
-  const instructions = `LumaStitch multi-hooping package\n\nSew numbered files in manifest order. Each begins with a temporary basting frame and shared registration crosses in the registration thread, then a STOP before design colors. Align the shared pair of crosses with the previous neighboring hooping; the two points establish position and rotation. The symmetric frame fixes machine-file centering. Do not remove it from the program or use automatic resize/fit on the machine. Remove temporary basting/registration thread after assembly. Registration-only hoopings bridge empty areas of the rectangular layout.\n\nCoordinates in manifest.json are millimetres in the original design. Every numbered machine file uses local coordinates centered on its stated centerMm. layout.svg is an actual-size placement template; print at 100% and verify scale. These are overlapping rectangular fields, not a machine-specific multi-position hoop format.\n\nStitch segments are split at ownership boundaries inside overlaps; original penetrations are retained and extra seam penetrations, locks, trims and registration stitches are added. Source sequence and stops are retained within each hooping. The numbered projects contain editable machine stitches, not reconstructed vector objects. source.lumastitch preserves the original design and settings. Changing density requires regenerating the package from the source.\n\nSoftware fit and command checks do not establish physical registration accuracy. Sew a sample on the intended machine/fabric/stabilizer before a production piece.\n`;
+  const instructions = `LumaStitch multi-hooping package\n\nSew numbered files in manifest order. Each begins with a temporary basting frame and shared registration crosses in the registration thread, then a STOP before design colors. Align the shared pair of crosses with the previous neighboring hooping; the two points establish position and rotation. The symmetric frame fixes machine-file centering. Do not remove it from the program or use automatic resize/fit on the machine. Remove temporary basting/registration thread after assembly. Registration-only hoopings bridge empty areas of the rectangular layout.\n\nCoordinates in manifest.json are millimetres in the original design. Every numbered machine file uses local coordinates centered on its stated centerMm and rotated clockwise by clockwiseDegrees in the placement template. Rotate the fabric placement, not the machine program. registrationParent identifies an earlier field sharing its registration pair for custom layouts. Local file coordinates are quantized to 0.1 mm; for rotated placements the reconstructed positions can differ by up to 0.08 mm from the quantized source. The saved placement list order may differ from the connected sewing order. layout.svg is an actual-size placement template; print at 100% and verify scale. These are overlapping rectangular fields, not a machine-specific multi-position hoop format.\n\nStitch segments are split at ownership boundaries inside overlaps; original penetrations are retained and extra seam penetrations, locks, trims and registration stitches are added. Source sequence and stops are retained within each hooping. The numbered projects contain editable machine stitches, not reconstructed vector objects. source.lumastitch preserves the original design and settings. Changing density requires regenerating the package from the source.\n\nSoftware fit and command checks do not establish physical registration accuracy. Sew a sample on the intended machine/fabric/stabilizer before a production piece.\n`;
   files.push(
     { name: 'manifest.json', data: enc.encode(JSON.stringify(manifest, null, 2)) },
     { name: 'layout.svg', data: enc.encode(layout) },
